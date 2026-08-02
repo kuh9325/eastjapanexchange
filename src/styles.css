@@ -1,0 +1,218 @@
+:root {
+  color-scheme: light;
+  --ink: #17233b;
+  --muted: #667085;
+  --paper: #f5f1e8;
+  --paper-deep: #e9e2d3;
+  --panel: rgba(255, 255, 255, 0.82);
+  --line: rgba(23, 35, 59, 0.13);
+  --chungnam: #e96b4c;
+  --chungnam-soft: #f6b3a2;
+  --chungbuk: #208f82;
+  --chungbuk-soft: #8fd0c5;
+  --daejeon: #3d63cc;
+  --daejeon-soft: #9db4ef;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255,255,255,.95), transparent 24rem),
+    radial-gradient(circle at 82% 86%, rgba(61,99,204,.10), transparent 28rem),
+    linear-gradient(145deg, var(--paper) 0%, #f8f5ef 58%, #efe8dc 100%);
+  overflow-x: hidden;
+}
+
+button { font: inherit; }
+
+.exhibition {
+  min-height: 100svh;
+  padding: clamp(22px, 3vw, 52px) clamp(18px, 4vw, 70px) 22px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 18px;
+}
+
+.hero-header { text-align: center; transition: transform .65s var(--ease), opacity .45s ease; }
+.eyebrow { margin: 0 0 8px; font-size: clamp(.7rem, 1vw, .92rem); font-weight: 800; letter-spacing: .22em; color: var(--daejeon); }
+h1 { margin: 0; font-size: clamp(2rem, 4.6vw, 4.6rem); line-height: 1.07; letter-spacing: -.055em; text-wrap: balance; }
+.subtitle { margin: 12px 0 0; color: var(--muted); font-size: clamp(.95rem, 1.5vw, 1.2rem); }
+
+.branch-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 20;
+}
+
+.branch-chip {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.68);
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  box-shadow: 0 7px 24px rgba(23,35,59,.06);
+  transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.branch-chip:hover, .branch-chip:focus-visible { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(23,35,59,.11); outline: none; }
+.branch-dot { width: 11px; height: 11px; border-radius: 50%; background: currentColor; }
+.branch-chip[data-branch="chungnam"] .branch-dot { color: var(--chungnam); }
+.branch-chip[data-branch="chungbuk"] .branch-dot { color: var(--chungbuk); }
+.branch-chip[data-branch="daejeon"] .branch-dot { color: var(--daejeon); }
+.branch-chip.active { color: white; border-color: transparent; }
+.branch-chip[data-branch="chungnam"].active { background: var(--chungnam); }
+.branch-chip[data-branch="chungbuk"].active { background: var(--chungbuk); }
+.branch-chip[data-branch="daejeon"].active { background: var(--daejeon); }
+
+.stage {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  min-height: min(720px, 68svh);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0fr;
+  gap: 0;
+  align-items: stretch;
+  transition: grid-template-columns .85s var(--ease), gap .85s var(--ease);
+}
+.exhibition.has-selection .stage { grid-template-columns: minmax(370px, .78fr) minmax(0, 1.35fr); gap: clamp(18px, 2.5vw, 38px); }
+
+.map-panel, .gallery-panel {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.66);
+  border-radius: clamp(24px, 3vw, 42px);
+  background: var(--panel);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 30px 70px rgba(35,47,76,.13);
+}
+
+.map-panel { display: grid; place-items: center; overflow: hidden; transition: transform .85s var(--ease); }
+.map-shell { position: relative; width: min(100%, 860px); aspect-ratio: 1.06; padding: 18px; display: grid; place-items: center; }
+.map-heading { position: absolute; top: clamp(20px, 4vw, 38px); left: clamp(24px, 4vw, 46px); display: grid; gap: 4px; z-index: 4; }
+.map-heading span { font-size: .68rem; font-weight: 900; letter-spacing: .18em; color: var(--muted); }
+.map-heading strong { font-size: clamp(1rem, 1.7vw, 1.35rem); }
+.korea-map { width: 100%; height: 100%; overflow: visible; }
+.country-context { opacity: .88; filter: url(#softShadow); }
+.country-mainland, .country-island { fill: #dcd8ce; stroke: #c3beb3; stroke-width: 3; }
+.country-island.small { stroke-width: 2; }
+
+.branch-region { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: transform .38s var(--ease), opacity .3s ease, filter .3s ease; outline: none; }
+.branch-region:hover, .branch-region:focus-visible { transform: scale(1.028); filter: url(#selectedShadow); }
+.branch-region .branch-halo { stroke-width: 7; stroke-linejoin: round; opacity: .88; }
+.branch-chungnam .branch-halo { fill: var(--chungnam-soft); stroke: var(--chungnam); }
+.branch-chungbuk .branch-halo { fill: var(--chungbuk-soft); stroke: var(--chungbuk); }
+.branch-daejeon .branch-halo { fill: var(--daejeon-soft); stroke: var(--daejeon); }
+.municipalities path { stroke: rgba(255,255,255,.82); stroke-width: 2.2; stroke-linejoin: round; transition: opacity .2s ease, filter .2s ease; }
+.branch-chungnam .municipalities path { fill: var(--chungnam-soft); }
+.branch-chungbuk .municipalities path { fill: var(--chungbuk-soft); }
+.branch-daejeon .municipalities path { fill: var(--daejeon-soft); }
+.municipalities path:hover { filter: brightness(1.08); }
+.branch-label { fill: white; font-size: 19px; font-weight: 900; text-anchor: middle; paint-order: stroke; stroke: rgba(23,35,59,.25); stroke-width: 5px; pointer-events: none; }
+.branch-daejeon .branch-label { font-size: 16px; }
+
+.branch-region.selected { transform: scale(1.045); filter: url(#selectedShadow); z-index: 10; }
+.exhibition.has-selection .branch-region:not(.selected) { opacity: .32; }
+
+.map-annotation line { stroke: rgba(23,35,59,.17); stroke-width: 1.5; }
+.map-annotation text { fill: var(--muted); font-size: 12px; font-weight: 650; }
+
+.map-legend { position: absolute; right: clamp(22px, 4vw, 42px); bottom: clamp(18px, 3vw, 34px); display: flex; gap: 8px; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 850; }
+.legend-item::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: currentColor; }
+.legend-chungnam { color: var(--chungnam); }
+.legend-chungbuk { color: var(--chungbuk); }
+.legend-daejeon { color: var(--daejeon); }
+
+.gallery-panel {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(70px) scale(.97);
+  overflow: hidden;
+  padding: clamp(22px, 3vw, 38px);
+  transition: opacity .55s ease .16s, visibility 0s linear .8s, transform .85s var(--ease);
+}
+.exhibition.has-selection .gallery-panel { opacity: 1; visibility: visible; transform: none; transition-delay: .12s, 0s, 0s; }
+.gallery-head { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
+.back-button { min-height: 44px; border: 0; background: #edf0f5; border-radius: 999px; padding: 0 15px; font-weight: 800; cursor: pointer; color: var(--ink); }
+.gallery-kicker { margin: 1px 0 5px; font-size: .7rem; font-weight: 900; letter-spacing: .17em; color: var(--muted); }
+.gallery-head h2 { margin: 0; font-size: clamp(1.9rem, 3vw, 3.5rem); letter-spacing: -.045em; line-height: 1; }
+.gallery-head p:last-child { margin: 10px 0 0; color: var(--muted); line-height: 1.6; }
+
+.category-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 22px 0 11px; scrollbar-width: none; }
+.category-tabs::-webkit-scrollbar { display: none; }
+.category-tabs button { flex: 0 0 auto; min-height: 42px; padding: 0 15px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.74); color: var(--muted); font-weight: 800; cursor: pointer; }
+.category-tabs button[aria-selected="true"] { background: var(--ink); color: white; border-color: var(--ink); }
+.gallery-summary { display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px 15px; color: var(--muted); font-size: .84rem; font-weight: 700; }
+
+.photo-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-flow: dense; gap: 12px; max-height: min(525px, 56svh); overflow: auto; padding-right: 4px; scroll-behavior: smooth; }
+.photo-card { grid-column: span 4; aspect-ratio: 1.18; border: 0; padding: 0; position: relative; overflow: hidden; border-radius: 20px; background: #e8e4db; cursor: zoom-in; box-shadow: 0 12px 26px rgba(23,35,59,.09); animation: reveal .6s var(--ease) both; }
+.photo-card.wide { grid-column: span 8; aspect-ratio: 1.75; }
+.photo-card.tall { grid-row: span 2; aspect-ratio: .82; }
+.photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .55s var(--ease), filter .4s ease; }
+.photo-card:hover img { transform: scale(1.045); filter: saturate(1.08); }
+.photo-card::after { content: ""; position: absolute; inset: 38% 0 0; background: linear-gradient(transparent, rgba(8,16,34,.78)); pointer-events: none; }
+.photo-meta { position: absolute; z-index: 2; left: 14px; right: 14px; bottom: 12px; color: white; text-align: left; display: grid; gap: 2px; }
+.photo-meta strong { font-size: .9rem; }
+.photo-meta span { font-size: .72rem; opacity: .83; }
+
+.placeholder-card { grid-column: span 4; aspect-ratio: 1.18; border-radius: 20px; border: 1px dashed rgba(23,35,59,.16); display: grid; place-items: center; padding: 20px; text-align: center; color: var(--muted); background: linear-gradient(145deg, rgba(255,255,255,.72), rgba(229,223,211,.72)); }
+.placeholder-card:nth-child(2) { grid-column: span 8; }
+.placeholder-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+.placeholder-card strong { color: var(--ink); display: block; margin-bottom: 5px; }
+
+.exhibition-footer { display: flex; justify-content: space-between; gap: 15px; color: var(--muted); font-size: .78rem; font-weight: 700; }
+
+.lightbox { width: min(1100px, 94vw); height: min(800px, 92svh); border: 0; padding: 0; border-radius: 28px; background: rgba(13,20,36,.94); color: white; overflow: hidden; }
+.lightbox::backdrop { background: rgba(4,9,18,.76); backdrop-filter: blur(12px); }
+.lightbox[open] { display: grid; place-items: center; }
+.lightbox figure { margin: 0; width: 100%; height: 100%; display: grid; grid-template-rows: 1fr auto; place-items: center; }
+.lightbox img { max-width: 100%; max-height: calc(92svh - 72px); width: 100%; height: 100%; object-fit: contain; }
+.lightbox figcaption { width: 100%; min-height: 72px; padding: 15px 74px; display: grid; place-items: center; text-align: center; background: rgba(0,0,0,.24); }
+.lightbox-close, .lightbox-nav { position: absolute; z-index: 5; border: 0; color: white; background: rgba(255,255,255,.14); cursor: pointer; backdrop-filter: blur(9px); }
+.lightbox-close { top: 16px; right: 16px; width: 46px; height: 46px; border-radius: 50%; font-size: 1.8rem; }
+.lightbox-nav { top: 50%; transform: translateY(-50%); width: 52px; height: 72px; font-size: 2.4rem; border-radius: 18px; }
+.lightbox-nav.previous { left: 14px; }
+.lightbox-nav.next { right: 14px; }
+
+@keyframes reveal { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 980px) {
+  .exhibition.has-selection .stage { grid-template-columns: 1fr; }
+  .exhibition.has-selection .map-panel { min-height: 400px; }
+  .gallery-panel { transform: translateY(40px) scale(.98); }
+  .photo-grid { max-height: none; }
+}
+
+@media (max-width: 640px) {
+  .exhibition { padding: 18px 12px 16px; }
+  .hero-header { padding-inline: 6px; }
+  .stage { min-height: 560px; }
+  .map-shell { aspect-ratio: .86; padding: 2px; }
+  .map-heading { top: 18px; left: 20px; }
+  .map-annotation, .map-legend { display: none; }
+  .gallery-panel { padding: 18px 14px 24px; }
+  .gallery-head { grid-template-columns: 1fr; }
+  .back-button { justify-self: start; }
+  .photo-card, .placeholder-card { grid-column: span 6; }
+  .photo-card.wide, .placeholder-card:nth-child(2) { grid-column: span 12; }
+  .swipe-hint { display: none; }
+  .exhibition-footer { flex-direction: column; align-items: center; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}

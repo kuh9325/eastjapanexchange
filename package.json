@@ -1,0 +1,14 @@
+{
+  "name": "east-japan-exchange-gallery",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "assets": "node scripts/generate-gallery-manifest.mjs",
+    "dev": "node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
