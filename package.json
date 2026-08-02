@@ -4,13 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "map": "node scripts/generate-map-data.mjs",
     "assets": "node scripts/generate-gallery-manifest.mjs",
-    "dev": "node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
+    "dev": "node scripts/generate-map-data.mjs && node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/dev-server.mjs --root dist",
     "test": "node scripts/verify.mjs"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "polygon-clipping": "0.15.7"
+  },
+  "overrides": {
+    "splaytree": "3.1.2"
   }
 }

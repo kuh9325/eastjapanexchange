@@ -4,34 +4,43 @@
 
 ## 방면 데이터와 지도
 
-`data/regions.js`가 조직 방면, 포함 시·군, 색상, 설명, SVG 도형을 함께 보관하는 단일 진실 원천입니다.
+`data/region-config.js`가 `방면 → 권` 조직 구조와 지도 표시 범위의 단일 진실 원천이며, `data/regions.js`는 SGIS 기반 SVG에서 자동 생성되는 지도 데이터입니다. 생성 파일은 직접 편집하지 않습니다. **행정구역은 방면의 지도 범위를 표현하기 위한 자료이며 조직의 하위 단위가 아닙니다.** 권별 경계는 지도에 표시하지 않습니다.
 
-- **대전방면:** 대전, 세종, 계룡, 금산, 옥천
-- **충남방면:** 천안, 공주, 보령, 아산, 서산, 논산, 당진, 부여, 서천, 청양, 홍성, 예산, 태안
-- **충북방면:** 청주, 충주, 제천, 보은, 영동, 증평, 진천, 괴산, 음성, 단양
+- **충남방면:** 백제권, 서해권, 천안권
+- **충북방면:** 동청주권, 서청주권, 제천권, 충주권
+- **대전방면:** 남대전권, 대전권, 서대전권, 세종권
 
-세종은 행정적으로 충남이 아니지만 조직상 대전방면에 포함합니다. 충남방면에는 계룡·금산이, 충북방면에는 옥천이 중복되지 않습니다. 지도 DOM과 갤러리의 branch 필터가 모두 이 데이터의 key를 사용합니다.
+지도 범위에서 대전방면은 대전·세종·계룡·금산·옥천을, 충남방면은 계룡·금산을 제외한 충남 지역을 표시합니다. 충북방면은 옥천과 김천권 소속 영동군을 제외한 충북 지역에 **제천권 소속 강원도 영월군**을 더해 표시합니다. 영동군은 이 전시의 세 방면 어디에도 표시하지 않습니다. 지도 DOM과 갤러리 필터는 동일한 방면 key를 사용합니다. 원본에서 천안·청주는 구 단위로 나뉘며, 대전광역시는 5개 구의 내부 경계를 그대로 표시합니다.
 
-> 지도는 공개 GIS 경계 파일을 전용하지 않고 이 전시를 위해 직접 그린 **시·군 수준의 단순화 다이어그램**입니다. 법적·측량·행정 경계 확인용이 아니며, 섬과 해안선, 시·군 경계 및 상대 크기가 실제와 다를 수 있습니다. 대한민국 실효 지배 구역의 전체 실루엣은 낮은 대비의 위치 맥락으로만 표현합니다.
+지도는 [statgarten/maps](https://github.com/statgarten/maps)의 `svg/simple` 자료를 사용합니다. 이 저장소는 통계청 SGIS 오픈 API에서 수집한 2020 행정구역 경계를 SVG로 제공하며 MIT 라이선스를 적용합니다. 사용한 원본 5개 SVG, upstream commit, 라이선스는 `data/vendor/statgarten-maps/`에 보관합니다.
 
-실제 GIS 데이터로 교체할 때는 `data/regions.js`의 각 `municipalities[].path`, `label`, `outlinePaths`를 동일한 `viewBox` 좌표계의 단순화된 path로 바꾸면 됩니다. `id`, `name`, 방면 key는 유지해야 갤러리 분류가 보존됩니다. 외부 공개 데이터를 채택한다면 해당 데이터셋의 명칭, URL, 버전/기준일, 라이선스와 단순화 방법을 이 문서에 추가해야 합니다.
+`scripts/generate-map-data.mjs`는 다음을 자동 수행합니다.
+
+1. 전국 시·도 SVG와 충남·충북·대전·세종·강원 시군구 SVG의 이름과 path를 추출합니다. 강원 SVG에서는 영월군만 선택합니다.
+2. 지역별 확대 SVG의 실제 bounds를 전국 SVG에서 같은 시·도가 차지하는 bounds로 다시 투영합니다.
+3. 전국과 시군구 좌표를 공통 `0 0 780 760` viewBox로 정규화합니다.
+4. `polygon-clipping`의 union으로 같은 조직 방면을 dissolve하여 내부 중복선이 없는 `outlinePaths`를 만듭니다.
+5. 면적 중심과 내부점 탐색으로 각 행정구역과 방면의 label 좌표를 생성합니다.
+
+섬과 다중 폴리곤 subpath는 유지하며, 시군구 path는 얇은 내부 경계로, dissolve 결과는 굵은 방면 외곽선으로 렌더링합니다. 화면 하단에는 `통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화`를 표시합니다. 법적·측량·행정 경계 확인용으로 사용하면 안 됩니다.
 
 ## 로컬 실행
 
-Node.js 18 이상이 필요하며 런타임 의존성은 없습니다.
+Node.js 18 이상이 필요합니다. 브라우저 런타임 의존성은 없으며, 지도 build 단계에서만 polygon union 패키지를 사용합니다.
 
 ```bash
 npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:4173`을 엽니다. 개발 서버는 실행 전 사진 manifest를 다시 만듭니다.
+브라우저에서 `http://localhost:4173`을 엽니다. 개발 서버는 실행 전 지도 데이터와 사진 manifest를 다시 만듭니다.
 
 ```bash
 npm run assets   # assets/gallery-manifest.json만 갱신
-npm run build    # manifest 생성 후 dist/ 구성
+npm run map      # SGIS SVG에서 data/regions.js 재생성
+npm run build    # 지도와 manifest 생성 후 dist/ 구성
 npm run preview  # dist/만 http://localhost:4173에서 제공
-npm test         # 임시 사진 fixture, 방면 예외, 문법, 정적 빌드 검증
+npm test         # 지도·dissolve·사진 fixture·방면 예외·정적 빌드 검증
 ```
 
 모든 HTML, CSS, JS, manifest 경로는 상대 경로이므로 `https://사용자.github.io/eastjapanexchange/` 같은 프로젝트 하위 경로에서 동작합니다.

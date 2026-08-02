@@ -37,23 +37,15 @@
                 <filter id="selected-shadow" x="-45%" y="-45%" width="190%" height="190%">
                   <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#15203b" flood-opacity="0.34" />
                 </filter>
-                <pattern id="paper-dots" width="18" height="18" patternUnits="userSpaceOnUse">
-                  <circle cx="2" cy="2" r="0.8" fill="#17233b" opacity="0.08" />
-                </pattern>
               </defs>
 
-              <g class="country-context" aria-hidden="true">
-                <path class="country-mainland" d="M482 57 C520 86 542 129 552 175 C565 232 610 256 619 310 C628 365 594 400 586 447 C577 501 606 532 574 574 C548 608 509 619 492 666 C480 700 453 729 420 708 C386 687 391 649 365 625 C337 598 289 587 274 547 C258 504 281 468 266 429 C251 391 209 370 218 323 C227 278 267 262 284 222 C303 178 292 126 328 91 C366 54 435 24 482 57 Z" />
-                <path class="country-island" d="M336 709 C365 690 410 691 438 711 C415 735 363 742 336 709 Z" />
-                <path class="country-island small" d="M527 587 C538 580 552 582 559 591 C548 599 535 599 527 587 Z" />
-                <path class="country-island small" d="M274 423 C283 415 294 416 301 425 C290 432 280 431 274 423 Z" />
-              </g>
+              <g class="country-context" id="country-context-layer" aria-hidden="true"></g>
 
               <g id="branch-map-layer"></g>
 
               <g class="map-annotation" aria-hidden="true">
                 <line x1="167" y1="610" x2="612" y2="610" />
-                <text x="167" y="635">전시용 단순화 지도 · 실제 행정 경계와 다를 수 있습니다</text>
+                <text x="167" y="635">SGIS 2020 행정구역 경계를 전시 화면에 맞게 단순화했습니다</text>
               </g>
             </svg>
 
@@ -70,8 +62,11 @@
               <p class="gallery-kicker" id="gallery-kicker">YOUTH ACTIVITIES</p>
               <h2 id="gallery-title">방면을 선택해 주세요</h2>
               <p id="gallery-description"></p>
+              <p class="scope-label">방면 하위 조직</p>
+              <ul class="zone-list" id="zone-list" aria-label="방면 하위 조직 권"></ul>
               <p class="boundary-note" id="boundary-note"></p>
-              <ul class="municipality-list" id="municipality-list" aria-label="포함 지역"></ul>
+              <p class="scope-label map-scope-label">지도 표시 행정구역</p>
+              <ul class="municipality-list" id="municipality-list" aria-label="방면 범위를 표시하는 행정구역"></ul>
             </div>
           </div>
 
@@ -93,7 +88,7 @@
 
       <footer class="exhibition-footer">
         <span>충남 · 충북 · 대전 청년부</span>
-        <span>사람과 지역을 잇는 평화의 연대</span>
+        <span id="map-attribution">통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화</span>
       </footer>
     </main>
 

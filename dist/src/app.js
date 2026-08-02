@@ -1,14 +1,26 @@
-import { BRANCHES, BRANCH_KEYS, CATEGORIES, CATEGORY_KEYS, municipalityNames } from "../data/regions.js";
+import {
+  BRANCHES,
+  BRANCH_KEYS,
+  CATEGORIES,
+  CATEGORY_KEYS,
+  COUNTRY_CONTEXT,
+  MAP_ATTRIBUTION,
+  MAP_VIEWBOX,
+  municipalityNames
+} from "../data/regions.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const app = document.querySelector("#app");
 const branchSwitcher = document.querySelector("#branch-switcher");
+const koreaMap = document.querySelector(".korea-map");
+const countryContextLayer = document.querySelector("#country-context-layer");
 const branchMapLayer = document.querySelector("#branch-map-layer");
 const mapLegend = document.querySelector("#map-legend");
 const galleryPanel = document.querySelector(".gallery-panel");
 const galleryTitle = document.querySelector("#gallery-title");
 const galleryKicker = document.querySelector("#gallery-kicker");
 const galleryDescription = document.querySelector("#gallery-description");
+const zoneList = document.querySelector("#zone-list");
 const boundaryNote = document.querySelector("#boundary-note");
 const municipalityList = document.querySelector("#municipality-list");
 const photoGrid = document.querySelector("#photo-grid");
@@ -21,6 +33,7 @@ const lightboxImage = document.querySelector("#lightbox-image");
 const lightboxCaption = document.querySelector("#lightbox-caption");
 const lightboxPrevious = document.querySelector(".lightbox-nav.previous");
 const lightboxNext = document.querySelector(".lightbox-nav.next");
+const mapAttribution = document.querySelector("#map-attribution");
 
 let manifest = { photos: [] };
 let manifestAvailable = true;
@@ -60,6 +73,19 @@ function renderBranchControls() {
   });
 }
 
+function renderCountryContext() {
+  koreaMap.setAttribute("viewBox", `${MAP_VIEWBOX.x} ${MAP_VIEWBOX.y} ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`);
+  COUNTRY_CONTEXT.forEach((province) => {
+    countryContextLayer.append(svgElement("path", {
+      class: "country-province",
+      d: province.path,
+      "fill-rule": province.fillRule,
+      "data-province": province.name
+    }));
+  });
+  mapAttribution.textContent = MAP_ATTRIBUTION;
+}
+
 function renderMap() {
   Object.entries(BRANCHES).forEach(([branchKey, branch]) => {
     const region = svgElement("g", {
@@ -68,21 +94,25 @@ function renderMap() {
       tabindex: "0",
       role: "button",
       "aria-pressed": "false",
-      "aria-label": `${branch.name} 선택. 포함 지역: ${municipalityNames(branchKey).join(", ")}`
+      "aria-label": `${branch.name} 선택. 하위 조직: ${branch.zones.join(", ")}. 지도 표시 행정구역: ${municipalityNames(branchKey).join(", ")}`
     });
     const title = svgElement("title");
-    title.textContent = `${branch.name}: ${municipalityNames(branchKey).join(", ")}`;
+    title.textContent = `${branch.name}. 하위 조직: ${branch.zones.join(", ")}. 지도 범위: ${municipalityNames(branchKey).join(", ")}`;
     region.append(title);
 
     const outlines = svgElement("g", { class: "branch-outlines", "aria-hidden": "true" });
     branch.outlinePaths.forEach((pathData) => {
-      outlines.append(svgElement("path", { class: "branch-halo", d: pathData }));
+      outlines.append(svgElement("path", { class: "branch-halo", d: pathData, "fill-rule": "evenodd" }));
     });
     region.append(outlines);
 
     const municipalities = svgElement("g", { class: "municipalities", "aria-hidden": "true" });
     branch.municipalities.forEach((municipality) => {
-      const path = svgElement("path", { d: municipality.path, "data-city": municipality.name });
+      const path = svgElement("path", {
+        d: municipality.path,
+        "data-city": municipality.name,
+        "fill-rule": municipality.fillRule
+      });
       const pathTitle = svgElement("title");
       pathTitle.textContent = municipality.name;
       path.append(pathTitle);
@@ -93,7 +123,7 @@ function renderMap() {
         x: municipality.label[0],
         y: municipality.label[1]
       });
-      cityLabel.textContent = municipality.name;
+      cityLabel.textContent = municipality.shortName || municipality.name;
       municipalities.append(cityLabel);
     });
     region.append(municipalities);
@@ -145,16 +175,23 @@ function selectBranch(branchKey, { scroll = true } = {}) {
     trigger.classList.toggle("selected", active && trigger.classList.contains("branch-region"));
     trigger.setAttribute("aria-pressed", String(active));
   });
+  const selectedMapRegion = branchMapLayer.querySelector(`.branch-region[data-branch="${branchKey}"]`);
+  if (selectedMapRegion) branchMapLayer.append(selectedMapRegion);
   setCategory("all", { focus: false });
 
   const branch = BRANCHES[branchKey];
   galleryKicker.textContent = branch.english;
   galleryTitle.textContent = branch.name;
   galleryDescription.textContent = branch.description;
-  boundaryNote.textContent = branch.boundaryNote;
-  municipalityList.replaceChildren(...branch.municipalities.map(({ name }) => {
+  zoneList.replaceChildren(...branch.zones.map((name) => {
     const item = document.createElement("li");
     item.textContent = name;
+    return item;
+  }));
+  boundaryNote.textContent = branch.boundaryNote;
+  municipalityList.replaceChildren(...branch.municipalities.map(({ name, shortName: displayName }) => {
+    const item = document.createElement("li");
+    item.textContent = displayName || name;
     return item;
   }));
   renderGallery();
@@ -174,6 +211,10 @@ function clearSelection({ restoreFocus = false } = {}) {
   branchTriggers().forEach((trigger) => {
     trigger.classList.remove("active", "selected");
     trigger.setAttribute("aria-pressed", "false");
+  });
+  BRANCH_KEYS.forEach((branchKey) => {
+    const mapRegion = branchMapLayer.querySelector(`.branch-region[data-branch="${branchKey}"]`);
+    if (mapRegion) branchMapLayer.append(mapRegion);
   });
   if (restoreFocus && previousBranch) {
     document.querySelector(`.branch-chip[data-branch="${previousBranch}"]`)?.focus();
@@ -310,6 +351,7 @@ function moveLightbox(direction) {
 }
 
 renderBranchControls();
+renderCountryContext();
 renderMap();
 galleryPanel.inert = true;
 
