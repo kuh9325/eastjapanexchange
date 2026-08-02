@@ -6,7 +6,9 @@
   "scripts": {
     "assets": "node scripts/generate-gallery-manifest.mjs",
     "dev": "node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/dev-server.mjs --root dist",
+    "test": "node scripts/verify.mjs"
   },
   "engines": {
     "node": ">=18"

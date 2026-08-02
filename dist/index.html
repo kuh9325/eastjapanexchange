@@ -5,47 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f5f1e8" />
     <meta name="description" content="충남·충북·대전방면 청년 활동 사진 전시" />
-    <title>충남·충북·대전 청년 활동 지도</title>
+    <title>마음과 마음을 잇는 청년의 발자취</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#branch-switcher">방면 선택으로 건너뛰기</a>
     <main class="exhibition" id="app">
       <header class="hero-header">
         <p class="eyebrow">KOREA × JAPAN YOUTH EXCHANGE</p>
-        <h1>마음과 마음을 잇는 청년의 발자취</h1>
+        <h1>마음과 마음을 잇는<br class="title-break" /> 청년의 발자취</h1>
         <p class="subtitle">지도에서 방면을 선택해 활동의 순간을 만나보세요.</p>
       </header>
 
-      <nav class="branch-switcher" aria-label="방면 선택">
-        <button class="branch-chip" data-branch="chungnam" type="button">
-          <span class="branch-dot" aria-hidden="true"></span>충남방면
-        </button>
-        <button class="branch-chip" data-branch="chungbuk" type="button">
-          <span class="branch-dot" aria-hidden="true"></span>충북방면
-        </button>
-        <button class="branch-chip" data-branch="daejeon" type="button">
-          <span class="branch-dot" aria-hidden="true"></span>대전방면
-        </button>
-      </nav>
+      <nav class="branch-switcher" id="branch-switcher" aria-label="방면 선택"></nav>
 
-      <section class="stage" aria-live="polite">
+      <section class="stage">
         <section class="map-panel" aria-label="대한민국 지도에서 방면 선택">
           <div class="map-shell">
-            <div class="map-heading">
+            <div class="map-heading" aria-hidden="true">
               <span>REPUBLIC OF KOREA</span>
               <strong>충남 · 충북 · 대전</strong>
             </div>
 
-            <svg class="korea-map" viewBox="0 0 780 760" role="img" aria-labelledby="map-title map-desc">
+            <svg class="korea-map" viewBox="0 0 780 760" role="group" aria-labelledby="map-title map-desc">
               <title id="map-title">대한민국 지도와 충남, 충북, 대전방면</title>
-              <desc id="map-desc">회색 대한민국 지도 위에 충남방면, 충북방면, 대전방면이 서로 다른 색으로 표시되어 있습니다.</desc>
+              <desc id="map-desc">낮은 대비의 대한민국 실루엣 위에 전시 대상 세 방면을 시군 단위의 단순화된 도형으로 표시한 지도입니다.</desc>
               <defs>
-                <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#15203b" flood-opacity="0.18" />
+                <filter id="context-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="9" stdDeviation="11" flood-color="#15203b" flood-opacity="0.13" />
                 </filter>
-                <filter id="selectedShadow" x="-40%" y="-40%" width="180%" height="180%">
-                  <feDropShadow dx="0" dy="18" stdDeviation="15" flood-color="#15203b" flood-opacity="0.30" />
+                <filter id="selected-shadow" x="-45%" y="-45%" width="190%" height="190%">
+                  <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#15203b" flood-opacity="0.34" />
                 </filter>
+                <pattern id="paper-dots" width="18" height="18" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="0.8" fill="#17233b" opacity="0.08" />
+                </pattern>
               </defs>
 
               <g class="country-context" aria-hidden="true">
@@ -55,95 +49,45 @@
                 <path class="country-island small" d="M274 423 C283 415 294 416 301 425 C290 432 280 431 274 423 Z" />
               </g>
 
-              <g class="branch-region branch-chungnam" data-branch="chungnam" tabindex="0" role="button" aria-label="충남방면 선택">
-                <path class="branch-halo" d="M250 315 L303 269 L382 277 L416 327 L402 406 L354 481 L278 458 L225 407 Z" />
-                <g class="municipalities">
-                  <path data-city="태안" d="M225 352 L257 321 L276 353 L259 391 L228 389 Z" />
-                  <path data-city="서산" d="M258 320 L302 300 L320 340 L276 353 Z" />
-                  <path data-city="당진" d="M302 281 L351 278 L355 323 L320 340 L302 300 Z" />
-                  <path data-city="천안" d="M351 278 L393 292 L416 327 L382 347 L355 323 Z" />
-                  <path data-city="아산" d="M320 340 L355 323 L382 347 L360 375 L321 372 Z" />
-                  <path data-city="예산" d="M276 353 L320 340 L321 372 L296 397 L260 391 Z" />
-                  <path data-city="홍성" d="M260 391 L296 397 L292 432 L251 426 L228 389 Z" />
-                  <path data-city="공주" d="M321 372 L360 375 L383 407 L345 431 L292 432 L296 397 Z" />
-                  <path data-city="청양" d="M292 432 L345 431 L331 464 L286 458 L251 426 Z" />
-                  <path data-city="보령" d="M251 426 L286 458 L278 492 L240 467 Z" />
-                  <path data-city="부여" d="M331 464 L345 431 L383 407 L392 447 L354 481 Z" />
-                  <path data-city="논산" d="M354 481 L392 447 L402 476 L378 509 L340 510 Z" />
-                  <path data-city="서천" d="M278 492 L331 464 L340 510 L292 526 L255 507 Z" />
-                </g>
-                <text class="branch-label" x="305" y="390">충남방면</text>
-              </g>
-
-              <g class="branch-region branch-chungbuk" data-branch="chungbuk" tabindex="0" role="button" aria-label="충북방면 선택">
-                <path class="branch-halo" d="M404 286 L465 251 L527 271 L551 320 L532 377 L557 423 L529 488 L469 521 L425 480 L397 420 L416 353 Z" />
-                <g class="municipalities">
-                  <path data-city="진천" d="M404 303 L442 272 L468 300 L451 337 L416 353 Z" />
-                  <path data-city="음성" d="M442 272 L486 252 L527 271 L515 311 L468 300 Z" />
-                  <path data-city="충주" d="M468 300 L515 311 L551 320 L532 377 L489 379 L451 337 Z" />
-                  <path data-city="제천" d="M515 311 L551 320 L559 357 L532 377 Z" />
-                  <path data-city="단양" d="M532 377 L559 357 L573 399 L557 423 L526 412 Z" />
-                  <path data-city="증평" d="M416 353 L451 337 L462 367 L439 387 L407 380 Z" />
-                  <path data-city="청주" d="M407 380 L439 387 L472 403 L458 452 L413 445 L397 420 Z" />
-                  <path data-city="괴산" d="M462 367 L489 379 L526 412 L502 443 L472 403 L439 387 Z" />
-                  <path data-city="보은" d="M413 445 L458 452 L469 487 L425 480 Z" />
-                  <path data-city="영동" d="M469 487 L502 443 L529 488 L489 519 L469 521 Z" />
-                </g>
-                <text class="branch-label" x="476" y="396">충북방면</text>
-              </g>
-
-              <g class="branch-region branch-daejeon" data-branch="daejeon" tabindex="0" role="button" aria-label="대전방면 선택">
-                <g class="branch-halo-group">
-                  <path class="branch-halo" d="M352 333 L407 321 L431 355 L417 407 L373 427 L338 393 Z" />
-                  <path class="branch-halo" d="M369 432 L416 416 L445 450 L425 492 L380 494 L354 465 Z" />
-                </g>
-                <g class="municipalities">
-                  <path data-city="세종" d="M352 333 L394 321 L414 347 L392 370 L355 366 Z" />
-                  <path data-city="대전" d="M355 366 L392 370 L417 407 L373 427 L338 393 Z" />
-                  <path data-city="계룡" d="M354 429 L375 420 L390 441 L369 455 Z" />
-                  <path data-city="금산" d="M369 455 L390 441 L416 416 L445 450 L425 492 L380 494 Z" />
-                  <path data-city="옥천" d="M392 370 L431 355 L437 392 L417 407 Z" />
-                </g>
-                <text class="branch-label" x="382" y="397">대전</text>
-              </g>
+              <g id="branch-map-layer"></g>
 
               <g class="map-annotation" aria-hidden="true">
-                <line x1="175" y1="605" x2="605" y2="605" />
-                <text x="175" y="630">다른 지역은 맥락만 보여주고, 전시 대상 3개 방면에만 집중합니다.</text>
+                <line x1="167" y1="610" x2="612" y2="610" />
+                <text x="167" y="635">전시용 단순화 지도 · 실제 행정 경계와 다를 수 있습니다</text>
               </g>
             </svg>
 
-            <div class="map-legend" aria-label="지도 범례">
-              <span class="legend-item legend-chungnam">충남</span>
-              <span class="legend-item legend-chungbuk">충북</span>
-              <span class="legend-item legend-daejeon">대전</span>
-            </div>
+            <div class="map-legend" id="map-legend" aria-label="지도 범례"></div>
           </div>
         </section>
 
         <section class="gallery-panel" aria-label="활동 사진 전시" aria-hidden="true">
           <div class="gallery-head">
-            <button class="back-button" type="button" aria-label="전체 지도 보기">← 전체 지도</button>
-            <div>
+            <button class="back-button" type="button" aria-label="전체 지도로 돌아가기">
+              <span aria-hidden="true">←</span> 전체 지도
+            </button>
+            <div class="gallery-intro">
               <p class="gallery-kicker" id="gallery-kicker">YOUTH ACTIVITIES</p>
               <h2 id="gallery-title">방면을 선택해 주세요</h2>
               <p id="gallery-description"></p>
+              <p class="boundary-note" id="boundary-note"></p>
+              <ul class="municipality-list" id="municipality-list" aria-label="포함 지역"></ul>
             </div>
           </div>
 
           <div class="category-tabs" role="tablist" aria-label="활동 유형">
-            <button type="button" role="tab" data-category="all" aria-selected="true">전체</button>
-            <button type="button" role="tab" data-category="discussion" aria-selected="false">좌담회</button>
-            <button type="button" role="tab" data-category="school" aria-selected="false">창가청년스쿨</button>
-            <button type="button" role="tab" data-category="future" aria-selected="false">청년미래총회</button>
-            <button type="button" role="tab" data-category="daily" aria-selected="false">평상시 활동</button>
+            <button type="button" role="tab" id="tab-all" data-category="all" aria-controls="photo-grid" aria-selected="true">전체</button>
+            <button type="button" role="tab" id="tab-discussion" data-category="discussion" aria-controls="photo-grid" aria-selected="false" tabindex="-1">좌담회</button>
+            <button type="button" role="tab" id="tab-school" data-category="school" aria-controls="photo-grid" aria-selected="false" tabindex="-1">창가청년스쿨</button>
+            <button type="button" role="tab" id="tab-future" data-category="future" aria-controls="photo-grid" aria-selected="false" tabindex="-1">청년미래총회</button>
+            <button type="button" role="tab" id="tab-daily" data-category="daily" aria-controls="photo-grid" aria-selected="false" tabindex="-1">평상시 활동</button>
           </div>
 
-          <div class="gallery-summary">
+          <div class="gallery-summary" aria-live="polite">
             <span id="photo-count">0장의 기록</span>
-            <span class="swipe-hint">사진을 눌러 크게 볼 수 있습니다.</span>
+            <span id="gallery-status">사진을 눌러 크게 볼 수 있습니다.</span>
           </div>
-          <div class="photo-grid" id="photo-grid"></div>
+          <div class="photo-grid" id="photo-grid" role="tabpanel" aria-labelledby="tab-all" tabindex="0"></div>
         </section>
       </section>
 
@@ -153,7 +97,7 @@
       </footer>
     </main>
 
-    <dialog class="lightbox" id="lightbox">
+    <dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-caption">
       <button class="lightbox-close" type="button" aria-label="사진 닫기">×</button>
       <button class="lightbox-nav previous" type="button" aria-label="이전 사진">‹</button>
       <figure>
