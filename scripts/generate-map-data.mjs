@@ -5,8 +5,10 @@ import polygonClipping from "polygon-clipping";
 import {
   ADMIN_SOURCES,
   BRANCH_CONFIG,
+  BRANCH_GEOMETRY_FILTERS,
   CATEGORY_CONFIG,
   MAP_PADDING,
+  MAP_DISPLAY_VIEWBOX,
   MAP_SOURCE,
   MAP_VIEWBOX,
   NATIONAL_SOURCE_FILE
@@ -263,6 +265,21 @@ function multiPolygonToPaths(multiPolygon) {
   return multiPolygon.map((polygon) => ringsToPath(polygon));
 }
 
+function largestOuterRing(multiPolygon, label) {
+  const polygon = [...multiPolygon].sort((a, b) => Math.abs(signedArea(b[0])) - Math.abs(signedArea(a[0])))[0];
+  if (!polygon?.[0]) throw new Error(`${label}: 본토 기준 polygon을 찾지 못했습니다.`);
+  return polygon[0];
+}
+
+function removeDetachedArtifacts(multiPolygon, filter) {
+  if (!filter) return multiPolygon;
+  return multiPolygon.filter((polygon) => {
+    const area = Math.abs(signedArea(polygon[0]));
+    const center = polygonCentroid(polygon[0]);
+    return !(area <= filter.detachedMaxArea && center[0] >= filter.detachedMinCenterX);
+  });
+}
+
 const nationalRaw = await fs.readFile(path.join(vendorRoot, NATIONAL_SOURCE_FILE), "utf8");
 const nationalSvg = parseSvg(nationalRaw, NATIONAL_SOURCE_FILE);
 const toApp = createAppProjection(nationalSvg.viewBox);
@@ -277,10 +294,11 @@ const countryContext = nationalSvg.paths.map((item) => ({
 const generatedBranches = Object.fromEntries(Object.entries(BRANCH_CONFIG).map(([key, metadata]) => [key, {
   ...metadata,
   label: null,
+  fillPaths: [],
   outlinePaths: [],
   municipalities: []
 }]));
-const branchGeometries = Object.fromEntries(Object.keys(BRANCH_CONFIG).map((key) => [key, []]));
+const branchCoverageGeometries = Object.fromEntries(Object.keys(BRANCH_CONFIG).map((key) => [key, []]));
 
 for (const source of ADMIN_SOURCES) {
   const nationalProvince = nationalByName.get(source.province);
@@ -288,9 +306,19 @@ for (const source of ADMIN_SOURCES) {
   const raw = await fs.readFile(path.join(vendorRoot, source.file), "utf8");
   const localSvg = parseSvg(raw, source.file);
   const localRings = localSvg.paths.flatMap((item) => item.rings);
-  const project = createProvinceProjection(localRings, nationalProvince.rings, toApp);
+  let projectionLocalRings = localRings;
+  let projectionNationalRings = nationalProvince.rings;
+  if (source.alignProjectionByLargestPolygon) {
+    const localGeometry = polygonClipping.union(...localSvg.paths.map((unit) => ringsToMultiPolygon(unit.rings)));
+    const nationalSourceGeometry = ringsToMultiPolygon(nationalProvince.rings);
+    projectionLocalRings = [largestOuterRing(localGeometry, `${source.province} 시군구 SVG`)];
+    projectionNationalRings = [largestOuterRing(nationalSourceGeometry, `${source.province} 전국 SVG`)];
+  }
+  const project = createProvinceProjection(projectionLocalRings, projectionNationalRings, toApp);
+  const nationalGeometry = ringsToMultiPolygon(transformRings(nationalProvince.rings, toApp));
   const includedNames = source.include ? new Set(source.include) : null;
   const excludedNames = new Set(source.exclude || []);
+  let defaultCoverage = source.defaultBranch && !source.coverageFromIncludedUnits ? nationalGeometry : [];
 
   if (includedNames) {
     for (const name of includedNames) {
@@ -307,13 +335,25 @@ for (const source of ADMIN_SOURCES) {
 
   for (const unit of localSvg.paths) {
     if (includedNames && !includedNames.has(unit.id)) continue;
-    if (excludedNames.has(unit.id)) continue;
-    const branchKey = source.overrides[unit.id] || source.defaultBranch;
-    if (!branchKey) continue;
-    if (!generatedBranches[branchKey]) throw new Error(`${unit.id}: 알 수 없는 방면 ${branchKey}`);
     const rings = transformRings(unit.rings, project);
     const geometry = ringsToMultiPolygon(rings);
     if (!geometry.length) throw new Error(`${unit.id}: polygon geometry를 생성하지 못했습니다.`);
+    const clippedGeometry = polygonClipping.intersection(geometry, nationalGeometry);
+    const branchKey = excludedNames.has(unit.id) ? null : (source.overrides[unit.id] || source.defaultBranch);
+
+    if (source.defaultBranch && !source.coverageFromIncludedUnits && branchKey !== source.defaultBranch && clippedGeometry.length) {
+      defaultCoverage = polygonClipping.difference(defaultCoverage, clippedGeometry);
+    }
+    if (source.coverageFromIncludedUnits && branchKey === source.defaultBranch && clippedGeometry.length) {
+      defaultCoverage.push(...clippedGeometry);
+    }
+    if (branchKey && branchKey !== source.defaultBranch && clippedGeometry.length) {
+      if (!generatedBranches[branchKey]) throw new Error(`${unit.id}: 알 수 없는 방면 ${branchKey}`);
+      branchCoverageGeometries[branchKey].push(clippedGeometry);
+    }
+
+    if (!branchKey) continue;
+    if (!generatedBranches[branchKey]) throw new Error(`${unit.id}: 알 수 없는 방면 ${branchKey}`);
     const label = visualCenter(geometry).map(round);
     generatedBranches[branchKey].municipalities.push({
       id: `${source.province}-${unit.id}`,
@@ -324,14 +364,23 @@ for (const source of ADMIN_SOURCES) {
       fillRule: unit.fillRule,
       label
     });
-    branchGeometries[branchKey].push(geometry);
+  }
+
+  if (source.defaultBranch && defaultCoverage.length) {
+    branchCoverageGeometries[source.defaultBranch].push(defaultCoverage);
   }
 }
 
 for (const branchKey of Object.keys(generatedBranches)) {
-  const geometries = branchGeometries[branchKey];
+  const geometries = branchCoverageGeometries[branchKey];
   if (!geometries.length) throw new Error(`${branchKey}: 행정구역 도형이 없습니다.`);
-  const dissolved = polygonClipping.union(...geometries);
+  const dissolved = removeDetachedArtifacts(
+    polygonClipping.union(...geometries),
+    BRANCH_GEOMETRY_FILTERS[branchKey]
+  );
+  generatedBranches[branchKey].fillPaths = multiPolygonToPaths(dissolved);
+  // 외곽선도 최종 방면 색면에서 직접 생성한다. 도 전체 외곽선을 색면으로
+  // clip하면 옥천·영동처럼 제외된 지역과 맞닿는 새 경계가 끊어진다.
   generatedBranches[branchKey].outlinePaths = multiPolygonToPaths(dissolved);
   generatedBranches[branchKey].label = visualCenter(dissolved).map(round);
 }
@@ -339,6 +388,7 @@ for (const branchKey of Object.keys(generatedBranches)) {
 const header = `/**\n * AUTO-GENERATED by scripts/generate-map-data.mjs — DO NOT EDIT BY HAND.\n * Source: ${MAP_SOURCE.repository} @ ${MAP_SOURCE.commit}\n * ${MAP_SOURCE.attribution}\n */`;
 const output = `${header}
 export const MAP_VIEWBOX = Object.freeze(${JSON.stringify(MAP_VIEWBOX)});
+export const MAP_DISPLAY_VIEWBOX = Object.freeze(${JSON.stringify(MAP_DISPLAY_VIEWBOX)});
 export const MAP_ATTRIBUTION = ${JSON.stringify(MAP_SOURCE.attribution)};
 export const COUNTRY_CONTEXT = Object.freeze(${JSON.stringify(countryContext, null, 2)});
 export const BRANCHES = Object.freeze(${JSON.stringify(generatedBranches, null, 2)});

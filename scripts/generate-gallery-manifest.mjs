@@ -72,9 +72,19 @@ for (const branch of BRANCH_KEYS) {
   }
 }
 
+let generatedAt = new Date().toISOString();
+try {
+  const existing = JSON.parse(await fs.readFile(outputPath, "utf8"));
+  if (existing && existing.generatedAt && JSON.stringify(existing.photos) === JSON.stringify(photos)) {
+    generatedAt = existing.generatedAt;
+  }
+} catch {
+  // 첫 생성이거나 기존 manifest가 손상된 경우 현재 생성 시각을 사용한다.
+}
+
 const manifest = {
   version: 1,
-  generatedAt: new Date().toISOString(),
+  generatedAt,
   photos
 };
 await fs.mkdir(path.dirname(outputPath), { recursive: true });

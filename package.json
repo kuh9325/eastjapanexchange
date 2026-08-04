@@ -9,12 +9,14 @@
     "dev": "node scripts/generate-map-data.mjs && node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/dev-server.mjs --root dist",
+    "kiosk": "node scripts/kiosk-server.mjs",
     "test": "node scripts/verify.mjs"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "esbuild": "0.25.8",
     "polygon-clipping": "0.15.7"
   },
   "overrides": {

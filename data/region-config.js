@@ -4,6 +4,7 @@
  * statgarten/maps 원본을 결합해 data/regions.js에 생성한다.
  */
 export const MAP_VIEWBOX = Object.freeze({ x: 0, y: 0, width: 780, height: 760 });
+export const MAP_DISPLAY_VIEWBOX = Object.freeze({ x: 20, y: 28, width: 650, height: 700 });
 export const MAP_PADDING = 38;
 
 export const MAP_SOURCE = Object.freeze({
@@ -50,6 +51,12 @@ export const CATEGORY_CONFIG = Object.freeze({
   daily: { name: "평상시 활동", shortName: "평상시" }
 });
 
+// 서로 다른 단순화 단계의 SVG를 boolean 연산할 때 예외 지역 가장자리에
+// 생기는 작은 분리 조각만 제거한다. 서해의 실제 섬은 x 범위 밖이라 보존된다.
+export const BRANCH_GEOMETRY_FILTERS = Object.freeze({
+  chungnam: Object.freeze({ detachedMaxArea: 5, detachedMinCenterX: 280 })
+});
+
 export const NATIONAL_SOURCE_FILE = "전국_시도_경계.svg";
 
 export const ADMIN_SOURCES = Object.freeze([
@@ -69,6 +76,7 @@ export const ADMIN_SOURCES = Object.freeze([
     province: "충청남도",
     file: "충청남도_시군구_경계.svg",
     defaultBranch: "chungnam",
+    alignProjectionByLargestPolygon: true,
     overrides: {
       "계룡시": "daejeon",
       "금산군": "daejeon"
@@ -78,6 +86,7 @@ export const ADMIN_SOURCES = Object.freeze([
     province: "충청북도",
     file: "충청북도_시군구_경계.svg",
     defaultBranch: "chungbuk",
+    coverageFromIncludedUnits: true,
     exclude: ["영동군"],
     overrides: {
       "옥천군": "daejeon"

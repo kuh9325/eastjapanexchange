@@ -5,52 +5,92 @@ import {
   CATEGORY_KEYS,
   COUNTRY_CONTEXT,
   MAP_ATTRIBUTION,
+  MAP_DISPLAY_VIEWBOX,
   MAP_VIEWBOX,
   municipalityNames
 } from "../data/regions.js";
+import { EXHIBITION_CONTENT } from "../data/exhibition-content.js";
+import {
+  EMPTY_FIXTURE_CONTENT,
+  EMPTY_FIXTURE_MANIFEST,
+  FULL_FIXTURE_CONTENT,
+  FULL_FIXTURE_MANIFEST
+} from "../data/fixture-content.js";
+import {
+  createDialogController,
+  initializeDebugMode,
+  registerOfflineWorker,
+  replaceChildren,
+  setRegionInteractive,
+  setRuntimeStatus
+} from "./compatibility.js";
+import { initializeIntro } from "./intro.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const query = new URLSearchParams(window.location.search);
+const fixtureMode = query.get("fixture");
+const previewMode = query.get("intro") === "preview";
+const debugMode = query.get("debug") === "1";
+
 const app = document.querySelector("#app");
 const branchSwitcher = document.querySelector("#branch-switcher");
 const koreaMap = document.querySelector(".korea-map");
 const countryContextLayer = document.querySelector("#country-context-layer");
 const branchMapLayer = document.querySelector("#branch-map-layer");
+const introKoreaLayer = document.querySelector("#intro-korea-layer");
 const mapLegend = document.querySelector("#map-legend");
 const galleryPanel = document.querySelector(".gallery-panel");
 const galleryTitle = document.querySelector("#gallery-title");
 const galleryKicker = document.querySelector("#gallery-kicker");
 const galleryDescription = document.querySelector("#gallery-description");
-const zoneList = document.querySelector("#zone-list");
-const boundaryNote = document.querySelector("#boundary-note");
-const municipalityList = document.querySelector("#municipality-list");
+const branchSlogan = document.querySelector("#branch-slogan");
+const leaderSection = document.querySelector("#leader-section");
+const leaderGrid = document.querySelector("#leader-grid");
+const meetingSection = document.querySelector("#meeting-section");
+const meetingContent = document.querySelector("#meeting-content");
 const photoGrid = document.querySelector("#photo-grid");
 const photoCount = document.querySelector("#photo-count");
 const galleryStatus = document.querySelector("#gallery-status");
-const categoryButtons = [...document.querySelectorAll("[data-category]")];
+const categoryButtons = Array.from(document.querySelectorAll("[data-category]"));
 const backButton = document.querySelector(".back-button");
 const lightbox = document.querySelector("#lightbox");
 const lightboxImage = document.querySelector("#lightbox-image");
+const lightboxError = document.querySelector("#lightbox-error");
 const lightboxCaption = document.querySelector("#lightbox-caption");
 const lightboxPrevious = document.querySelector(".lightbox-nav.previous");
 const lightboxNext = document.querySelector(".lightbox-nav.next");
+const lightboxClose = document.querySelector(".lightbox-close");
 const mapAttribution = document.querySelector("#map-attribution");
 
 let manifest = { photos: [] };
+let content = EXHIBITION_CONTENT;
 let manifestAvailable = true;
 let selectedBranch = null;
 let selectedCategory = "all";
 let visiblePhotos = [];
+let lightboxItems = [];
 let lightboxIndex = 0;
 let lightboxOpener = null;
 
-const svgElement = (name, attributes = {}) => {
+const svgElement = (name, attributes) => {
   const element = document.createElementNS(SVG_NS, name);
-  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
+  const source = attributes || {};
+  Object.keys(source).forEach((key) => element.setAttribute(key, String(source[key])));
   return element;
 };
 
+function humaniseFilename(filename) {
+  return filename
+    .replace(/\.[^.]+$/, "")
+    .replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim() || "청년 활동의 순간";
+}
+
 function renderBranchControls() {
-  Object.entries(BRANCHES).forEach(([branchKey, branch]) => {
+  Object.keys(BRANCHES).forEach((branchKey) => {
+    const branch = BRANCHES[branchKey];
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "branch-chip";
@@ -63,80 +103,131 @@ function renderBranchControls() {
     dot.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.textContent = branch.name;
-    chip.append(dot, label);
-    branchSwitcher.append(chip);
+    chip.appendChild(dot);
+    chip.appendChild(label);
+    branchSwitcher.appendChild(chip);
 
     const legend = document.createElement("span");
     legend.className = `legend-item legend-${branchKey}`;
     legend.textContent = branch.shortName;
-    mapLegend.append(legend);
+    mapLegend.appendChild(legend);
+  });
+}
+
+function appendCountryContext(layer, includeMetadata) {
+  COUNTRY_CONTEXT.forEach((province) => {
+    const attributes = {
+      class: "country-province",
+      d: province.path,
+      "fill-rule": province.fillRule || "evenodd"
+    };
+    if (includeMetadata && debugMode) attributes["data-debug-province"] = province.name;
+    layer.appendChild(svgElement("path", attributes));
   });
 }
 
 function renderCountryContext() {
-  koreaMap.setAttribute("viewBox", `${MAP_VIEWBOX.x} ${MAP_VIEWBOX.y} ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`);
-  COUNTRY_CONTEXT.forEach((province) => {
-    countryContextLayer.append(svgElement("path", {
-      class: "country-province",
-      d: province.path,
-      "fill-rule": province.fillRule,
-      "data-province": province.name
-    }));
-  });
+  koreaMap.setAttribute("viewBox", `${MAP_DISPLAY_VIEWBOX.x} ${MAP_DISPLAY_VIEWBOX.y} ${MAP_DISPLAY_VIEWBOX.width} ${MAP_DISPLAY_VIEWBOX.height}`);
+  appendCountryContext(countryContextLayer, true);
+  appendCountryContext(introKoreaLayer, false);
   mapAttribution.textContent = MAP_ATTRIBUTION;
 }
 
 function renderMap() {
-  Object.entries(BRANCHES).forEach(([branchKey, branch]) => {
+  Object.keys(BRANCHES).forEach((branchKey) => {
+    const branch = BRANCHES[branchKey];
+    const branchCopy = content[branchKey] || {};
+    const accessibleDescription = branchCopy.introduction || branch.description;
     const region = svgElement("g", {
       class: `branch-region branch-${branchKey}`,
       "data-branch": branchKey,
       tabindex: "0",
       role: "button",
       "aria-pressed": "false",
-      "aria-label": `${branch.name} 선택. 하위 조직: ${branch.zones.join(", ")}. 지도 표시 행정구역: ${municipalityNames(branchKey).join(", ")}`
+      "aria-label": `${branch.name} 선택. ${accessibleDescription}`
     });
     const title = svgElement("title");
-    title.textContent = `${branch.name}. 하위 조직: ${branch.zones.join(", ")}. 지도 범위: ${municipalityNames(branchKey).join(", ")}`;
-    region.append(title);
+    title.textContent = `${branch.name}. ${accessibleDescription}`;
+    region.appendChild(title);
 
-    const outlines = svgElement("g", { class: "branch-outlines", "aria-hidden": "true" });
-    branch.outlinePaths.forEach((pathData) => {
-      outlines.append(svgElement("path", { class: "branch-halo", d: pathData, "fill-rule": "evenodd" }));
+    const clipId = `branch-clip-${branchKey}`;
+    const clipPath = svgElement("clipPath", { id: clipId, clipPathUnits: "userSpaceOnUse" });
+    branch.fillPaths.forEach((pathData) => {
+      clipPath.appendChild(svgElement("path", { d: pathData, "fill-rule": "evenodd", "clip-rule": "evenodd" }));
     });
-    region.append(outlines);
+    region.appendChild(clipPath);
 
-    const municipalities = svgElement("g", { class: "municipalities", "aria-hidden": "true" });
+    const zoomViewport = svgElement("g", {
+      class: "branch-zoom-viewport",
+      "aria-hidden": "true",
+      "clip-path": `url(#${clipId})`
+    });
+    const zoomLayer = svgElement("g", { class: "branch-zoom-layer" });
+    const fills = svgElement("g", { class: "branch-fills" });
+    branch.fillPaths.forEach((pathData) => {
+      fills.appendChild(svgElement("path", { class: "branch-fill", d: pathData, "fill-rule": "evenodd" }));
+    });
+    zoomLayer.appendChild(fills);
+
+    const municipalities = svgElement("g", {
+      class: "municipalities"
+    });
+    const hitAreas = svgElement("g", {
+      class: "branch-hit-areas",
+      "aria-hidden": "true",
+      "clip-path": `url(#${clipId})`
+    });
     branch.municipalities.forEach((municipality) => {
-      const path = svgElement("path", {
+      const pathAttributes = {
         d: municipality.path,
-        "data-city": municipality.name,
-        "fill-rule": municipality.fillRule
-      });
-      const pathTitle = svgElement("title");
-      pathTitle.textContent = municipality.name;
-      path.append(pathTitle);
-      municipalities.append(path);
-
-      const cityLabel = svgElement("text", {
-        class: "city-label",
-        x: municipality.label[0],
-        y: municipality.label[1]
-      });
-      cityLabel.textContent = municipality.shortName || municipality.name;
-      municipalities.append(cityLabel);
+        "fill-rule": municipality.fillRule || "evenodd"
+      };
+      if (debugMode) pathAttributes["data-debug-city"] = municipality.name;
+      municipalities.appendChild(svgElement("path", pathAttributes));
+      hitAreas.appendChild(svgElement("path", {
+        class: "branch-hit-area",
+        d: municipality.path,
+        "fill-rule": municipality.fillRule || "evenodd",
+        "vector-effect": "non-scaling-stroke"
+      }));
     });
-    region.append(municipalities);
+    zoomLayer.appendChild(municipalities);
+    zoomViewport.appendChild(zoomLayer);
+    region.appendChild(zoomViewport);
 
-    const [labelX, labelY] = branch.label;
-    const label = svgElement("text", { class: "branch-label", x: labelX, y: labelY });
+    const outlines = svgElement("g", {
+      class: "branch-outlines",
+      "aria-hidden": "true"
+    });
+    branch.outlinePaths.forEach((pathData) => {
+      outlines.appendChild(svgElement("path", { class: "branch-halo", d: pathData, "fill-rule": "evenodd" }));
+    });
+    region.appendChild(outlines);
+    region.appendChild(hitAreas);
+
+    const label = svgElement("text", { class: "branch-label", x: branch.label[0], y: branch.label[1], "aria-hidden": "true" });
     label.textContent = branch.name;
-    region.append(label);
-    branchMapLayer.append(region);
+    region.appendChild(label);
+    branchMapLayer.appendChild(region);
   });
+  if (debugMode) {
+    setRuntimeStatus("mapData", BRANCH_KEYS.map((key) => `${BRANCHES[key].name}: ${municipalityNames(key).join(", ")}`).join(" / "));
+  }
 }
 
 async function loadManifest() {
+  if (fixtureMode === "empty") {
+    manifest = EMPTY_FIXTURE_MANIFEST;
+    content = EMPTY_FIXTURE_CONTENT;
+    setRuntimeStatus("manifest", "empty fixture · 사진 0장");
+    return;
+  }
+  if (fixtureMode === "full") {
+    manifest = FULL_FIXTURE_MANIFEST;
+    content = FULL_FIXTURE_CONTENT;
+    setRuntimeStatus("manifest", `full fixture · 사진 ${manifest.photos.length}장`);
+    return;
+  }
   try {
     const response = await fetch("./assets/gallery-manifest.json", { cache: "no-store" });
     if (!response.ok) throw new Error(`manifest HTTP ${response.status}`);
@@ -145,143 +236,157 @@ async function loadManifest() {
     manifest = {
       ...result,
       photos: result.photos.filter((photo) => (
-        BRANCH_KEYS.includes(photo.branch)
-        && CATEGORY_KEYS.includes(photo.category)
+        BRANCH_KEYS.indexOf(photo.branch) >= 0
+        && CATEGORY_KEYS.indexOf(photo.category) >= 0
         && typeof photo.src === "string"
       ))
     };
+    setRuntimeStatus("manifest", `성공 · 사진 ${manifest.photos.length}장`);
   } catch (error) {
     manifestAvailable = false;
     manifest = { photos: [] };
+    setRuntimeStatus("manifest", `실패 · ${error.message}`);
     console.info("사진 manifest를 읽지 못해 안내 카드를 표시합니다.", error.message);
   }
 }
 
 function branchTriggers() {
-  return [...document.querySelectorAll("[data-branch]")];
+  return Array.from(document.querySelectorAll("[data-branch]"));
 }
 
-function selectBranch(branchKey, { scroll = true } = {}) {
-  if (!BRANCHES[branchKey]) return;
-  selectedBranch = branchKey;
-  app.dataset.branch = branchKey;
-  app.classList.add("has-selection");
-  galleryPanel.inert = false;
-  galleryPanel.setAttribute("aria-hidden", "false");
+const SELECTED_BRANCH_SCALE = 1.035;
 
-  branchTriggers().forEach((trigger) => {
-    const active = trigger.dataset.branch === branchKey;
-    trigger.classList.toggle("active", active);
-    trigger.classList.toggle("selected", active && trigger.classList.contains("branch-region"));
-    trigger.setAttribute("aria-pressed", String(active));
-  });
-  const selectedMapRegion = branchMapLayer.querySelector(`.branch-region[data-branch="${branchKey}"]`);
-  if (selectedMapRegion) branchMapLayer.append(selectedMapRegion);
-  setCategory("all", { focus: false });
-
-  const branch = BRANCHES[branchKey];
-  galleryKicker.textContent = branch.english;
-  galleryTitle.textContent = branch.name;
-  galleryDescription.textContent = branch.description;
-  zoneList.replaceChildren(...branch.zones.map((name) => {
-    const item = document.createElement("li");
-    item.textContent = name;
-    return item;
-  }));
-  boundaryNote.textContent = branch.boundaryNote;
-  municipalityList.replaceChildren(...branch.municipalities.map(({ name, shortName: displayName }) => {
-    const item = document.createElement("li");
-    item.textContent = displayName || name;
-    return item;
-  }));
-  renderGallery();
-
-  if (scroll && window.matchMedia("(max-width: 1080px)").matches) {
-    requestAnimationFrame(() => galleryPanel.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }
-}
-
-function clearSelection({ restoreFocus = false } = {}) {
-  const previousBranch = selectedBranch;
-  selectedBranch = null;
-  delete app.dataset.branch;
-  app.classList.remove("has-selection");
-  galleryPanel.inert = true;
-  galleryPanel.setAttribute("aria-hidden", "true");
-  branchTriggers().forEach((trigger) => {
-    trigger.classList.remove("active", "selected");
-    trigger.setAttribute("aria-pressed", "false");
-  });
-  BRANCH_KEYS.forEach((branchKey) => {
-    const mapRegion = branchMapLayer.querySelector(`.branch-region[data-branch="${branchKey}"]`);
-    if (mapRegion) branchMapLayer.append(mapRegion);
-  });
-  if (restoreFocus && previousBranch) {
-    document.querySelector(`.branch-chip[data-branch="${previousBranch}"]`)?.focus();
-  }
-}
-
-function humaniseFilename(filename) {
-  return filename
-    .replace(/\.[^.]+$/, "")
-    .replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim() || "청년 활동의 순간";
-}
-
-function renderGallery() {
-  if (!selectedBranch) return;
-  visiblePhotos = manifest.photos.filter((photo) => (
-    photo.branch === selectedBranch
-    && (selectedCategory === "all" || photo.category === selectedCategory)
-  ));
-
-  photoGrid.replaceChildren();
-  photoCount.textContent = `${visiblePhotos.length}장의 기록`;
-  galleryStatus.textContent = manifestAvailable
-    ? "사진을 눌러 크게 볼 수 있습니다."
-    : "사진 목록을 불러오지 못했습니다. 안내 카드를 표시합니다.";
-
-  if (!visiblePhotos.length) {
-    renderPlaceholders();
+function setBranchMapTransform(region, active) {
+  if (!region || !region.classList.contains("branch-region")) return;
+  const zoomLayer = region.querySelector(".branch-zoom-layer");
+  region.removeAttribute("transform");
+  if (!zoomLayer) return;
+  if (!active) {
+    zoomLayer.removeAttribute("transform");
     return;
   }
+  const branch = BRANCHES[region.dataset.branch];
+  if (!branch) return;
+  const centerX = branch.label[0];
+  const centerY = branch.label[1];
+  zoomLayer.setAttribute(
+    "transform",
+    `translate(${centerX} ${centerY}) scale(${SELECTED_BRANCH_SCALE}) translate(${-centerX} ${-centerY})`
+  );
+}
 
-  visiblePhotos.forEach((photo, index) => {
-    const caption = photo.caption || humaniseFilename(photo.filename || "");
+function photoItem(source, fallbackCaption, detail) {
+  const caption = source.caption || fallbackCaption;
+  return {
+    src: source.full || source.src || source.photo,
+    alt: source.alt || caption,
+    caption,
+    detail: detail || ""
+  };
+}
+
+function imageWithFallback(source, alt, className, onLoad, onError) {
+  const img = document.createElement("img");
+  img.className = className || "";
+  img.src = source;
+  img.alt = alt;
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.addEventListener("load", () => {
+    if (typeof onLoad === "function") onLoad(img);
+  }, { once: true });
+  img.addEventListener("error", () => {
+    img.hidden = true;
+    if (typeof onError === "function") onError(img);
+  }, { once: true });
+  return img;
+}
+
+function renderLeaders(branchKey) {
+  const leaders = ((content[branchKey] && content[branchKey].leaders) || []).slice(0, 4);
+  replaceChildren(leaderGrid, []);
+  leaderSection.hidden = leaders.length === 0;
+  if (!leaders.length) return;
+
+  const cards = [];
+  leaders.forEach((leader, index) => {
     const card = document.createElement("button");
     card.type = "button";
-    card.className = `photo-card ${index % 7 === 0 ? "wide" : ""} ${index % 9 === 5 ? "tall" : ""}`.trim();
-    card.style.setProperty("--delay", `${Math.min(index, 12) * 45}ms`);
-    card.dataset.photoIndex = String(index);
-    card.setAttribute("aria-label", `${caption} 사진 크게 보기`);
+    card.className = "leader-card";
+    card.setAttribute("aria-label", `${leader.name || `간부 사진 ${index + 1}`} 크게 보기`);
+    card.setAttribute("aria-disabled", "true");
 
-    const img = document.createElement("img");
-    img.src = photo.src;
-    img.alt = photo.alt || caption;
-    img.loading = index < 5 ? "eager" : "lazy";
-    img.decoding = "async";
-    img.addEventListener("error", () => {
-      img.hidden = true;
-      card.classList.add("image-missing");
-      card.setAttribute("aria-label", `${caption}. 이미지 파일을 불러올 수 없습니다.`);
-    }, { once: true });
+    const frame = document.createElement("span");
+    frame.className = "leader-photo-frame";
+    const placeholder = document.createElement("span");
+    placeholder.className = "leader-placeholder";
+    placeholder.setAttribute("aria-hidden", "true");
+    placeholder.innerHTML = "<span></span>사진 준비 중";
+    frame.appendChild(placeholder);
 
-    const fallback = document.createElement("span");
-    fallback.className = "image-fallback";
-    fallback.textContent = "이미지를 불러올 수 없습니다";
+    const item = photoItem(leader, leader.name || `4부 간부 사진 ${index + 1}`, leader.role || "4부 간부");
+    if (item.src) {
+      const image = imageWithFallback(item.src, item.alt, "leader-photo", () => {
+        card.classList.add("has-image");
+        card.removeAttribute("aria-disabled");
+      });
+      if (leader.objectPosition) image.style.objectPosition = leader.objectPosition;
+      frame.appendChild(image);
+    }
 
-    const meta = document.createElement("span");
-    meta.className = "photo-meta";
-    const title = document.createElement("strong");
-    title.textContent = caption;
-    const type = document.createElement("span");
-    type.textContent = CATEGORIES[photo.category]?.name || "활동 기록";
-    meta.append(title, type);
-    card.append(img, fallback, meta);
-    photoGrid.append(card);
+    if (leader.name || leader.role) {
+      const meta = document.createElement("span");
+      meta.className = "leader-meta";
+      if (leader.name) {
+        const name = document.createElement("strong");
+        name.textContent = leader.name;
+        meta.appendChild(name);
+      }
+      if (leader.role) {
+        const role = document.createElement("span");
+        role.textContent = leader.role;
+        meta.appendChild(role);
+      }
+      card.appendChild(frame);
+      card.appendChild(meta);
+    } else {
+      card.appendChild(frame);
+    }
+
+    card.addEventListener("click", () => {
+      if (!card.classList.contains("has-image")) return;
+      const loaded = cards.filter((entry) => entry.card.classList.contains("has-image")).map((entry) => entry.item);
+      const selectedIndex = loaded.indexOf(item);
+      openLightbox(loaded, selectedIndex, card);
+    });
+    cards.push({ card, item });
+    leaderGrid.appendChild(card);
   });
+}
+
+function renderMeeting(branchKey) {
+  const meeting = content[branchKey] && content[branchKey].meetingPhoto;
+  replaceChildren(meetingContent, []);
+  meetingSection.hidden = !meeting || (!meeting.src && !meeting.photo);
+  if (!meeting || (!meeting.src && !meeting.photo)) return;
+
+  const item = photoItem(meeting, `${BRANCHES[branchKey].name} 방면운영회의`, "방면운영회의");
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "meeting-card";
+  card.setAttribute("aria-label", `${item.caption} 사진 크게 보기`);
+  const image = imageWithFallback(item.src, item.alt, "meeting-photo", () => card.classList.add("has-image"), () => {
+    meetingSection.hidden = true;
+  });
+  const caption = document.createElement("span");
+  caption.className = "meeting-caption";
+  caption.textContent = item.caption;
+  card.appendChild(image);
+  card.appendChild(caption);
+  card.addEventListener("click", () => {
+    if (card.classList.contains("has-image")) openLightbox([item], 0, card);
+  });
+  meetingContent.appendChild(card);
 }
 
 function renderPlaceholders() {
@@ -290,7 +395,6 @@ function renderPlaceholders() {
     const category = CATEGORIES[categoryKey];
     const card = document.createElement("article");
     card.className = `placeholder-card placeholder-${categoryKey}`;
-
     const number = document.createElement("span");
     number.className = "placeholder-number";
     number.textContent = String(index + 1).padStart(2, "0");
@@ -305,114 +409,258 @@ function renderPlaceholders() {
     title.textContent = `${BRANCHES[selectedBranch].shortName}의 다음 장면을 기다립니다`;
     const copy = document.createElement("span");
     copy.className = "placeholder-copy";
-    copy.textContent = `assets/gallery/${selectedBranch}/${categoryKey}/ 폴더에 사진을 추가해 주세요.`;
-    card.append(number, motif, label, title, copy);
-    photoGrid.append(card);
+    copy.textContent = "활동 사진이 준비되면 이 자리에 전시됩니다.";
+    card.appendChild(number);
+    card.appendChild(motif);
+    card.appendChild(label);
+    card.appendChild(title);
+    card.appendChild(copy);
+    photoGrid.appendChild(card);
   });
 }
 
-function setCategory(category, { focus = false } = {}) {
+function renderGallery() {
+  if (!selectedBranch) return;
+  visiblePhotos = manifest.photos.filter((photo) => (
+    photo.branch === selectedBranch
+    && (selectedCategory === "all" || photo.category === selectedCategory)
+  ));
+  replaceChildren(photoGrid, []);
+  photoCount.textContent = `${visiblePhotos.length}장의 기록`;
+  galleryStatus.textContent = manifestAvailable
+    ? "사진을 눌러 크게 볼 수 있습니다."
+    : "사진 목록을 불러오지 못했습니다. 안내 카드를 표시합니다.";
+  if (!visiblePhotos.length) {
+    renderPlaceholders();
+    return;
+  }
+
+  visiblePhotos.forEach((photo, index) => {
+    const caption = photo.caption || humaniseFilename(photo.filename || "");
+    const item = photoItem(photo, caption, CATEGORIES[photo.category] ? CATEGORIES[photo.category].name : "활동 기록");
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `photo-card ${index % 7 === 0 ? "wide" : ""} ${index % 9 === 5 ? "tall" : ""}`.trim();
+    card.dataset.photoIndex = String(index);
+    card.setAttribute("aria-label", `${caption} 사진 크게 보기`);
+    const img = imageWithFallback(photo.thumbnail || photo.src, item.alt, "", null, () => {
+      card.classList.add("image-missing");
+      card.setAttribute("aria-disabled", "true");
+      card.setAttribute("aria-label", `${caption}. 이미지 파일을 불러올 수 없습니다.`);
+    });
+    if (index < 2) img.loading = "eager";
+    const fallback = document.createElement("span");
+    fallback.className = "image-fallback";
+    fallback.textContent = "이미지를 준비하고 있습니다";
+    const meta = document.createElement("span");
+    meta.className = "photo-meta";
+    const title = document.createElement("strong");
+    title.textContent = caption;
+    const type = document.createElement("span");
+    type.textContent = item.detail;
+    meta.appendChild(title);
+    meta.appendChild(type);
+    card.appendChild(img);
+    card.appendChild(fallback);
+    card.appendChild(meta);
+    photoGrid.appendChild(card);
+  });
+}
+
+function setCategory(category, options) {
+  const config = options || {};
   if (category !== "all" && !CATEGORIES[category]) return;
   selectedCategory = category;
   categoryButtons.forEach((button) => {
     const active = button.dataset.category === category;
     button.setAttribute("aria-selected", String(active));
     button.tabIndex = active ? 0 : -1;
-    if (active && focus) button.focus();
+    if (active && config.focus) button.focus();
   });
   const activeButton = categoryButtons.find((button) => button.dataset.category === category);
-  photoGrid.setAttribute("aria-labelledby", activeButton?.id || "tab-all");
+  photoGrid.setAttribute("aria-labelledby", activeButton ? activeButton.id : "tab-all");
   renderGallery();
 }
 
-function updateLightbox(index) {
-  const photo = visiblePhotos[index];
-  if (!photo) return;
-  const caption = photo.caption || humaniseFilename(photo.filename || "");
-  lightboxIndex = index;
-  lightboxImage.src = photo.src;
-  lightboxImage.alt = photo.alt || caption;
-  lightboxCaption.textContent = `${caption} · ${CATEGORIES[photo.category]?.name || "활동 기록"} · ${index + 1}/${visiblePhotos.length}`;
-  const singlePhoto = visiblePhotos.length < 2;
-  lightboxPrevious.disabled = singlePhoto;
-  lightboxNext.disabled = singlePhoto;
+function selectBranch(branchKey, options) {
+  const config = options || {};
+  if (!BRANCHES[branchKey]) return;
+  selectedBranch = branchKey;
+  app.dataset.branch = branchKey;
+  app.classList.add("has-selection");
+  setRegionInteractive(galleryPanel, true);
+  branchTriggers().forEach((trigger) => {
+    const active = trigger.dataset.branch === branchKey;
+    trigger.classList.toggle("active", active);
+    trigger.classList.toggle("selected", active && trigger.classList.contains("branch-region"));
+    setBranchMapTransform(trigger, active);
+    trigger.setAttribute("aria-pressed", String(active));
+  });
+  const selectedMapRegion = branchMapLayer.querySelector(`.branch-region[data-branch="${branchKey}"]`);
+  if (selectedMapRegion) branchMapLayer.appendChild(selectedMapRegion);
+
+  const branch = BRANCHES[branchKey];
+  const branchContent = content[branchKey] || {};
+  galleryKicker.textContent = branch.english;
+  galleryTitle.textContent = branch.name;
+  branchSlogan.textContent = branchContent.slogan || "";
+  branchSlogan.hidden = !branchContent.slogan;
+  galleryDescription.textContent = branchContent.introduction || "";
+  galleryDescription.hidden = !branchContent.introduction;
+  renderLeaders(branchKey);
+  renderMeeting(branchKey);
+  setCategory("all");
+  galleryPanel.scrollTop = 0;
+
+  if (config.scroll !== false && window.matchMedia("(max-width: 1080px), (orientation: portrait)").matches) {
+    window.requestAnimationFrame(() => galleryPanel.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
 }
 
-function openLightbox(index, opener) {
-  if (!visiblePhotos[index]) return;
+function clearSelection(options) {
+  const config = options || {};
+  const previousBranch = selectedBranch;
+  selectedBranch = null;
+  delete app.dataset.branch;
+  app.classList.remove("has-selection");
+  setRegionInteractive(galleryPanel, false);
+  branchTriggers().forEach((trigger) => {
+    trigger.classList.remove("active", "selected");
+    setBranchMapTransform(trigger, false);
+    trigger.setAttribute("aria-pressed", "false");
+  });
+  BRANCH_KEYS.forEach((branchKey) => {
+    const mapRegion = branchMapLayer.querySelector(`.branch-region[data-branch="${branchKey}"]`);
+    if (mapRegion) branchMapLayer.appendChild(mapRegion);
+  });
+  if (config.restoreFocus && previousBranch) {
+    const trigger = document.querySelector(`.branch-chip[data-branch="${previousBranch}"]`);
+    if (trigger) trigger.focus();
+  }
+}
+
+const dialogController = createDialogController(lightbox, () => {
+  lightboxImage.removeAttribute("src");
+  if (lightboxOpener) lightboxOpener.focus();
+  lightboxOpener = null;
+});
+
+function updateLightbox(index) {
+  const item = lightboxItems[index];
+  if (!item) return;
+  lightboxIndex = index;
+  lightboxImage.hidden = false;
+  lightboxError.hidden = true;
+  lightboxImage.src = item.src;
+  lightboxImage.alt = item.alt;
+  lightboxCaption.textContent = `${item.caption}${item.detail ? ` · ${item.detail}` : ""} · ${index + 1}/${lightboxItems.length}`;
+  const single = lightboxItems.length < 2;
+  lightboxPrevious.disabled = single;
+  lightboxNext.disabled = single;
+}
+
+function openLightbox(items, index, opener) {
+  if (!items || !items[index]) return;
+  lightboxItems = items;
   lightboxOpener = opener;
   updateLightbox(index);
-  if (!lightbox.open) lightbox.showModal();
+  dialogController.open();
+  window.setTimeout(() => lightboxClose.focus(), 0);
 }
 
 function moveLightbox(direction) {
-  if (visiblePhotos.length < 2) return;
-  updateLightbox((lightboxIndex + direction + visiblePhotos.length) % visiblePhotos.length);
+  if (lightboxItems.length < 2) return;
+  updateLightbox((lightboxIndex + direction + lightboxItems.length) % lightboxItems.length);
 }
 
-renderBranchControls();
-renderCountryContext();
-renderMap();
-galleryPanel.inert = true;
-
-branchTriggers().forEach((trigger) => {
-  trigger.addEventListener("click", () => selectBranch(trigger.dataset.branch));
-  if (trigger.classList.contains("branch-region")) {
-    trigger.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        selectBranch(trigger.dataset.branch);
-      }
-    });
-  }
-});
-
-categoryButtons.forEach((button, index) => {
-  button.addEventListener("click", () => setCategory(button.dataset.category));
-  button.addEventListener("keydown", (event) => {
-    let nextIndex = null;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (index + 1) % categoryButtons.length;
-    if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (index - 1 + categoryButtons.length) % categoryButtons.length;
-    if (event.key === "Home") nextIndex = 0;
-    if (event.key === "End") nextIndex = categoryButtons.length - 1;
-    if (nextIndex !== null) {
-      event.preventDefault();
-      setCategory(categoryButtons[nextIndex].dataset.category, { focus: true });
+function bindEvents() {
+  branchTriggers().forEach((trigger) => {
+    trigger.addEventListener("click", () => selectBranch(trigger.dataset.branch));
+    if (trigger.classList.contains("branch-region")) {
+      trigger.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectBranch(trigger.dataset.branch);
+        }
+      });
     }
   });
-});
+  categoryButtons.forEach((button, index) => {
+    button.addEventListener("click", () => setCategory(button.dataset.category));
+    button.addEventListener("keydown", (event) => {
+      let nextIndex = null;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (index + 1) % categoryButtons.length;
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (index - 1 + categoryButtons.length) % categoryButtons.length;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = categoryButtons.length - 1;
+      if (nextIndex !== null) {
+        event.preventDefault();
+        setCategory(categoryButtons[nextIndex].dataset.category, { focus: true });
+      }
+    });
+  });
+  backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));
+  photoGrid.addEventListener("click", (event) => {
+    const card = event.target.closest(".photo-card:not(.image-missing)");
+    if (!card) return;
+    const items = visiblePhotos.map((photo) => photoItem(
+      photo,
+      photo.caption || humaniseFilename(photo.filename || ""),
+      CATEGORIES[photo.category] ? CATEGORIES[photo.category].name : "활동 기록"
+    ));
+    openLightbox(items, Number(card.dataset.photoIndex), card);
+  });
+  lightboxClose.addEventListener("click", () => dialogController.close());
+  lightboxPrevious.addEventListener("click", () => moveLightbox(-1));
+  lightboxNext.addEventListener("click", () => moveLightbox(1));
+  lightbox.addEventListener("click", (event) => {
+    if (event.target === lightbox) dialogController.close();
+  });
+  lightboxImage.addEventListener("load", () => {
+    lightboxImage.hidden = false;
+    lightboxError.hidden = true;
+  });
+  lightboxImage.addEventListener("error", () => {
+    lightboxImage.hidden = true;
+    lightboxError.hidden = false;
+  });
+  document.addEventListener("keydown", (event) => {
+    if (!dialogController.isOpen()) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      dialogController.close();
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveLightbox(-1);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveLightbox(1);
+    }
+  });
+}
 
-backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));
-photoGrid.addEventListener("click", (event) => {
-  const card = event.target.closest(".photo-card:not(.image-missing)");
-  if (card) openLightbox(Number(card.dataset.photoIndex), card);
-});
-document.querySelector(".lightbox-close").addEventListener("click", () => lightbox.close());
-lightboxPrevious.addEventListener("click", () => moveLightbox(-1));
-lightboxNext.addEventListener("click", () => moveLightbox(1));
-lightbox.addEventListener("click", (event) => {
-  if (event.target === lightbox) lightbox.close();
-});
-lightbox.addEventListener("close", () => {
-  lightboxImage.removeAttribute("src");
-  lightboxOpener?.focus();
-  lightboxOpener = null;
-});
-document.addEventListener("keydown", (event) => {
-  if (!lightbox.open) return;
-  if (event.key === "Escape") {
-    event.preventDefault();
-    lightbox.close();
-    return;
-  }
-  if (event.key === "ArrowLeft") {
-    event.preventDefault();
-    moveLightbox(-1);
-  }
-  if (event.key === "ArrowRight") {
-    event.preventDefault();
-    moveLightbox(1);
-  }
-});
+async function boot() {
+  initializeDebugMode(debugMode);
+  await loadManifest();
+  renderBranchControls();
+  renderCountryContext();
+  renderMap();
+  setRegionInteractive(galleryPanel, false);
+  bindEvents();
+  initializeIntro({
+    previewMode,
+    onComplete() {
+      const first = branchSwitcher.querySelector("button");
+      if (first) first.focus();
+    }
+  });
+  registerOfflineWorker();
+}
 
-await loadManifest();
+boot().catch((error) => {
+  setRuntimeStatus("lastError", error && error.message ? error.message : String(error));
+  console.error("전시 앱 초기화 중 오류가 발생했습니다.", error);
+  const intro = document.querySelector("#intro-screen");
+  if (intro) intro.classList.remove("is-visible");
+  app.removeAttribute("aria-hidden");
+});

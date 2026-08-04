@@ -1,53 +1,79 @@
 # 충남·충북·대전 청년 활동 지도 전시
 
-일본 청년 교류 행사에서 충남·충북·대전방면의 좌담회, 창가청년스쿨, 청년미래총회, 평상시 활동 사진을 지도와 함께 보여주는 터치 친화형 정적 웹앱입니다. 사진이 한 장도 없어도 안내 콜라주가 완성된 화면을 구성하며, 사진 폴더를 채우면 빌드 단계에서 자동으로 갤러리에 반영됩니다.
+홋카이도 방문단에게 충남·충북·대전방면의 사람과 활동을 소개하는 오프라인 우선 터치 전시 웹앱입니다. SMART TOUCH STS-75IR11(3840×2160, Android 11)의 Opera를 주 실행 환경으로 삼고, 구형 Android Chromium에서도 핵심 선택·필터·사진 확대가 유지되도록 점진적으로 향상합니다.
 
-## 방면 데이터와 지도
+CDN, 외부 폰트, 온라인 지도 타일, 외부 API를 사용하지 않습니다. `dist/`는 인터넷이 없는 로컬 HTTP 서버에서 그대로 제공할 수 있는 순수 정적 결과물입니다.
 
-`data/region-config.js`가 `방면 → 권` 조직 구조와 지도 표시 범위의 단일 진실 원천이며, `data/regions.js`는 SGIS 기반 SVG에서 자동 생성되는 지도 데이터입니다. 생성 파일은 직접 편집하지 않습니다. **행정구역은 방면의 지도 범위를 표현하기 위한 자료이며 조직의 하위 단위가 아닙니다.** 권별 경계는 지도에 표시하지 않습니다.
+## 화면 구조
 
-- **충남방면:** 백제권, 서해권, 천안권
-- **충북방면:** 동청주권, 서청주권, 제천권, 충주권
-- **대전방면:** 남대전권, 대전권, 서대전권, 세종권
+가로 전시 화면은 브라우저 높이에 고정됩니다. 방면을 선택하면 왼쪽 지도는 약 44% 폭을 유지하고 오른쪽 콘텐츠 패널만 세로로 스크롤됩니다. 지도, 방면 버튼, 범례는 계속 보입니다. 900px 이하 또는 세로 화면에서는 지도와 콘텐츠가 위아래로 전환됩니다.
 
-지도 범위에서 대전방면은 대전·세종·계룡·금산·옥천을, 충남방면은 계룡·금산을 제외한 충남 지역을 표시합니다. 충북방면은 옥천과 김천권 소속 영동군을 제외한 충북 지역에 **제천권 소속 강원도 영월군**을 더해 표시합니다. 영동군은 이 전시의 세 방면 어디에도 표시하지 않습니다. 지도 DOM과 갤러리 필터는 동일한 방면 key를 사용합니다. 원본에서 천안·청주는 구 단위로 나뉘며, 대전광역시는 5개 구의 내부 경계를 그대로 표시합니다.
+- 실제 GIS 도형은 변형하지 않고, 각 시군 path 위에 52px(작은 대전방면 도형은 64px)의 투명 SVG hit-area를 둡니다.
+- 방면은 지도와 상단 버튼 모두에서 클릭, 터치, Enter, Space로 선택합니다.
+- 선택된 방면만 3.5% 확대하고 굵은 outline·그림자를 적용합니다.
+- 시군명, 행정구역 목록, 시군 tooltip과 `city-label`은 일반 화면에 만들지 않습니다.
+- `?debug=1`일 때만 내부 지도 분류를 진단 패널에서 확인할 수 있습니다.
+- 오른쪽 콘텐츠는 방면명 → 슬로건 → 소개 → 4부 간부 → 방면운영회의 → 탭 → 사진 순서이며, 데이터가 없는 섹션은 공간까지 숨깁니다.
 
-지도는 [statgarten/maps](https://github.com/statgarten/maps)의 `svg/simple` 자료를 사용합니다. 이 저장소는 통계청 SGIS 오픈 API에서 수집한 2020 행정구역 경계를 SVG로 제공하며 MIT 라이선스를 적용합니다. 사용한 원본 5개 SVG, upstream commit, 라이선스는 `data/vendor/statgarten-maps/`에 보관합니다.
+`100vh`를 기본으로 사용하고 지원 브라우저에서 `100dvh`를 추가합니다. `backdrop-filter`, `dialog`, `inert`는 기능 감지와 불투명 배경·div형 dialog·tabindex/ARIA 대체 동작을 함께 제공합니다.
 
-`scripts/generate-map-data.mjs`는 다음을 자동 수행합니다.
+## 방면 데이터와 GIS 지도
 
-1. 전국 시·도 SVG와 충남·충북·대전·세종·강원 시군구 SVG의 이름과 path를 추출합니다. 강원 SVG에서는 영월군만 선택합니다.
-2. 지역별 확대 SVG의 실제 bounds를 전국 SVG에서 같은 시·도가 차지하는 bounds로 다시 투영합니다.
-3. 전국과 시군구 좌표를 공통 `0 0 780 760` viewBox로 정규화합니다.
-4. `polygon-clipping`의 union으로 같은 조직 방면을 dissolve하여 내부 중복선이 없는 `outlinePaths`를 만듭니다.
-5. 면적 중심과 내부점 탐색으로 각 행정구역과 방면의 label 좌표를 생성합니다.
+[`data/region-config.js`](data/region-config.js)가 `방면 → 권` 조직 구조와 지도 표시 범위의 단일 진실 원천입니다. [`data/regions.js`](data/regions.js)는 [`scripts/generate-map-data.mjs`](scripts/generate-map-data.mjs)가 생성하므로 직접 편집하지 않습니다. 행정구역은 방면 범위를 그리기 위한 내부 GIS 데이터이고 조직 하위 단위는 권입니다. 권별 지도는 만들지 않습니다.
 
-섬과 다중 폴리곤 subpath는 유지하며, 시군구 path는 얇은 내부 경계로, dissolve 결과는 굵은 방면 외곽선으로 렌더링합니다. 화면 하단에는 `통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화`를 표시합니다. 법적·측량·행정 경계 확인용으로 사용하면 안 됩니다.
+- 충남방면: 백제권, 서해권, 천안권
+- 충북방면: 동청주권, 서청주권, 제천권, 충주권
+- 대전방면: 남대전권, 대전권, 서대전권, 세종권
 
-## 로컬 실행
+지도 범위는 현재 확정 분류를 유지합니다.
 
-Node.js 18 이상이 필요합니다. 브라우저 런타임 의존성은 없으며, 지도 build 단계에서만 polygon union 패키지를 사용합니다.
+- 대전방면: 대전·세종·계룡·금산·옥천
+- 충남방면: 계룡·금산을 제외한 충남
+- 충북방면: 옥천과 김천권 소속 영동을 제외한 충북 + 제천권 소속 강원 영월
 
-```bash
-npm install
-npm run dev
+방면 색면과 굵은 외곽선은 회색 전도와 동일한 전국 시·도 path에서 생성합니다. 계룡·금산·옥천·영동 예외만 시군구 도형으로 잘라내고 모든 결과를 원래 전국 경계 안으로 클리핑하므로, 서로 다른 SVG의 단순 bbox 정규화 오차가 외곽에 나타나지 않습니다. 시군 path는 색을 채우지 않고 매우 옅은 내부선으로만 그리며, 그 선 역시 방면 색면 안으로 클리핑합니다. `polygon-clipping` union으로 내부 중복선이 없는 방면별 `outlinePaths`를 생성하고 섬과 다중 폴리곤을 유지합니다.
+
+대한민국 지도는 [statgarten/maps](https://github.com/statgarten/maps)의 통계청 SGIS 2020 경계 기반 단순화 SVG(MIT)를 사용합니다. vendored 원본, upstream commit, 라이선스는 [`data/vendor/statgarten-maps`](data/vendor/statgarten-maps)에 있습니다. 화면에는 `통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화`라고 표시합니다. 법적·측량·행정 경계 확인용 지도가 아닙니다.
+
+인트로 일본 지도는 [Natural Earth Vector](https://github.com/nvkelso/natural-earth-vector)의 공개 도메인 데이터를 단순화해 저장소에 포함했습니다. 정확한 commit과 설명은 [`assets/intro/SOURCE.md`](assets/intro/SOURCE.md)에 있습니다. 실행 중 어느 지도 서버에도 요청하지 않습니다.
+
+## 전시 문구와 인물 콘텐츠
+
+확정 문구와 사진 설정은 [`data/exhibition-content.js`](data/exhibition-content.js)에서 수정합니다. 프로덕션 슬로건, 직책, 성명은 현재 빈 문자열이며 임의 문구를 넣지 않았습니다. 빈 슬로건·이름·직책은 화면 공간도 만들지 않습니다. `futureMedia`는 추후 영상 확장용 데이터 자리만 있고 이번 버전에는 `video`, 자동 재생, 업로드 기능이 없습니다.
+
+간부 사진은 아래 경로가 기본 설정되어 있습니다.
+
+```text
+assets/leaders/chungnam/01.jpg ... 04.jpg
+assets/leaders/chungbuk/01.jpg ... 04.jpg
+assets/leaders/daejeon/01.jpg ... 04.jpg
 ```
 
-브라우저에서 `http://localhost:4173`을 엽니다. 개발 서버는 실행 전 지도 데이터와 사진 manifest를 다시 만듭니다.
+사진은 3:4 비율로 표시됩니다. 얼굴 위치 조정은 각 항목의 `objectPosition` 값을 `"50% 32%"`처럼 바꿉니다. 파일이 없으면 깨진 아이콘 대신 자리표시자를 표시합니다. 항목 수가 2개면 2개만 중앙 정렬되고, 4개보다 많은 데이터는 화면에서 최대 4개까지만 사용합니다.
 
-```bash
-npm run assets   # assets/gallery-manifest.json만 갱신
-npm run map      # SGIS SVG에서 data/regions.js 재생성
-npm run build    # 지도와 manifest 생성 후 dist/ 구성
-npm run preview  # dist/만 http://localhost:4173에서 제공
-npm test         # 지도·dissolve·사진 fixture·방면 예외·정적 빌드 검증
+방면운영회의 사진을 표시하려면 같은 파일에서 `meetingPhoto`를 설정하고 파일을 다음 위치에 둡니다.
+
+```text
+assets/meeting/chungnam/group.jpg
+assets/meeting/chungbuk/group.jpg
+assets/meeting/daejeon/group.jpg
 ```
 
-모든 HTML, CSS, JS, manifest 경로는 상대 경로이므로 `https://사용자.github.io/eastjapanexchange/` 같은 프로젝트 하위 경로에서 동작합니다.
+예시는 다음과 같습니다.
 
-## 사진 추가
+```js
+meetingPhoto: {
+  photo: "./assets/meeting/chungnam/group.jpg",
+  caption: "",
+  alt: ""
+}
+```
 
-사진을 아래 폴더 중 하나에 넣습니다. 빈 폴더는 `.gitkeep`으로 저장소에 유지됩니다.
+`meetingPhoto: null`이거나 이미지 로딩이 실패하면 섹션 전체를 숨깁니다.
+
+## 활동 사진과 manifest
+
+브라우저가 디렉터리를 스캔하지 않습니다. [`scripts/generate-gallery-manifest.mjs`](scripts/generate-gallery-manifest.mjs)가 빌드 전에 폴더를 읽어 `assets/gallery-manifest.json`을 만듭니다.
 
 ```text
 assets/gallery/
@@ -56,37 +82,102 @@ assets/gallery/
 │  ├─ school/      # 창가청년스쿨
 │  ├─ future/      # 청년미래총회
 │  └─ daily/       # 평상시 활동
-├─ chungbuk/
-│  └─ (같은 네 폴더)
-└─ daejeon/
-   └─ (같은 네 폴더)
+├─ chungbuk/       # 같은 네 폴더
+└─ daejeon/        # 같은 네 폴더
 ```
 
-지원 형식은 JPG, JPEG, PNG, WebP, AVIF입니다. 파일명에서 날짜 접두사, `_`, `-`를 정리한 값이 기본 캡션과 alt가 됩니다. 같은 폴더의 선택적 `captions.json`으로 덮어쓸 수 있습니다.
+JPG, JPEG, PNG, WebP, AVIF를 지원합니다. 날짜 접두사와 `_`, `-`를 정리한 파일명이 기본 caption/alt가 됩니다. 폴더별 선택적 `captions.json`으로 덮어쓸 수 있습니다.
 
 ```json
 {
-  "2026-07-19_동대전_청년미래총회.jpg": {
-    "caption": "동대전지역 청년미래총회",
-    "alt": "무대 앞에서 함께 기념 촬영한 참가자들"
+  "2026-07-19_청년미래총회.jpg": {
+    "caption": "청년미래총회",
+    "alt": "무대 앞에서 기념 촬영한 참가자들"
   }
 }
 ```
 
-사진 추가 후 `npm run assets` 또는 `npm run build`를 실행하고 생성된 `assets/gallery-manifest.json`도 함께 커밋합니다. 더 자세한 안내는 [`assets/gallery/README.md`](assets/gallery/README.md)에 있습니다.
+실제 사진은 긴 변 약 2000px의 WebP 또는 품질 80–88 JPEG를 권장합니다. manifest는 향후 `thumbnail`과 `full` 경로를 구분할 수 있고, 화면 밖 이미지는 lazy loading합니다.
 
-## 배포
+## 인트로 여정
 
-`.github/workflows/pages.yml`은 `main` push와 수동 실행을 지원합니다. Actions에서 Node.js 20으로 `npm ci`, `npm test`를 실행한 뒤 생성된 `dist/`만 GitHub Pages artifact로 배포합니다. 저장소 **Settings → Pages → Source**는 **GitHub Actions**로 설정합니다.
+첫 화면과 진행 단계 문구는 모두 일본어로 표시합니다. `韓国へようこそ`와 `出発`에서 시작해 약 15초 동안 신치토세공항 → 인천국제공항 → 한국SGI 본부(서울 구로구 공원로 54) → 한국SGI 진천연수원(진천군 초평면 초평로 1048-6) → 한국SGI 대전문화회관(대덕구 비래동로40번길 46) 순으로 이동합니다. CTS(42.7752, 141.6923)와 ICN(37.4602, 126.4407)의 Haversine 거리를 10km 단위로 반올림해 `約 1,420 km`로 표시합니다.
 
-## 전시 및 접근성
+인트로 지점은 화면 크기에 따른 픽셀 위치가 아니라 [`data/intro-route.js`](data/intro-route.js)의 로컬 지도 좌표로 관리합니다. 대한민국 지점은 `regions.js`와 같은 780×760 좌표계에 둔 뒤 인트로 장면으로 변환하므로 모바일에서도 전도와 동쪽으로 어긋나지 않습니다. 시설 주소나 지도 애셋을 바꿀 때는 이 파일의 `mapPoint`만 갱신합니다.
 
-- 1440×900에서는 중앙 지도에서 선택 후 좌측 지도/우측 콜라주로 전환합니다.
-- 1080px 이하에서는 지도 위/사진 아래의 세로 흐름으로 전환합니다.
-- SVG 방면은 클릭, 터치, Enter, Space로 선택할 수 있습니다.
-- 활동 탭은 클릭과 터치 외에 방향키, Home, End를 지원합니다.
-- 사진 dialog는 이전/다음 버튼, 좌우 방향키, Escape 닫기를 지원합니다.
-- 터치 조작 요소는 최소 44px이며, 포커스 표시와 `prefers-reduced-motion`을 제공합니다.
-- manifest나 이미지 파일이 누락되어도 깨진 이미지 대신 안내/실패 카드를 표시합니다.
+비행기와 이동 점은 CSS motion path 대신 SVG `getTotalLength()`, `getPointAtLength()`, `requestAnimationFrame()`으로 이동합니다. 건너뛰기·페이지 이탈·완료 때 frame과 timer를 정리합니다. `prefers-reduced-motion`에서는 지점 이름만 짧게 순차 표시합니다. 자세한 15초 구성은 [`docs/intro-motion-spec.md`](docs/intro-motion-spec.md)에 있습니다.
 
-권장 사진 크기는 긴 변 약 2000px, WebP 또는 품질 80–88의 JPEG입니다. 관람자가 직접 선택하도록 자동 슬라이드와 자동 페이지 이동은 사용하지 않습니다.
+개발 검토용 인트로 반복 모드:
+
+```text
+http://localhost:4180/?intro=preview
+```
+
+재생/일시정지, 처음부터, 0.5×·1×·2×를 제공합니다. 저작권 있는 참고 영상은 포함하지 않았고 녹화 파일 대신 재현 가능한 preview URL과 motion spec을 제공합니다.
+
+## fixture와 디버그 URL
+
+fixture는 프로덕션 manifest와 완전히 분리되며 기본 화면에는 나타나지 않습니다.
+
+```text
+http://localhost:4180/?fixture=empty
+http://localhost:4180/?fixture=full
+http://localhost:4180/?fixture=full&debug=1
+http://localhost:4180/?intro=preview&debug=1
+```
+
+- `fixture=empty`: 활동 0장, 간부 0명, 단체사진 없음. 안내 카드만 표시하고 빈 섹션을 숨깁니다.
+- `fixture=full`: 방면별 활동 SVG 6장, 비인물 간부 SVG 4장, 단체 그래픽 1장을 표시합니다.
+- `debug=1`: userAgent, viewport, devicePixelRatio, dialog/inert/backdrop-filter/rAF 지원, manifest, 인트로 상태, 내부 GIS 분류, 마지막 JS 오류를 표시합니다.
+
+## 실행과 전시 배포
+
+Node.js 18 이상이 필요합니다.
+
+```bash
+npm install
+npm run dev      # 지도 + manifest 생성 후 http://localhost:4180
+npm run assets   # gallery-manifest.json 생성
+npm run build    # 지도 + manifest + 호환 번들 + service worker + dist 생성
+npm run preview  # dist를 http://localhost:4180에서 확인
+npm run kiosk    # dist를 http://localhost:8081에서 제공
+npm test         # 데이터·레이아웃 계약·fixture·인트로·kiosk·dist 검증
+```
+
+키오스크 서버 옵션:
+
+```bash
+npm run kiosk -- --port 9090
+npm run kiosk -- --host 0.0.0.0 --port 8081
+```
+
+개발·미리보기 기본 port는 `4180`, 전시 kiosk 기본 port는 `8081`입니다. 영상 기획 웹앱과 포트가 겹치지 않도록 분리했습니다. kiosk 기본 host는 `localhost`이며, 같은 LAN의 전자칠판이 개발 PC에 접속할 때만 `--host 0.0.0.0`을 사용합니다. 적절한 MIME type으로 정적 파일만 제공하고 path traversal을 차단합니다. 종료는 서버를 실행한 터미널에서 `Ctrl+C`입니다.
+
+`file://` 직접 열기는 ES module과 `fetch` 보안 정책 때문에 기본 지원하지 않습니다. 전자칠판에서는 일반 Android 로컬 HTTP 서버 앱의 document root로 `dist/` 전체를 지정할 수 있습니다.
+
+실제 전시 준비 순서는 다음과 같습니다.
+
+1. 활동·간부·단체사진을 위 경로에 복사합니다.
+2. 개발 PC/Mac에서 `npm run assets`를 실행합니다.
+3. `npm run build`를 실행합니다.
+4. 생성된 `dist/` 전체를 전자칠판으로 복사합니다.
+5. 전자칠판의 로컬 HTTP 서버로 `dist/`를 제공합니다.
+6. Opera에서 서버 주소를 열고 `?fixture=full` 같은 테스트 query가 없는지 확인합니다.
+
+서비스 워커는 production build이며 localhost 또는 HTTPS일 때만 등록됩니다. 핵심 HTML/JS/CSS, 지도, manifest, 인트로와 fixture 애셋만 사전 캐시하고 외부 URL은 캐시하지 않습니다. 빌드 hash가 바뀌면 이전 캐시를 삭제합니다. 등록 실패해도 앱은 정적 서버에서 계속 동작합니다. 개발 소스(`npm run dev`)는 `data-build="development"`이므로 서비스 워커를 등록하지 않습니다.
+
+## 구형 Android 대응
+
+- esbuild가 브라우저 코드를 Chrome 69, Safari 12, Edge 79 수준의 단일 ES module로 번들합니다.
+- `color-mix()`와 CSS motion path를 사용하지 않습니다.
+- `100vh` 뒤에 기능 감지된 `100dvh`를 둡니다.
+- `dialog.showModal()` 실패 시 fixed div 방식, `inert` 미지원 시 ARIA·pointer-events·tabindex 방식으로 대체합니다.
+- `backdrop-filter` 미지원 환경은 먼저 선언한 불투명 패널을 사용합니다.
+- 인트로 이동 API나 rAF가 없으면 정적 축소 여정으로 자동 전환합니다.
+- 한 이미지나 manifest 로딩 실패는 전체 앱을 중단시키지 않습니다.
+
+Android 11 Opera에서 터치, 내부 패널 관성 스크롤, dialog, 재생 완료 후 frame 정리를 최종 현장 점검해야 합니다. 구형 Chrome에서는 ES module 자체 지원 여부, SVG path 길이 API, fixed/overflow 조합을 `?debug=1`로 확인합니다. Chrome이 ES module을 지원하지 않을 정도로 오래된 경우 Opera를 사용합니다.
+
+## GitHub Pages
+
+`.github/workflows/pages.yml`은 `main` push와 수동 실행에서 Node.js로 설치·테스트·빌드 후 `dist/`만 Pages artifact로 배포합니다. 모든 런타임 경로는 상대 경로이므로 `https://사용자.github.io/eastjapanexchange/` 같은 프로젝트 하위 경로에서 동작합니다.

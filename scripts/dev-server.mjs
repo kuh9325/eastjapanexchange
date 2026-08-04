@@ -7,7 +7,10 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const rootArgumentIndex = process.argv.indexOf("--root");
 const requestedRoot = rootArgumentIndex >= 0 ? process.argv[rootArgumentIndex + 1] : ".";
 const serveRoot = path.resolve(projectRoot, requestedRoot || ".");
-const port = Number(process.env.PORT || 4173);
+const portArgumentIndex = process.argv.indexOf("--port");
+const requestedPort = portArgumentIndex >= 0 ? process.argv[portArgumentIndex + 1] : null;
+const port = Number(requestedPort || process.env.PORT || 4180);
+if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("--port에는 1~65535 값을 사용하세요.");
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",

@@ -1,107 +1,159 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-build="development">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f5f1e8" />
-    <meta name="description" content="충남·충북·대전방면 청년 활동 사진 전시" />
+    <meta name="description" content="충남·충북·대전방면 청년 활동 오프라인 전시" />
     <title>마음과 마음을 잇는 청년의 발자취</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
     <a class="skip-link" href="#branch-switcher">방면 선택으로 건너뛰기</a>
-    <main class="exhibition" id="app">
-      <header class="hero-header">
-        <p class="eyebrow">KOREA × JAPAN YOUTH EXCHANGE</p>
-        <h1>마음과 마음을 잇는<br class="title-break" /> 청년의 발자취</h1>
-        <p class="subtitle">지도에서 방면을 선택해 활동의 순간을 만나보세요.</p>
-      </header>
 
-      <nav class="branch-switcher" id="branch-switcher" aria-label="방면 선택"></nav>
+    <section class="intro-screen is-visible" id="intro-screen" lang="ja" aria-label="北海道訪問団を歓迎する韓国への旅">
+      <div class="intro-topbar">
+        <span>韓国 × 北海道 青年交流</span>
+        <button class="intro-skip" type="button" data-intro-skip aria-label="オープニングをスキップ">スキップ</button>
+      </div>
+      <svg class="intro-map" viewBox="0 0 1200 700" role="img" aria-labelledby="intro-map-title intro-map-desc">
+        <title id="intro-map-title">新千歳空港から大田までの交流の旅</title>
+        <desc id="intro-map-desc">北海道の新千歳空港から仁川国際空港へ飛び、ソウル九老、忠清北道鎮川、大田へ移動します。</desc>
+        <g id="intro-world">
+          <g id="intro-korea-layer" class="intro-korea-layer" transform="translate(100 185) scale(.52)" aria-hidden="true"></g>
+          <image class="intro-japan-layer" href="./assets/intro/japan.svg" x="470" y="30" width="690" height="414" aria-hidden="true" />
+          <path id="intro-flight-path" class="intro-flight-path" d="M910.79 102.22 C755 58 485 178 211.38 281.51" />
+          <path id="intro-ground-path" class="intro-ground-path" d="M211.38 281.51 C218 278 228 278 234.21 279.85 C243 288 258 307 265.7 321.45 C267 333 265 346 262.97 352.96" />
+          <path id="intro-ground-to-guro" class="intro-travel-segment" d="M211.38 281.51 C218 278 228 278 234.21 279.85" />
+          <path id="intro-ground-to-jincheon" class="intro-travel-segment" d="M234.21 279.85 C243 288 258 307 265.7 321.45" />
+          <path id="intro-ground-to-daejeon" class="intro-travel-segment" d="M265.7 321.45 C267 333 265 346 262.97 352.96" />
+          <g class="intro-route-points" aria-hidden="true">
+            <g id="intro-point-cts" class="intro-air-point" transform="translate(910.79 102.22)"><circle r="10"/><text x="-10" y="-20" text-anchor="end">新千歳空港 · CTS</text></g>
+            <g id="intro-point-icn" class="intro-air-point" transform="translate(211.38 281.51)"><circle r="9"/><text x="-14" y="-14" text-anchor="end">仁川国際空港</text></g>
+            <g id="intro-point-guro" class="intro-domestic-point" transform="translate(234.21 279.85)"><circle r="7"/><text x="13" y="4">韓国SGI本部 · ソウル九老</text></g>
+            <g id="intro-point-jincheon" class="intro-domestic-point" transform="translate(265.7 321.45)"><circle r="7"/><text x="13" y="4">韓国SGI鎮川研修院</text></g>
+            <g id="intro-point-daejeon" class="intro-domestic-point" transform="translate(262.97 352.96)"><circle r="9"/><text x="13" y="5">韓国SGI大田文化会館</text></g>
+          </g>
+          <g id="intro-plane" class="intro-plane" aria-hidden="true">
+            <g transform="scale(.78)">
+              <path d="M40 0C40-4 36-7 30-8L12-10-2-32C-4-35-8-35-10-32L-5-9-22-6-31-15C-34-18-38-16-37-12L-31-3-39-1C-42 0-42 3-39 4L-31 5-37 14C-38 18-34 20-31 17L-22 8-5 10-10 32C-8 36-4 36-2 33L12 11 30 9C36 8 40 4 40 0Z" />
+              <path d="M3-18C3-22 7-24 11-22L19-18C22-16 20-12 16-12L8-13C5-13 3-15 3-18ZM3 18C3 22 7 24 11 22L19 18C22 16 20 12 16 12L8 13C5 13 3 15 3 18Z" />
+            </g>
+          </g>
+          <g id="intro-travel-dot" class="intro-travel-dot" aria-hidden="true"><circle r="11"/><circle r="22"/></g>
+        </g>
+      </svg>
+      <div class="intro-flight-label" id="intro-flight-label">CTS → ICN</div>
+      <div class="intro-welcome">
+        <p>韓国へようこそ</p>
+        <span>北海道訪問団の皆さま、韓国への旅を始めましょう</span>
+        <button id="intro-start" type="button">出発</button>
+      </div>
+      <p class="intro-stage-label" id="intro-stage-label" aria-live="polite">新千歳空港からの出発をお待ちください</p>
+      <div class="intro-preview-controls" id="intro-preview-controls" hidden>
+        <button id="intro-pause" type="button">一時停止</button>
+        <button id="intro-restart" type="button">最初から</button>
+        <label for="intro-speed">速度</label>
+        <select id="intro-speed">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+      <small class="intro-source">地図：Natural Earth パブリックドメインデータ · 韓国：統計庁 SGIS 2020 基準</small>
+    </section>
 
+    <main class="exhibition" id="app" aria-hidden="true">
       <section class="stage">
         <section class="map-panel" aria-label="대한민국 지도에서 방면 선택">
-          <div class="map-shell">
-            <div class="map-heading" aria-hidden="true">
-              <span>REPUBLIC OF KOREA</span>
-              <strong>충남 · 충북 · 대전</strong>
-            </div>
+          <header class="hero-header">
+            <p class="eyebrow">KOREA × JAPAN YOUTH EXCHANGE</p>
+            <h1>마음과 마음을 잇는 청년의 발자취</h1>
+            <p class="subtitle">지도에서 방면을 선택해 활동의 순간을 만나보세요.</p>
+          </header>
 
+          <div class="map-shell">
+            <nav class="branch-switcher" id="branch-switcher" aria-label="방면 선택"></nav>
             <svg class="korea-map" viewBox="0 0 780 760" role="group" aria-labelledby="map-title map-desc">
               <title id="map-title">대한민국 지도와 충남, 충북, 대전방면</title>
-              <desc id="map-desc">낮은 대비의 대한민국 실루엣 위에 전시 대상 세 방면을 시군 단위의 단순화된 도형으로 표시한 지도입니다.</desc>
+              <desc id="map-desc">낮은 대비의 대한민국 지도 위에 충남방면, 충북방면, 대전방면을 서로 다른 색으로 표시했습니다.</desc>
               <defs>
-                <filter id="context-shadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="9" stdDeviation="11" flood-color="#15203b" flood-opacity="0.13" />
-                </filter>
-                <filter id="selected-shadow" x="-45%" y="-45%" width="190%" height="190%">
-                  <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#15203b" flood-opacity="0.34" />
+                <filter id="selected-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#15203b" flood-opacity="0.3" />
                 </filter>
               </defs>
-
               <g class="country-context" id="country-context-layer" aria-hidden="true"></g>
-
               <g id="branch-map-layer"></g>
-
-              <g class="map-annotation" aria-hidden="true">
-                <line x1="167" y1="610" x2="612" y2="610" />
-                <text x="167" y="635">SGIS 2020 행정구역 경계를 전시 화면에 맞게 단순화했습니다</text>
-              </g>
             </svg>
-
-            <div class="map-legend" id="map-legend" aria-label="지도 범례"></div>
           </div>
+
+          <div class="map-underbar">
+            <div class="map-legend" id="map-legend" aria-label="지도 범례"></div>
+            <button class="journey-replay" id="intro-replay" type="button" aria-label="홋카이도에서 대전까지의 여정 다시 보기">여정 다시 보기</button>
+          </div>
+          <footer class="exhibition-footer">
+            <span>충남 · 충북 · 대전 청년부</span>
+            <details class="map-source-details">
+              <summary>지도 정보</summary>
+              <span id="map-attribution">통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화</span>
+            </details>
+          </footer>
         </section>
 
-        <section class="gallery-panel" aria-label="활동 사진 전시" aria-hidden="true">
-          <div class="gallery-head">
-            <button class="back-button" type="button" aria-label="전체 지도로 돌아가기">
-              <span aria-hidden="true">←</span> 전체 지도
-            </button>
+        <section class="gallery-panel" aria-label="방면 활동 콘텐츠" aria-hidden="true">
+          <header class="gallery-sticky-header">
+            <button class="back-button" type="button" aria-label="전체 지도로 돌아가기"><span aria-hidden="true">←</span> 전체 지도</button>
             <div class="gallery-intro">
               <p class="gallery-kicker" id="gallery-kicker">YOUTH ACTIVITIES</p>
               <h2 id="gallery-title">방면을 선택해 주세요</h2>
+              <p class="branch-slogan" id="branch-slogan" hidden></p>
               <p id="gallery-description"></p>
-              <p class="scope-label">방면 하위 조직</p>
-              <ul class="zone-list" id="zone-list" aria-label="방면 하위 조직 권"></ul>
-              <p class="boundary-note" id="boundary-note"></p>
-              <p class="scope-label map-scope-label">지도 표시 행정구역</p>
-              <ul class="municipality-list" id="municipality-list" aria-label="방면 범위를 표시하는 행정구역"></ul>
             </div>
-          </div>
+          </header>
 
-          <div class="category-tabs" role="tablist" aria-label="활동 유형">
-            <button type="button" role="tab" id="tab-all" data-category="all" aria-controls="photo-grid" aria-selected="true">전체</button>
-            <button type="button" role="tab" id="tab-discussion" data-category="discussion" aria-controls="photo-grid" aria-selected="false" tabindex="-1">좌담회</button>
-            <button type="button" role="tab" id="tab-school" data-category="school" aria-controls="photo-grid" aria-selected="false" tabindex="-1">창가청년스쿨</button>
-            <button type="button" role="tab" id="tab-future" data-category="future" aria-controls="photo-grid" aria-selected="false" tabindex="-1">청년미래총회</button>
-            <button type="button" role="tab" id="tab-daily" data-category="daily" aria-controls="photo-grid" aria-selected="false" tabindex="-1">평상시 활동</button>
-          </div>
+          <div class="gallery-scroll-content">
+            <section class="content-section leader-section" id="leader-section" hidden aria-labelledby="leader-section-title">
+              <div class="section-heading"><span>PEOPLE</span><h3 id="leader-section-title">4부 간부</h3></div>
+              <div class="leader-grid" id="leader-grid"></div>
+            </section>
 
-          <div class="gallery-summary" aria-live="polite">
-            <span id="photo-count">0장의 기록</span>
-            <span id="gallery-status">사진을 눌러 크게 볼 수 있습니다.</span>
+            <section class="content-section meeting-section" id="meeting-section" hidden aria-labelledby="meeting-section-title">
+              <div class="section-heading"><span>TOGETHER</span><h3 id="meeting-section-title">방면운영회의</h3></div>
+              <div id="meeting-content"></div>
+            </section>
+
+            <section class="content-section activity-section" aria-labelledby="activity-section-title">
+              <div class="section-heading"><span>ACTIVITIES</span><h3 id="activity-section-title">청년 활동 기록</h3></div>
+              <div class="category-tabs" role="tablist" aria-label="활동 유형">
+                <button type="button" role="tab" id="tab-all" data-category="all" aria-controls="photo-grid" aria-selected="true">전체</button>
+                <button type="button" role="tab" id="tab-discussion" data-category="discussion" aria-controls="photo-grid" aria-selected="false" tabindex="-1">좌담회</button>
+                <button type="button" role="tab" id="tab-school" data-category="school" aria-controls="photo-grid" aria-selected="false" tabindex="-1">창가청년스쿨</button>
+                <button type="button" role="tab" id="tab-future" data-category="future" aria-controls="photo-grid" aria-selected="false" tabindex="-1">청년미래총회</button>
+                <button type="button" role="tab" id="tab-daily" data-category="daily" aria-controls="photo-grid" aria-selected="false" tabindex="-1">평상시 활동</button>
+              </div>
+              <div class="gallery-summary" aria-live="polite">
+                <span id="photo-count">0장의 기록</span>
+                <span id="gallery-status">사진을 눌러 크게 볼 수 있습니다.</span>
+              </div>
+              <div class="photo-grid" id="photo-grid" role="tabpanel" aria-labelledby="tab-all" tabindex="0"></div>
+            </section>
           </div>
-          <div class="photo-grid" id="photo-grid" role="tabpanel" aria-labelledby="tab-all" tabindex="0"></div>
         </section>
       </section>
-
-      <footer class="exhibition-footer">
-        <span>충남 · 충북 · 대전 청년부</span>
-        <span id="map-attribution">통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화</span>
-      </footer>
     </main>
 
-    <dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-caption">
+    <dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-caption" hidden>
       <button class="lightbox-close" type="button" aria-label="사진 닫기">×</button>
       <button class="lightbox-nav previous" type="button" aria-label="이전 사진">‹</button>
       <figure>
         <img id="lightbox-image" alt="" />
+        <p class="lightbox-error" id="lightbox-error" role="status" hidden>이미지를 불러올 수 없습니다.</p>
         <figcaption id="lightbox-caption"></figcaption>
       </figure>
       <button class="lightbox-nav next" type="button" aria-label="다음 사진">›</button>
     </dialog>
 
+    <aside class="debug-panel" id="debug-panel" aria-label="브라우저 디버그 정보" hidden></aside>
     <script type="module" src="./src/app.js"></script>
   </body>
 </html>
