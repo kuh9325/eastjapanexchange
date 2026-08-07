@@ -4,7 +4,9 @@
  * 통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화
  */
 export const MAP_VIEWBOX = Object.freeze({"x":0,"y":0,"width":780,"height":760});
-export const MAP_DISPLAY_VIEWBOX = Object.freeze({"x":20,"y":28,"width":650,"height":700});
+export const MAP_DISPLAY_VIEWBOX = Object.freeze({"x":20,"y":28,"width":720,"height":700});
+export const MAP_FOCUS_VIEWBOX = Object.freeze({"x":145,"y":150,"width":350,"height":300});
+export const MAP_LANDMARKS = Object.freeze([{"id":"dokdo","name":"독도","point":[724,199]}]);
 export const MAP_ATTRIBUTION = "통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화";
 export const COUNTRY_CONTEXT = Object.freeze([
   {
@@ -121,7 +123,7 @@ export const BRANCHES = Object.freeze({
       "서해권",
       "천안권"
     ],
-    "description": "서해의 넉넉함과 백제의 문화가 이어지는 충남 청년들의 활동 기록입니다.",
+    "description": "백제문화의 중심지로 일본 고대문화 형성에 깊은 영향을 전하고, 근대에는 비폭력 독립정신이 꽃핀 역사와 평화의 가치를 이어가는 방면입니다.",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 충청남도 시·군 가운데 계룡시와 금산군은 대전방면에 표시합니다.",
     "label": [
       248.79,
@@ -319,7 +321,7 @@ export const BRANCHES = Object.freeze({
       "제천권",
       "충주권"
     ],
-    "description": "대한민국의 중심에서 사람과 사람을 잇는 충북 청년들의 활동 기록입니다.",
+    "description": "한반도의 중심에서 다양한 문화가 만나 조화를 이루며, 사제의 정신을 다음 세대에 꾸준히 계승해 온 방면입니다.",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 옥천군은 대전방면에 표시하고 영동군은 충북방면에서 제외합니다. 제천권의 강원도 영월군은 충북방면에 표시합니다.",
     "label": [
       360.61,
@@ -503,7 +505,7 @@ export const BRANCHES = Object.freeze({
       "서대전권",
       "세종권"
     ],
-    "description": "대전광역시와 세종·계룡·금산·옥천을 하나로 잇는 청년들의 활동 기록입니다.",
+    "description": "이케다 선생님의 고향 오타(大田)와 같은 한자를 쓰는 인연을 품고, 과학·교육·행정·교통의 중심에서 인간주의를 시민행동으로 실천해 온 방면입니다.",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 세종특별자치시와 계룡시·금산군·옥천군을 행정 도 경계와 관계없이 함께 표시합니다.",
     "label": [
       311.57,
@@ -628,21 +630,13 @@ export const BRANCHES = Object.freeze({
   }
 });
 export const CATEGORIES = Object.freeze({
-  "discussion": {
-    "name": "좌담회",
-    "shortName": "좌담회"
-  },
-  "school": {
-    "name": "창가청년스쿨",
-    "shortName": "청년스쿨"
-  },
   "future": {
     "name": "청년미래총회",
     "shortName": "미래총회"
   },
-  "daily": {
-    "name": "평상시 활동",
-    "shortName": "평상시"
+  "visit": {
+    "name": "방문 일대일 근행회",
+    "shortName": "방문 근행회"
   }
 });
 export const BRANCH_KEYS = Object.freeze(Object.keys(BRANCHES));

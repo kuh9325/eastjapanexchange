@@ -12,6 +12,8 @@ import {
   COUNTRY_CONTEXT,
   MAP_ATTRIBUTION,
   MAP_DISPLAY_VIEWBOX,
+  MAP_FOCUS_VIEWBOX,
+  MAP_LANDMARKS,
   MAP_VIEWBOX,
   municipalityNames
 } from "../data/regions.js";
@@ -40,7 +42,7 @@ try {
       await fs.writeFile(path.join(directory, `2026-08-02_${branch}_${category}.png`), tinyPng);
     }
   }
-  await fs.writeFile(path.join(galleryRoot, "chungnam", "discussion", "ignored.gif"), tinyPng);
+  await fs.writeFile(path.join(galleryRoot, "chungnam", "future", "ignored.gif"), tinyPng);
   await fs.writeFile(
     path.join(galleryRoot, "daejeon", "future", "captions.json"),
     JSON.stringify({
@@ -58,7 +60,7 @@ try {
     "--src-prefix", "./fixtures"
   ]);
   const manifest = JSON.parse(await fs.readFile(outputPath, "utf8"));
-  assert.equal(manifest.photos.length, BRANCH_KEYS.length * CATEGORY_KEYS.length, "지원 이미지 12개만 포함해야 합니다.");
+  assert.equal(manifest.photos.length, BRANCH_KEYS.length * CATEGORY_KEYS.length, "방면별 두 카테고리의 지원 이미지만 포함해야 합니다.");
   for (const branch of BRANCH_KEYS) {
     for (const category of CATEGORY_KEYS) {
       assert.equal(
@@ -75,8 +77,11 @@ try {
 
   assert.equal(COUNTRY_CONTEXT.length, 17, "전국 17개 시도 path가 모두 있어야 합니다.");
   assert.deepEqual(MAP_VIEWBOX, { x: 0, y: 0, width: 780, height: 760 });
-  assert.deepEqual(MAP_DISPLAY_VIEWBOX, { x: 20, y: 28, width: 650, height: 700 }, "표시 viewBox는 실제 대한민국 도형에 맞게 불필요한 여백을 잘라야 합니다.");
+  assert.deepEqual(MAP_DISPLAY_VIEWBOX, { x: 20, y: 28, width: 720, height: 700 }, "표시 viewBox는 독도 표식까지 포함해야 합니다.");
+  assert.deepEqual(MAP_FOCUS_VIEWBOX, { x: 145, y: 150, width: 350, height: 300 }, "활동 화면에서는 세 방면을 중심으로 지도를 확대해야 합니다.");
+  assert.deepEqual(MAP_LANDMARKS, [{ id: "dokdo", name: "독도", point: [724, 199] }], "원본에 없는 독도는 실제 상대 위치의 점으로 보완해야 합니다.");
   assert.equal(MAP_ATTRIBUTION, "통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화");
+  assert.deepEqual(CATEGORY_KEYS, ["future", "visit"], "활동 카테고리는 청년미래총회와 방문 일대일 근행회만 제공해야 합니다.");
 
   assert.deepEqual(municipalityNames("chungnam"), [
     "공주시", "논산시", "당진시", "보령시", "부여군", "서산시", "서천군",
@@ -150,10 +155,13 @@ try {
   assert.match(sourceStyles, /\.exhibition\s*\{[^}]*height:\s*100vh/s, "100vh 기본값이 있어야 합니다.");
   assert.match(sourceStyles, /@supports\s*\(height:\s*100dvh\)/, "지원 브라우저용 100dvh 향상이 있어야 합니다.");
   assert.match(sourceStyles, /\.gallery-panel\s*\{[^}]*overflow-y:\s*auto[^}]*overscroll-behavior:\s*contain/s, "오른쪽 패널만 스크롤되고 overscroll을 가둬야 합니다.");
-  assert.match(sourceStyles, /\.map-panel\s*\{[^}]*min-width:\s*600px/s, "대형 화면 지도 패널은 최소 600px이어야 합니다.");
+  assert.match(sourceStyles, /\.exhibition\.has-selection \.stage\s*\{[^}]*grid-template-columns:\s*minmax\(420px,\s*30fr\)\s*minmax\(0,\s*70fr\)/s, "방면 선택 후 지도와 사진 영역은 3:7 비율이어야 합니다.");
+  assert.match(sourceStyles, /\.map-panel\s*\{[^}]*min-width:\s*420px/s, "대형 화면의 축소된 지도 패널은 최소 420px을 유지해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*position:\s*sticky[^}]*height:\s*100%/s, "가로 화면의 왼쪽 지도 패널은 고정되어야 합니다.");
-  assert.match(sourceStyles, /\.branch-switcher\s*\{[^}]*position:\s*absolute[^}]*flex-direction:\s*column/s, "방면 버튼은 서해의 빈 공간에 세로로 배치해야 합니다.");
-  assert.match(sourceHtml, /<div class="map-shell">\s*<nav class="branch-switcher"/s, "방면 버튼은 지도 안의 서해 쪽에 배치되어야 합니다.");
+  assert.match(sourceStyles, /\.branch-switcher\s*\{[^}]*position:\s*absolute[^}]*top:\s*12px[^}]*flex-direction:\s*row/s, "방면 버튼은 지도 위쪽에 가로 오버레이로 배치해야 합니다.");
+  assert.match(sourceHtml, /<div class="map-shell">\s*<nav class="branch-switcher"/s, "방면 버튼은 지도 안에 배치되어야 합니다.");
+  assert.match(sourceStyles, /\.exhibition\.has-selection \.country-context\s*\{[^}]*opacity:\s*0\.2[^}]*filter:\s*blur\(2\.2px\)/s, "활동 화면에서 주변 지도는 흐리게 처리해야 합니다.");
+  assert.match(sourceApp, /function setMapViewport\(focused\)[\s\S]*MAP_FOCUS_VIEWBOX[\s\S]*koreaMap\.setAttribute\("viewBox"/, "활동 화면 지도는 세 방면 중심 viewBox로 전환해야 합니다.");
   assert.match(sourceStyles, /\.branch-hit-area\s*\{[^}]*stroke-width:\s*52/s, "투명 hit-area를 52px 수준으로 확대해야 합니다.");
   assert.match(sourceStyles, /\.branch-halo\s*\{[^}]*stroke-width:\s*2\.5/s, "방면 외곽선은 기본 굵기 2.5px을 유지해야 합니다.");
   assert.doesNotMatch(sourceStyles, /\.branch-region\.selected \.branch-halo\s*\{[^}]*stroke-width/s, "선택 상태에서 외곽선 굵기만 별도로 키우면 안 됩니다.");
@@ -168,6 +176,15 @@ try {
   assert.doesNotMatch(sourceHtml, /city-label|municipality-list|지도 표시 행정구역/, "일반 화면에 행정구역 UI를 만들면 안 됩니다.");
   assert.doesNotMatch(sourceApp, /class:\s*["']city-label|pathTitle|municipality-list/, "일반 지도에 시군 이름/툴팁을 렌더링하면 안 됩니다.");
   assert.match(sourceApp, /data-debug-city/, "행정구역 식별자는 디버그 모드에서만 제공해야 합니다.");
+  assert.match(sourceApp, /MAP_LANDMARKS\.forEach/, "독도 등 원본 보완 표식을 지도에 렌더링해야 합니다.");
+  assert.match(sourceApp, /appendMapLandmarks\(mapLandmarkLayer\)[\s\S]*appendMapLandmarks\(introKoreaLayer\)/, "독도 위치점은 본 화면과 인트로 대한민국 지도에 모두 표시해야 합니다.");
+  assert.match(sourceHtml, /id="map-landmark-layer"/, "지도에 원본 보완 표식 레이어가 있어야 합니다.");
+  assert.match(sourceApp, /class:\s*"map-landmark-dot",\s*r:\s*1\.6/, "독도는 강조 장식 없이 작은 점으로 표시해야 합니다.");
+  assert.doesNotMatch(sourceStyles, /map-landmark-ring|\.map-landmark text/, "독도 위치점에 강조 링이나 지도 라벨을 추가하면 안 됩니다.");
+  assert.doesNotMatch(sourceHtml, /leader-section|4부 간부/, "4부 간부 사진 영역은 화면에서 제거해야 합니다.");
+  assert.doesNotMatch(sourceApp, /renderLeaders|leaderGrid|leaderSection/, "4부 간부 렌더링 코드는 제거해야 합니다.");
+  assert.match(sourceHtml, /id="hall-card"/, "방면 소개 옆에 회관 전경 사진 영역이 있어야 합니다.");
+  assert.match(sourceApp, /function renderHall\(branchKey\)/, "방면별 회관 전경 사진을 렌더링해야 합니다.");
   assert.match(sourceIntro, /getTotalLength\(\)/);
   assert.match(sourceIntro, /getPointAtLength/);
   assert.match(sourceIntro, /cancelAnimationFrame/);
@@ -203,11 +220,11 @@ try {
   assert.equal(FULL_FIXTURE_MANIFEST.photos.length, BRANCH_KEYS.length * 6, "full fixture는 방면별 활동 사진 6장을 제공해야 합니다.");
   for (const branchKey of BRANCH_KEYS) {
     assert.equal(FULL_FIXTURE_MANIFEST.photos.filter(({ branch }) => branch === branchKey).length, 6);
-    assert.equal(FULL_FIXTURE_CONTENT[branchKey].leaders.length, 4, "full fixture 간부 카드는 4개여야 합니다.");
+    assert.ok(FULL_FIXTURE_CONTENT[branchKey].hallPhoto, "full fixture 회관 전경 사진이 있어야 합니다.");
     assert.ok(FULL_FIXTURE_CONTENT[branchKey].meetingPhoto, "full fixture 단체사진이 있어야 합니다.");
-    assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].leaders.length, 0);
+    assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].hallPhoto, null);
     assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].meetingPhoto, null);
-    assert.ok(EXHIBITION_CONTENT[branchKey].leaders.length <= 4, "프로덕션 간부 카드는 최대 4개여야 합니다.");
+    assert.ok(EXHIBITION_CONTENT[branchKey].hallPhoto, "프로덕션 회관 전경 사진 슬롯이 있어야 합니다.");
     assert.equal(EXHIBITION_CONTENT[branchKey].slogan, "", "확정되지 않은 프로덕션 슬로건을 만들면 안 됩니다.");
   }
 

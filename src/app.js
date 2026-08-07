@@ -6,6 +6,8 @@ import {
   COUNTRY_CONTEXT,
   MAP_ATTRIBUTION,
   MAP_DISPLAY_VIEWBOX,
+  MAP_FOCUS_VIEWBOX,
+  MAP_LANDMARKS,
   MAP_VIEWBOX,
   municipalityNames
 } from "../data/regions.js";
@@ -37,6 +39,7 @@ const branchSwitcher = document.querySelector("#branch-switcher");
 const koreaMap = document.querySelector(".korea-map");
 const countryContextLayer = document.querySelector("#country-context-layer");
 const branchMapLayer = document.querySelector("#branch-map-layer");
+const mapLandmarkLayer = document.querySelector("#map-landmark-layer");
 const introKoreaLayer = document.querySelector("#intro-korea-layer");
 const mapLegend = document.querySelector("#map-legend");
 const galleryPanel = document.querySelector(".gallery-panel");
@@ -44,8 +47,9 @@ const galleryTitle = document.querySelector("#gallery-title");
 const galleryKicker = document.querySelector("#gallery-kicker");
 const galleryDescription = document.querySelector("#gallery-description");
 const branchSlogan = document.querySelector("#branch-slogan");
-const leaderSection = document.querySelector("#leader-section");
-const leaderGrid = document.querySelector("#leader-grid");
+const hallCard = document.querySelector("#hall-card");
+const hallPhotoFrame = document.querySelector("#hall-photo-frame");
+const hallCaption = document.querySelector("#hall-caption");
 const meetingSection = document.querySelector("#meeting-section");
 const meetingContent = document.querySelector("#meeting-content");
 const photoGrid = document.querySelector("#photo-grid");
@@ -127,10 +131,33 @@ function appendCountryContext(layer, includeMetadata) {
 }
 
 function renderCountryContext() {
-  koreaMap.setAttribute("viewBox", `${MAP_DISPLAY_VIEWBOX.x} ${MAP_DISPLAY_VIEWBOX.y} ${MAP_DISPLAY_VIEWBOX.width} ${MAP_DISPLAY_VIEWBOX.height}`);
+  setMapViewport(false);
   appendCountryContext(countryContextLayer, true);
   appendCountryContext(introKoreaLayer, false);
+  replaceChildren(mapLandmarkLayer, []);
+  appendMapLandmarks(mapLandmarkLayer);
+  appendMapLandmarks(introKoreaLayer);
   mapAttribution.textContent = MAP_ATTRIBUTION;
+}
+
+function appendMapLandmarks(layer) {
+  MAP_LANDMARKS.forEach((landmark) => {
+    const group = svgElement("g", {
+      class: `map-landmark map-landmark-${landmark.id}`,
+      transform: `translate(${landmark.point[0]} ${landmark.point[1]})`
+    });
+    const dot = svgElement("circle", { class: "map-landmark-dot", r: 1.6 });
+    const title = svgElement("title");
+    title.textContent = landmark.name;
+    dot.appendChild(title);
+    group.appendChild(dot);
+    layer.appendChild(group);
+  });
+}
+
+function setMapViewport(focused) {
+  const viewBox = focused ? MAP_FOCUS_VIEWBOX : MAP_DISPLAY_VIEWBOX;
+  koreaMap.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
 }
 
 function renderMap() {
@@ -302,66 +329,33 @@ function imageWithFallback(source, alt, className, onLoad, onError) {
   return img;
 }
 
-function renderLeaders(branchKey) {
-  const leaders = ((content[branchKey] && content[branchKey].leaders) || []).slice(0, 4);
-  replaceChildren(leaderGrid, []);
-  leaderSection.hidden = leaders.length === 0;
-  if (!leaders.length) return;
+function renderHall(branchKey) {
+  const hall = content[branchKey] && content[branchKey].hallPhoto;
+  replaceChildren(hallPhotoFrame, []);
+  hallCard.classList.remove("has-image");
+  hallCard.setAttribute("aria-disabled", "true");
+  hallCard.onclick = null;
+  hallCard.hidden = !hall || (!hall.src && !hall.photo);
+  if (hallCard.hidden) return;
 
-  const cards = [];
-  leaders.forEach((leader, index) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "leader-card";
-    card.setAttribute("aria-label", `${leader.name || `간부 사진 ${index + 1}`} 크게 보기`);
-    card.setAttribute("aria-disabled", "true");
+  const item = photoItem(hall, `${BRANCHES[branchKey].name} 회관 전경`, "방면회관 전경");
+  hallCaption.textContent = item.caption;
+  hallCard.setAttribute("aria-label", `${item.caption} 사진 크게 보기`);
 
-    const frame = document.createElement("span");
-    frame.className = "leader-photo-frame";
-    const placeholder = document.createElement("span");
-    placeholder.className = "leader-placeholder";
-    placeholder.setAttribute("aria-hidden", "true");
-    placeholder.innerHTML = "<span></span>사진 준비 중";
-    frame.appendChild(placeholder);
+  const placeholder = document.createElement("span");
+  placeholder.className = "hall-placeholder";
+  placeholder.textContent = "회관 전경 사진 준비 중";
+  hallPhotoFrame.appendChild(placeholder);
 
-    const item = photoItem(leader, leader.name || `4부 간부 사진 ${index + 1}`, leader.role || "4부 간부");
-    if (item.src) {
-      const image = imageWithFallback(item.src, item.alt, "leader-photo", () => {
-        card.classList.add("has-image");
-        card.removeAttribute("aria-disabled");
-      });
-      if (leader.objectPosition) image.style.objectPosition = leader.objectPosition;
-      frame.appendChild(image);
-    }
-
-    if (leader.name || leader.role) {
-      const meta = document.createElement("span");
-      meta.className = "leader-meta";
-      if (leader.name) {
-        const name = document.createElement("strong");
-        name.textContent = leader.name;
-        meta.appendChild(name);
-      }
-      if (leader.role) {
-        const role = document.createElement("span");
-        role.textContent = leader.role;
-        meta.appendChild(role);
-      }
-      card.appendChild(frame);
-      card.appendChild(meta);
-    } else {
-      card.appendChild(frame);
-    }
-
-    card.addEventListener("click", () => {
-      if (!card.classList.contains("has-image")) return;
-      const loaded = cards.filter((entry) => entry.card.classList.contains("has-image")).map((entry) => entry.item);
-      const selectedIndex = loaded.indexOf(item);
-      openLightbox(loaded, selectedIndex, card);
-    });
-    cards.push({ card, item });
-    leaderGrid.appendChild(card);
+  const image = imageWithFallback(item.src, item.alt, "hall-photo", () => {
+    hallCard.classList.add("has-image");
+    hallCard.removeAttribute("aria-disabled");
   });
+  if (hall.objectPosition) image.style.objectPosition = hall.objectPosition;
+  hallPhotoFrame.appendChild(image);
+  hallCard.onclick = () => {
+    if (hallCard.classList.contains("has-image")) openLightbox([item], 0, hallCard);
+  };
 }
 
 function renderMeeting(branchKey) {
@@ -486,6 +480,7 @@ function selectBranch(branchKey, options) {
   const config = options || {};
   if (!BRANCHES[branchKey]) return;
   selectedBranch = branchKey;
+  setMapViewport(true);
   app.dataset.branch = branchKey;
   app.classList.add("has-selection");
   setRegionInteractive(galleryPanel, true);
@@ -507,7 +502,7 @@ function selectBranch(branchKey, options) {
   branchSlogan.hidden = !branchContent.slogan;
   galleryDescription.textContent = branchContent.introduction || "";
   galleryDescription.hidden = !branchContent.introduction;
-  renderLeaders(branchKey);
+  renderHall(branchKey);
   renderMeeting(branchKey);
   setCategory("all");
   galleryPanel.scrollTop = 0;
@@ -521,6 +516,7 @@ function clearSelection(options) {
   const config = options || {};
   const previousBranch = selectedBranch;
   selectedBranch = null;
+  setMapViewport(false);
   delete app.dataset.branch;
   app.classList.remove("has-selection");
   setRegionInteractive(galleryPanel, false);

@@ -4,7 +4,7 @@ const BRANCH_NAMES = {
   daejeon: "대전방면"
 };
 
-const CATEGORY_SEQUENCE = ["discussion", "school", "future", "daily", "discussion", "daily"];
+const CATEGORY_SEQUENCE = ["future", "visit", "future", "visit", "future", "visit"];
 
 export const EMPTY_FIXTURE_MANIFEST = Object.freeze({ version: 1, fixture: "empty", photos: [] });
 
@@ -30,14 +30,6 @@ export const FULL_FIXTURE_MANIFEST = Object.freeze({
   photos: fixturePhotos
 });
 
-const fixtureLeaders = (branch) => [1, 2, 3, 4].map((number) => ({
-  role: "",
-  name: "",
-  photo: `./fixtures/full/leaders/leader-${number}.svg`,
-  alt: `${BRANCH_NAMES[branch]} 테스트 간부 카드용 비인물 그래픽 ${number}`,
-  objectPosition: "50% 50%"
-}));
-
 const fullContent = {};
 const emptyContent = {};
 Object.keys(BRANCH_NAMES).forEach((branch) => {
@@ -45,7 +37,11 @@ Object.keys(BRANCH_NAMES).forEach((branch) => {
   fullContent[branch] = {
     slogan: `${name} 테스트 슬로건`,
     introduction: `${name} 전시 콘텐츠의 전체 상태를 확인하는 테스트 소개입니다.`,
-    leaders: fixtureLeaders(branch),
+    hallPhoto: {
+      photo: "./fixtures/full/meeting/group.svg",
+      alt: `${name} 회관 전경 영역 테스트용 추상 그래픽`,
+      caption: `${name} 회관 전경 테스트 이미지`
+    },
     meetingPhoto: {
       photo: "./fixtures/full/meeting/group.svg",
       alt: `${name} 단체사진 영역 테스트용 추상 그래픽`,
@@ -56,7 +52,7 @@ Object.keys(BRANCH_NAMES).forEach((branch) => {
   emptyContent[branch] = {
     slogan: "",
     introduction: "",
-    leaders: [],
+    hallPhoto: null,
     meetingPhoto: null,
     futureMedia: null
   };

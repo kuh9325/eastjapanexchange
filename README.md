@@ -6,14 +6,16 @@ CDN, 외부 폰트, 온라인 지도 타일, 외부 API를 사용하지 않습�
 
 ## 화면 구조
 
-가로 전시 화면은 브라우저 높이에 고정됩니다. 방면을 선택하면 왼쪽 지도는 약 44% 폭을 유지하고 오른쪽 콘텐츠 패널만 세로로 스크롤됩니다. 지도, 방면 버튼, 범례는 계속 보입니다. 900px 이하 또는 세로 화면에서는 지도와 콘텐츠가 위아래로 전환됩니다.
+가로 전시 화면은 브라우저 높이에 고정됩니다. 방면을 선택하면 왼쪽 지도와 오른쪽 콘텐츠가 3:7 비율로 배치되고 오른쪽 콘텐츠 패널만 세로로 스크롤됩니다. 지도, 방면 버튼, 범례는 계속 보입니다. 900px 이하 또는 세로 화면에서는 지도와 콘텐츠가 위아래로 전환됩니다.
 
 - 실제 GIS 도형은 변형하지 않고, 각 시군 path 위에 52px(작은 대전방면 도형은 64px)의 투명 SVG hit-area를 둡니다.
 - 방면은 지도와 상단 버튼 모두에서 클릭, 터치, Enter, Space로 선택합니다.
+- 방면 선택 버튼은 지도 위쪽에 가로로 겹쳐 표시합니다.
 - 선택된 방면만 3.5% 확대하고 굵은 outline·그림자를 적용합니다.
+- 방면 선택 후에는 세 방면을 중심으로 지도 범위를 확대하고 나머지 지역을 흐리게 표시합니다.
 - 시군명, 행정구역 목록, 시군 tooltip과 `city-label`은 일반 화면에 만들지 않습니다.
 - `?debug=1`일 때만 내부 지도 분류를 진단 패널에서 확인할 수 있습니다.
-- 오른쪽 콘텐츠는 방면명 → 슬로건 → 소개 → 4부 간부 → 방면운영회의 → 탭 → 사진 순서이며, 데이터가 없는 섹션은 공간까지 숨깁니다.
+- 오른쪽 콘텐츠는 방면명·소개·방면회관 전경 → 방면운영회의 → 탭 → 사진 순서이며, 데이터가 없는 섹션은 공간까지 숨깁니다.
 
 `100vh`를 기본으로 사용하고 지원 브라우저에서 `100dvh`를 추가합니다. `backdrop-filter`, `dialog`, `inert`는 기능 감지와 불투명 배경·div형 dialog·tabindex/ARIA 대체 동작을 함께 제공합니다.
 
@@ -35,21 +37,23 @@ CDN, 외부 폰트, 온라인 지도 타일, 외부 API를 사용하지 않습�
 
 대한민국 지도는 [statgarten/maps](https://github.com/statgarten/maps)의 통계청 SGIS 2020 경계 기반 단순화 SVG(MIT)를 사용합니다. vendored 원본, upstream commit, 라이선스는 [`data/vendor/statgarten-maps`](data/vendor/statgarten-maps)에 있습니다. 화면에는 `통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화`라고 표시합니다. 법적·측량·행정 경계 확인용 지도가 아닙니다.
 
+전국 단순화 원본에는 울릉도 도형은 있지만 독도 도형은 포함되지 않아, 독도는 본 화면과 인트로 대한민국 지도 모두에서 실제 상대 위치에 작은 점으로만 표시합니다.
+
 인트로 일본 지도는 [Natural Earth Vector](https://github.com/nvkelso/natural-earth-vector)의 공개 도메인 데이터를 단순화해 저장소에 포함했습니다. 정확한 commit과 설명은 [`assets/intro/SOURCE.md`](assets/intro/SOURCE.md)에 있습니다. 실행 중 어느 지도 서버에도 요청하지 않습니다.
 
-## 전시 문구와 인물 콘텐츠
+## 전시 문구와 회관 사진
 
-확정 문구와 사진 설정은 [`data/exhibition-content.js`](data/exhibition-content.js)에서 수정합니다. 프로덕션 슬로건, 직책, 성명은 현재 빈 문자열이며 임의 문구를 넣지 않았습니다. 빈 슬로건·이름·직책은 화면 공간도 만들지 않습니다. `futureMedia`는 추후 영상 확장용 데이터 자리만 있고 이번 버전에는 `video`, 자동 재생, 업로드 기능이 없습니다.
+확정 문구와 사진 설정은 [`data/exhibition-content.js`](data/exhibition-content.js)에서 수정합니다. 빈 슬로건은 화면 공간도 만들지 않습니다. `futureMedia`는 추후 영상 확장용 데이터 자리만 있고 이번 버전에는 `video`, 자동 재생, 업로드 기능이 없습니다.
 
-간부 사진은 아래 경로가 기본 설정되어 있습니다.
+방면 소개 옆 회관 전경 사진은 아래 경로가 기본 설정되어 있습니다.
 
 ```text
-assets/leaders/chungnam/01.jpg ... 04.jpg
-assets/leaders/chungbuk/01.jpg ... 04.jpg
-assets/leaders/daejeon/01.jpg ... 04.jpg
+assets/halls/chungnam/exterior.jpg
+assets/halls/chungbuk/exterior.jpg
+assets/halls/daejeon/exterior.jpg
 ```
 
-사진은 3:4 비율로 표시됩니다. 얼굴 위치 조정은 각 항목의 `objectPosition` 값을 `"50% 32%"`처럼 바꿉니다. 파일이 없으면 깨진 아이콘 대신 자리표시자를 표시합니다. 항목 수가 2개면 2개만 중앙 정렬되고, 4개보다 많은 데이터는 화면에서 최대 4개까지만 사용합니다.
+사진은 16:9 비율로 표시됩니다. 초점 위치 조정은 각 `hallPhoto`의 `objectPosition` 값을 `"50% 42%"`처럼 바꿉니다. 파일이 없으면 깨진 아이콘 대신 자리표시자를 표시합니다.
 
 방면운영회의 사진을 표시하려면 같은 파일에서 `meetingPhoto`를 설정하고 파일을 다음 위치에 둡니다.
 
@@ -78,15 +82,13 @@ meetingPhoto: {
 ```text
 assets/gallery/
 ├─ chungnam/
-│  ├─ discussion/  # 좌담회
-│  ├─ school/      # 창가청년스쿨
-│  ├─ future/      # 청년미래총회
-│  └─ daily/       # 평상시 활동
-├─ chungbuk/       # 같은 네 폴더
-└─ daejeon/        # 같은 네 폴더
+│  ├─ future/  # 청년미래총회
+│  └─ visit/   # 방문 일대일 근행회
+├─ chungbuk/   # 같은 두 폴더
+└─ daejeon/    # 같은 두 폴더
 ```
 
-JPG, JPEG, PNG, WebP, AVIF를 지원합니다. 날짜 접두사와 `_`, `-`를 정리한 파일명이 기본 caption/alt가 됩니다. 폴더별 선택적 `captions.json`으로 덮어쓸 수 있습니다.
+카테고리마다 약 10장의 사진을 넣을 수 있습니다. JPG, JPEG, PNG, WebP, AVIF를 지원합니다. 날짜 접두사와 `_`, `-`를 정리한 파일명이 기본 caption/alt가 됩니다. 폴더별 선택적 `captions.json`으로 덮어쓸 수 있습니다.
 
 ```json
 {
@@ -126,8 +128,8 @@ http://localhost:4180/?fixture=full&debug=1
 http://localhost:4180/?intro=preview&debug=1
 ```
 
-- `fixture=empty`: 활동 0장, 간부 0명, 단체사진 없음. 안내 카드만 표시하고 빈 섹션을 숨깁니다.
-- `fixture=full`: 방면별 활동 SVG 6장, 비인물 간부 SVG 4장, 단체 그래픽 1장을 표시합니다.
+- `fixture=empty`: 활동 0장, 회관·단체사진 없음. 안내 카드만 표시하고 빈 섹션을 숨깁니다.
+- `fixture=full`: 방면별 활동 SVG 6장, 회관 전경용 그래픽 1장, 단체 그래픽 1장을 표시합니다.
 - `debug=1`: userAgent, viewport, devicePixelRatio, dialog/inert/backdrop-filter/rAF 지원, manifest, 인트로 상태, 내부 GIS 분류, 마지막 JS 오류를 표시합니다.
 
 ## 실행과 전시 배포
@@ -157,7 +159,7 @@ npm run kiosk -- --host 0.0.0.0 --port 8081
 
 실제 전시 준비 순서는 다음과 같습니다.
 
-1. 활동·간부·단체사진을 위 경로에 복사합니다.
+1. 활동·회관 전경·단체사진을 위 경로에 복사합니다.
 2. 개발 PC/Mac에서 `npm run assets`를 실행합니다.
 3. `npm run build`를 실행합니다.
 4. 생성된 `dist/` 전체를 전자칠판으로 복사합니다.

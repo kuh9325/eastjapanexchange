@@ -76,7 +76,7 @@
             <nav class="branch-switcher" id="branch-switcher" aria-label="방면 선택"></nav>
             <svg class="korea-map" viewBox="0 0 780 760" role="group" aria-labelledby="map-title map-desc">
               <title id="map-title">대한민국 지도와 충남, 충북, 대전방면</title>
-              <desc id="map-desc">낮은 대비의 대한민국 지도 위에 충남방면, 충북방면, 대전방면을 서로 다른 색으로 표시했습니다.</desc>
+              <desc id="map-desc">낮은 대비의 대한민국 지도 위에 충남방면, 충북방면, 대전방면을 서로 다른 색으로 표시하고 동쪽에 독도 위치점을 표시했습니다.</desc>
               <defs>
                 <filter id="selected-shadow" x="-30%" y="-30%" width="160%" height="160%">
                   <feDropShadow dx="0" dy="9" stdDeviation="7" flood-color="#15203b" flood-opacity="0.3" />
@@ -84,6 +84,7 @@
               </defs>
               <g class="country-context" id="country-context-layer" aria-hidden="true"></g>
               <g id="branch-map-layer"></g>
+              <g class="map-landmarks" id="map-landmark-layer" aria-hidden="true"></g>
             </svg>
           </div>
 
@@ -109,14 +110,13 @@
               <p class="branch-slogan" id="branch-slogan" hidden></p>
               <p id="gallery-description"></p>
             </div>
+            <button class="hall-card" id="hall-card" type="button" aria-label="방면회관 전경 사진 크게 보기" aria-disabled="true">
+              <span class="hall-photo-frame" id="hall-photo-frame"></span>
+              <span class="hall-caption" id="hall-caption">방면회관 전경</span>
+            </button>
           </header>
 
           <div class="gallery-scroll-content">
-            <section class="content-section leader-section" id="leader-section" hidden aria-labelledby="leader-section-title">
-              <div class="section-heading"><span>PEOPLE</span><h3 id="leader-section-title">4부 간부</h3></div>
-              <div class="leader-grid" id="leader-grid"></div>
-            </section>
-
             <section class="content-section meeting-section" id="meeting-section" hidden aria-labelledby="meeting-section-title">
               <div class="section-heading"><span>TOGETHER</span><h3 id="meeting-section-title">방면운영회의</h3></div>
               <div id="meeting-content"></div>
@@ -126,10 +126,8 @@
               <div class="section-heading"><span>ACTIVITIES</span><h3 id="activity-section-title">청년 활동 기록</h3></div>
               <div class="category-tabs" role="tablist" aria-label="활동 유형">
                 <button type="button" role="tab" id="tab-all" data-category="all" aria-controls="photo-grid" aria-selected="true">전체</button>
-                <button type="button" role="tab" id="tab-discussion" data-category="discussion" aria-controls="photo-grid" aria-selected="false" tabindex="-1">좌담회</button>
-                <button type="button" role="tab" id="tab-school" data-category="school" aria-controls="photo-grid" aria-selected="false" tabindex="-1">창가청년스쿨</button>
                 <button type="button" role="tab" id="tab-future" data-category="future" aria-controls="photo-grid" aria-selected="false" tabindex="-1">청년미래총회</button>
-                <button type="button" role="tab" id="tab-daily" data-category="daily" aria-controls="photo-grid" aria-selected="false" tabindex="-1">평상시 활동</button>
+                <button type="button" role="tab" id="tab-visit" data-category="visit" aria-controls="photo-grid" aria-selected="false" tabindex="-1">방문 일대일 근행회</button>
               </div>
               <div class="gallery-summary" aria-live="polite">
                 <span id="photo-count">0장의 기록</span>

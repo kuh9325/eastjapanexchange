@@ -1,6 +1,8 @@
 // data/regions.js
 var MAP_VIEWBOX = Object.freeze({ "x": 0, "y": 0, "width": 780, "height": 760 });
-var MAP_DISPLAY_VIEWBOX = Object.freeze({ "x": 20, "y": 28, "width": 650, "height": 700 });
+var MAP_DISPLAY_VIEWBOX = Object.freeze({ "x": 20, "y": 28, "width": 720, "height": 700 });
+var MAP_FOCUS_VIEWBOX = Object.freeze({ "x": 145, "y": 150, "width": 350, "height": 300 });
+var MAP_LANDMARKS = Object.freeze([{ "id": "dokdo", "name": "독도", "point": [724, 199] }]);
 var MAP_ATTRIBUTION = "통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화";
 var COUNTRY_CONTEXT = Object.freeze([
   {
@@ -117,7 +119,7 @@ var BRANCHES = Object.freeze({
       "서해권",
       "천안권"
     ],
-    "description": "서해의 넉넉함과 백제의 문화가 이어지는 충남 청년들의 활동 기록입니다.",
+    "description": "백제문화의 중심지로 일본 고대문화 형성에 깊은 영향을 전하고, 근대에는 비폭력 독립정신이 꽃핀 역사와 평화의 가치를 이어가는 방면입니다.",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 충청남도 시·군 가운데 계룡시와 금산군은 대전방면에 표시합니다.",
     "label": [
       248.79,
@@ -315,7 +317,7 @@ var BRANCHES = Object.freeze({
       "제천권",
       "충주권"
     ],
-    "description": "대한민국의 중심에서 사람과 사람을 잇는 충북 청년들의 활동 기록입니다.",
+    "description": "한반도의 중심에서 다양한 문화가 만나 조화를 이루며, 사제의 정신을 다음 세대에 꾸준히 계승해 온 방면입니다.",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 옥천군은 대전방면에 표시하고 영동군은 충북방면에서 제외합니다. 제천권의 강원도 영월군은 충북방면에 표시합니다.",
     "label": [
       360.61,
@@ -499,7 +501,7 @@ var BRANCHES = Object.freeze({
       "서대전권",
       "세종권"
     ],
-    "description": "대전광역시와 세종·계룡·금산·옥천을 하나로 잇는 청년들의 활동 기록입니다.",
+    "description": "이케다 선생님의 고향 오타(大田)와 같은 한자를 쓰는 인연을 품고, 과학·교육·행정·교통의 중심에서 인간주의를 시민행동으로 실천해 온 방면입니다.",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 세종특별자치시와 계룡시·금산군·옥천군을 행정 도 경계와 관계없이 함께 표시합니다.",
     "label": [
       311.57,
@@ -624,21 +626,13 @@ var BRANCHES = Object.freeze({
   }
 });
 var CATEGORIES = Object.freeze({
-  "discussion": {
-    "name": "좌담회",
-    "shortName": "좌담회"
-  },
-  "school": {
-    "name": "창가청년스쿨",
-    "shortName": "청년스쿨"
-  },
   "future": {
     "name": "청년미래총회",
     "shortName": "미래총회"
   },
-  "daily": {
-    "name": "평상시 활동",
-    "shortName": "평상시"
+  "visit": {
+    "name": "방문 일대일 근행회",
+    "shortName": "방문 근행회"
   }
 });
 var BRANCH_KEYS = Object.freeze(Object.keys(BRANCHES));
@@ -649,32 +643,31 @@ function municipalityNames(branchKey) {
 }
 
 // data/exhibition-content.js
-var leaderSlots = (branch) => ["01", "02", "03", "04"].map((number) => ({
-  role: "",
-  name: "",
-  photo: "./assets/leaders/".concat(branch, "/").concat(number, ".jpg"),
-  alt: "",
-  objectPosition: "50% 32%"
-}));
+var hallPhoto = (branch, name) => ({
+  photo: "./assets/halls/".concat(branch, "/exterior.jpg"),
+  alt: "".concat(name, " 회관 전경"),
+  caption: "".concat(name, " 회관 전경"),
+  objectPosition: "50% 50%"
+});
 var EXHIBITION_CONTENT = Object.freeze({
   chungnam: {
     slogan: "",
-    introduction: "서해의 넉넉함과 백제의 문화가 이어지는 충남 청년들의 활동 기록입니다.",
-    leaders: leaderSlots("chungnam"),
+    introduction: "백제문화의 중심지로 일본 고대문화 형성에 깊은 영향을 전하고, 근대에는 비폭력 독립정신이 꽃핀 역사와 평화의 가치를 이어가는 방면입니다.",
+    hallPhoto: hallPhoto("chungnam", "충남방면"),
     meetingPhoto: null,
     futureMedia: null
   },
   chungbuk: {
     slogan: "",
-    introduction: "대한민국의 중심에서 사람과 사람을 잇는 충북 청년들의 활동 기록입니다.",
-    leaders: leaderSlots("chungbuk"),
+    introduction: "한반도의 중심에서 다양한 문화가 만나 조화를 이루며, 사제의 정신을 다음 세대에 꾸준히 계승해 온 방면입니다.",
+    hallPhoto: hallPhoto("chungbuk", "충북방면"),
     meetingPhoto: null,
     futureMedia: null
   },
   daejeon: {
     slogan: "",
-    introduction: "대전광역시와 세종·계룡·금산·옥천을 하나로 잇는 청년들의 활동 기록입니다.",
-    leaders: leaderSlots("daejeon"),
+    introduction: "이케다 선생님의 고향 오타(大田)와 같은 한자를 쓰는 인연을 품고, 과학·교육·행정·교통의 중심에서 인간주의를 시민행동으로 실천해 온 방면입니다.",
+    hallPhoto: hallPhoto("daejeon", "대전방면"),
     meetingPhoto: null,
     futureMedia: null
   }
@@ -686,7 +679,7 @@ var BRANCH_NAMES = {
   chungbuk: "충북방면",
   daejeon: "대전방면"
 };
-var CATEGORY_SEQUENCE = ["discussion", "school", "future", "daily", "discussion", "daily"];
+var CATEGORY_SEQUENCE = ["future", "visit", "future", "visit", "future", "visit"];
 var EMPTY_FIXTURE_MANIFEST = Object.freeze({ version: 1, fixture: "empty", photos: [] });
 var fixturePhotos = [];
 Object.keys(BRANCH_NAMES).forEach((branch) => {
@@ -708,13 +701,6 @@ var FULL_FIXTURE_MANIFEST = Object.freeze({
   fixture: "full",
   photos: fixturePhotos
 });
-var fixtureLeaders = (branch) => [1, 2, 3, 4].map((number) => ({
-  role: "",
-  name: "",
-  photo: "./fixtures/full/leaders/leader-".concat(number, ".svg"),
-  alt: "".concat(BRANCH_NAMES[branch], " 테스트 간부 카드용 비인물 그래픽 ").concat(number),
-  objectPosition: "50% 50%"
-}));
 var fullContent = {};
 var emptyContent = {};
 Object.keys(BRANCH_NAMES).forEach((branch) => {
@@ -722,7 +708,11 @@ Object.keys(BRANCH_NAMES).forEach((branch) => {
   fullContent[branch] = {
     slogan: "".concat(name, " 테스트 슬로건"),
     introduction: "".concat(name, " 전시 콘텐츠의 전체 상태를 확인하는 테스트 소개입니다."),
-    leaders: fixtureLeaders(branch),
+    hallPhoto: {
+      photo: "./fixtures/full/meeting/group.svg",
+      alt: "".concat(name, " 회관 전경 영역 테스트용 추상 그래픽"),
+      caption: "".concat(name, " 회관 전경 테스트 이미지")
+    },
     meetingPhoto: {
       photo: "./fixtures/full/meeting/group.svg",
       alt: "".concat(name, " 단체사진 영역 테스트용 추상 그래픽"),
@@ -733,7 +723,7 @@ Object.keys(BRANCH_NAMES).forEach((branch) => {
   emptyContent[branch] = {
     slogan: "",
     introduction: "",
-    leaders: [],
+    hallPhoto: null,
     meetingPhoto: null,
     futureMedia: null
   };
@@ -1284,6 +1274,7 @@ var branchSwitcher = document.querySelector("#branch-switcher");
 var koreaMap = document.querySelector(".korea-map");
 var countryContextLayer = document.querySelector("#country-context-layer");
 var branchMapLayer = document.querySelector("#branch-map-layer");
+var mapLandmarkLayer = document.querySelector("#map-landmark-layer");
 var introKoreaLayer = document.querySelector("#intro-korea-layer");
 var mapLegend = document.querySelector("#map-legend");
 var galleryPanel = document.querySelector(".gallery-panel");
@@ -1291,8 +1282,9 @@ var galleryTitle = document.querySelector("#gallery-title");
 var galleryKicker = document.querySelector("#gallery-kicker");
 var galleryDescription = document.querySelector("#gallery-description");
 var branchSlogan = document.querySelector("#branch-slogan");
-var leaderSection = document.querySelector("#leader-section");
-var leaderGrid = document.querySelector("#leader-grid");
+var hallCard = document.querySelector("#hall-card");
+var hallPhotoFrame = document.querySelector("#hall-photo-frame");
+var hallCaption = document.querySelector("#hall-caption");
 var meetingSection = document.querySelector("#meeting-section");
 var meetingContent = document.querySelector("#meeting-content");
 var photoGrid = document.querySelector("#photo-grid");
@@ -1361,10 +1353,31 @@ function appendCountryContext(layer, includeMetadata) {
   });
 }
 function renderCountryContext() {
-  koreaMap.setAttribute("viewBox", "".concat(MAP_DISPLAY_VIEWBOX.x, " ").concat(MAP_DISPLAY_VIEWBOX.y, " ").concat(MAP_DISPLAY_VIEWBOX.width, " ").concat(MAP_DISPLAY_VIEWBOX.height));
+  setMapViewport(false);
   appendCountryContext(countryContextLayer, true);
   appendCountryContext(introKoreaLayer, false);
+  replaceChildren(mapLandmarkLayer, []);
+  appendMapLandmarks(mapLandmarkLayer);
+  appendMapLandmarks(introKoreaLayer);
   mapAttribution.textContent = MAP_ATTRIBUTION;
+}
+function appendMapLandmarks(layer) {
+  MAP_LANDMARKS.forEach((landmark) => {
+    const group = svgElement("g", {
+      class: "map-landmark map-landmark-".concat(landmark.id),
+      transform: "translate(".concat(landmark.point[0], " ").concat(landmark.point[1], ")")
+    });
+    const dot = svgElement("circle", { class: "map-landmark-dot", r: 1.6 });
+    const title = svgElement("title");
+    title.textContent = landmark.name;
+    dot.appendChild(title);
+    group.appendChild(dot);
+    layer.appendChild(group);
+  });
+}
+function setMapViewport(focused) {
+  const viewBox = focused ? MAP_FOCUS_VIEWBOX : MAP_DISPLAY_VIEWBOX;
+  koreaMap.setAttribute("viewBox", "".concat(viewBox.x, " ").concat(viewBox.y, " ").concat(viewBox.width, " ").concat(viewBox.height));
 }
 function renderMap() {
   Object.keys(BRANCHES).forEach((branchKey) => {
@@ -1519,61 +1532,30 @@ function imageWithFallback(source, alt, className, onLoad, onError) {
   }, { once: true });
   return img;
 }
-function renderLeaders(branchKey) {
-  const leaders = (content[branchKey] && content[branchKey].leaders || []).slice(0, 4);
-  replaceChildren(leaderGrid, []);
-  leaderSection.hidden = leaders.length === 0;
-  if (!leaders.length) return;
-  const cards = [];
-  leaders.forEach((leader, index) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "leader-card";
-    card.setAttribute("aria-label", "".concat(leader.name || "간부 사진 ".concat(index + 1), " 크게 보기"));
-    card.setAttribute("aria-disabled", "true");
-    const frame = document.createElement("span");
-    frame.className = "leader-photo-frame";
-    const placeholder = document.createElement("span");
-    placeholder.className = "leader-placeholder";
-    placeholder.setAttribute("aria-hidden", "true");
-    placeholder.innerHTML = "<span></span>사진 준비 중";
-    frame.appendChild(placeholder);
-    const item = photoItem(leader, leader.name || "4부 간부 사진 ".concat(index + 1), leader.role || "4부 간부");
-    if (item.src) {
-      const image = imageWithFallback(item.src, item.alt, "leader-photo", () => {
-        card.classList.add("has-image");
-        card.removeAttribute("aria-disabled");
-      });
-      if (leader.objectPosition) image.style.objectPosition = leader.objectPosition;
-      frame.appendChild(image);
-    }
-    if (leader.name || leader.role) {
-      const meta = document.createElement("span");
-      meta.className = "leader-meta";
-      if (leader.name) {
-        const name = document.createElement("strong");
-        name.textContent = leader.name;
-        meta.appendChild(name);
-      }
-      if (leader.role) {
-        const role = document.createElement("span");
-        role.textContent = leader.role;
-        meta.appendChild(role);
-      }
-      card.appendChild(frame);
-      card.appendChild(meta);
-    } else {
-      card.appendChild(frame);
-    }
-    card.addEventListener("click", () => {
-      if (!card.classList.contains("has-image")) return;
-      const loaded = cards.filter((entry) => entry.card.classList.contains("has-image")).map((entry) => entry.item);
-      const selectedIndex = loaded.indexOf(item);
-      openLightbox(loaded, selectedIndex, card);
-    });
-    cards.push({ card, item });
-    leaderGrid.appendChild(card);
+function renderHall(branchKey) {
+  const hall = content[branchKey] && content[branchKey].hallPhoto;
+  replaceChildren(hallPhotoFrame, []);
+  hallCard.classList.remove("has-image");
+  hallCard.setAttribute("aria-disabled", "true");
+  hallCard.onclick = null;
+  hallCard.hidden = !hall || !hall.src && !hall.photo;
+  if (hallCard.hidden) return;
+  const item = photoItem(hall, "".concat(BRANCHES[branchKey].name, " 회관 전경"), "방면회관 전경");
+  hallCaption.textContent = item.caption;
+  hallCard.setAttribute("aria-label", "".concat(item.caption, " 사진 크게 보기"));
+  const placeholder = document.createElement("span");
+  placeholder.className = "hall-placeholder";
+  placeholder.textContent = "회관 전경 사진 준비 중";
+  hallPhotoFrame.appendChild(placeholder);
+  const image = imageWithFallback(item.src, item.alt, "hall-photo", () => {
+    hallCard.classList.add("has-image");
+    hallCard.removeAttribute("aria-disabled");
   });
+  if (hall.objectPosition) image.style.objectPosition = hall.objectPosition;
+  hallPhotoFrame.appendChild(image);
+  hallCard.onclick = () => {
+    if (hallCard.classList.contains("has-image")) openLightbox([item], 0, hallCard);
+  };
 }
 function renderMeeting(branchKey) {
   const meeting = content[branchKey] && content[branchKey].meetingPhoto;
@@ -1686,6 +1668,7 @@ function selectBranch(branchKey, options) {
   const config = options || {};
   if (!BRANCHES[branchKey]) return;
   selectedBranch = branchKey;
+  setMapViewport(true);
   app.dataset.branch = branchKey;
   app.classList.add("has-selection");
   setRegionInteractive(galleryPanel, true);
@@ -1706,7 +1689,7 @@ function selectBranch(branchKey, options) {
   branchSlogan.hidden = !branchContent.slogan;
   galleryDescription.textContent = branchContent.introduction || "";
   galleryDescription.hidden = !branchContent.introduction;
-  renderLeaders(branchKey);
+  renderHall(branchKey);
   renderMeeting(branchKey);
   setCategory("all");
   galleryPanel.scrollTop = 0;
@@ -1718,6 +1701,7 @@ function clearSelection(options) {
   const config = options || {};
   const previousBranch = selectedBranch;
   selectedBranch = null;
+  setMapViewport(false);
   delete app.dataset.branch;
   app.classList.remove("has-selection");
   setRegionInteractive(galleryPanel, false);

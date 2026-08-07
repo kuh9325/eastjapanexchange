@@ -3,17 +3,15 @@
 방면과 활동 종류에 맞는 폴더에 이미지를 넣습니다.
 
 ```text
-assets/gallery/{chungnam|chungbuk|daejeon}/{discussion|school|future|daily}/
+assets/gallery/{chungnam|chungbuk|daejeon}/{future|visit}/
 ```
 
 | 폴더 | 화면 표시 |
 | --- | --- |
-| `discussion` | 좌담회 |
-| `school` | 창가청년스쿨 |
 | `future` | 청년미래총회 |
-| `daily` | 평상시 활동 |
+| `visit` | 방문 일대일 근행회 |
 
-지원 형식은 JPG, JPEG, PNG, WebP, AVIF이며 대소문자를 구분하지 않습니다. 하위 폴더는 재귀적으로 읽지 않습니다.
+각 카테고리에 약 10장씩 넣을 수 있습니다. 지원 형식은 JPG, JPEG, PNG, WebP, AVIF이며 대소문자를 구분하지 않습니다. 하위 폴더는 재귀적으로 읽지 않습니다.
 
 사진 추가 후 다음 명령으로 `assets/gallery-manifest.json`을 갱신합니다.
 
