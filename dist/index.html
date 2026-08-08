@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f5f1e8" />
-    <meta name="description" content="충남·충북·대전방면 청년 활동 오프라인 전시" />
+    <meta name="description" id="meta-description" content="충남·충북·대전방면 청년 활동 오프라인 전시" />
     <title>마음과 마음을 잇는 청년의 발자취</title>
-    <link rel="stylesheet" href="./src/styles.css?v=a174a9340b6a" />
+    <link rel="stylesheet" href="./src/styles.css?v=3ba4a5bd075d" />
   </head>
   <body>
-    <a class="skip-link" href="#branch-switcher">방면 선택으로 건너뛰기</a>
+    <a class="skip-link" id="skip-link" href="#branch-switcher">방면 선택으로 건너뛰기</a>
 
     <section class="intro-screen is-visible" id="intro-screen" lang="ja" aria-label="北海道訪問団を歓迎する韓国への旅">
       <div class="intro-topbar">
@@ -18,19 +18,17 @@
       </div>
       <svg class="intro-map" viewBox="0 0 1200 700" role="img" aria-labelledby="intro-map-title intro-map-desc">
         <title id="intro-map-title">新千歳空港から大田までの交流の旅</title>
-        <desc id="intro-map-desc">北海道の新千歳空港から仁川国際空港へ飛び、ソウル九老、忠清北道鎮川、大田へ移動します。</desc>
+        <desc id="intro-map-desc">北海道の新千歳空港から仁川国際空港へ飛び、韓国SGI鎮川研修院を経て韓国SGI大田文化会館へ移動します。</desc>
         <g id="intro-world">
           <g id="intro-korea-layer" class="intro-korea-layer" transform="translate(100 185) scale(.52)" aria-hidden="true"></g>
           <image class="intro-japan-layer" href="./assets/intro/japan.svg" x="470" y="30" width="690" height="414" aria-hidden="true" />
           <path id="intro-flight-path" class="intro-flight-path" d="M910.79 102.22 C755 58 485 178 211.38 281.51" />
-          <path id="intro-ground-path" class="intro-ground-path" d="M211.38 281.51 C218 278 228 278 234.21 279.85 C243 288 258 307 265.7 321.45 C267 333 265 346 262.97 352.96" />
-          <path id="intro-ground-to-guro" class="intro-travel-segment" d="M211.38 281.51 C218 278 228 278 234.21 279.85" />
-          <path id="intro-ground-to-jincheon" class="intro-travel-segment" d="M234.21 279.85 C243 288 258 307 265.7 321.45" />
+          <path id="intro-ground-path" class="intro-ground-path" d="M211.38 281.51 C226 292 249 310 265.7 321.45 C268 333 265 346 262.97 352.96" />
+          <path id="intro-ground-to-jincheon" class="intro-travel-segment" d="M211.38 281.51 C226 292 249 310 265.7 321.45" />
           <path id="intro-ground-to-daejeon" class="intro-travel-segment" d="M265.7 321.45 C267 333 265 346 262.97 352.96" />
           <g class="intro-route-points" aria-hidden="true">
             <g id="intro-point-cts" class="intro-air-point" transform="translate(910.79 102.22)"><circle r="10"/><text x="-10" y="-20" text-anchor="end">新千歳空港 · CTS</text></g>
             <g id="intro-point-icn" class="intro-air-point" transform="translate(211.38 281.51)"><circle r="9"/><text x="-14" y="-14" text-anchor="end">仁川国際空港</text></g>
-            <g id="intro-point-guro" class="intro-domestic-point" transform="translate(234.21 279.85)"><circle r="7"/><text x="13" y="4">韓国SGI本部 · ソウル九老</text></g>
             <g id="intro-point-jincheon" class="intro-domestic-point" transform="translate(265.7 321.45)"><circle r="7"/><text x="13" y="4">韓国SGI鎮川研修院</text></g>
             <g id="intro-point-daejeon" class="intro-domestic-point" transform="translate(262.97 352.96)"><circle r="9"/><text x="13" y="5">韓国SGI大田文化会館</text></g>
           </g>
@@ -67,9 +65,13 @@
       <section class="stage">
         <section class="map-panel" aria-label="대한민국 지도에서 방면 선택">
           <header class="hero-header">
+            <div class="language-tabs" role="tablist" aria-label="표시 언어">
+              <button type="button" role="tab" data-language="ko" aria-selected="true">한국어</button>
+              <button type="button" role="tab" data-language="ja" aria-selected="false" tabindex="-1">日本語</button>
+            </div>
             <p class="eyebrow">KOREA × JAPAN YOUTH EXCHANGE</p>
-            <h1>마음과 마음을 잇는 청년의 발자취</h1>
-            <p class="subtitle">지도에서 방면을 선택해 활동의 순간을 만나보세요.</p>
+            <h1 id="hero-title">마음과 마음을 잇는 청년의 발자취</h1>
+            <p class="subtitle" id="hero-subtitle">지도에서 방면을 선택해 활동의 순간을 만나보세요.</p>
           </header>
 
           <div class="map-shell">
@@ -93,9 +95,9 @@
             <button class="journey-replay" id="intro-replay" type="button" aria-label="홋카이도에서 대전까지의 여정 다시 보기">여정 다시 보기</button>
           </div>
           <footer class="exhibition-footer">
-            <span>충남 · 충북 · 대전 청년부</span>
+            <span id="footer-label">충남 · 충북 · 대전 청년부</span>
             <details class="map-source-details">
-              <summary>지도 정보</summary>
+              <summary id="map-info-label">지도 정보</summary>
               <span id="map-attribution">통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화</span>
             </details>
           </footer>
@@ -103,12 +105,12 @@
 
         <section class="gallery-panel" aria-label="방면 활동 콘텐츠" aria-hidden="true">
           <header class="gallery-sticky-header">
-            <button class="back-button" type="button" aria-label="전체 지도로 돌아가기"><span aria-hidden="true">←</span> 전체 지도</button>
+            <button class="back-button" type="button" aria-label="전체 지도로 돌아가기"><span aria-hidden="true">←</span> <span id="back-button-label">전체 지도</span></button>
             <div class="gallery-intro">
               <p class="gallery-kicker" id="gallery-kicker">YOUTH ACTIVITIES</p>
               <h2 id="gallery-title">방면을 선택해 주세요</h2>
-              <p class="branch-slogan" id="branch-slogan" hidden></p>
               <p id="gallery-description"></p>
+              <p class="branch-slogan" id="branch-slogan" hidden></p>
             </div>
             <button class="hall-card" id="hall-card" type="button" aria-label="방면회관 전경 사진 크게 보기" aria-disabled="true">
               <span class="hall-photo-frame" id="hall-photo-frame"></span>
@@ -152,6 +154,6 @@
     </dialog>
 
     <aside class="debug-panel" id="debug-panel" aria-label="브라우저 디버그 정보" hidden></aside>
-    <script type="module" src="./src/app.js?v=a174a9340b6a"></script>
+    <script type="module" src="./src/app.js?v=3ba4a5bd075d"></script>
   </body>
 </html>

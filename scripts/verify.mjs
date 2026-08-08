@@ -188,13 +188,13 @@ try {
   assert.match(sourceIntro, /getTotalLength\(\)/);
   assert.match(sourceIntro, /getPointAtLength/);
   assert.match(sourceIntro, /cancelAnimationFrame/);
-  assert.match(sourceIntro, /guro:\s*Object\.freeze\(\{ revealAt:\s*9500, move:\s*Object\.freeze\(\[10000, 10800\]\)/, "구로 핀이 먼저 나타난 뒤 구로 이동을 시작해야 합니다.");
-  assert.match(sourceIntro, /jincheon:\s*Object\.freeze\(\{ revealAt:\s*10800, move:\s*Object\.freeze\(\[11300, 12400\]\)/, "진천 핀이 먼저 나타난 뒤 진천 이동을 시작해야 합니다.");
-  assert.match(sourceIntro, /daejeon:\s*Object\.freeze\(\{ revealAt:\s*12400, move:\s*Object\.freeze\(\[12900, 14000\]\)/, "대전 핀이 먼저 나타난 뒤 대전 이동을 시작해야 합니다.");
-  assert.match(sourceIntro, /const domesticTravelPoint[\s\S]*groundSegments\.guro[\s\S]*groundSegments\.jincheon[\s\S]*groundSegments\.daejeon/, "국내 이동은 목적지별 세 구간으로 분리해야 합니다.");
+  assert.match(sourceIntro, /jincheon:\s*Object\.freeze\(\{ revealAt:\s*9500, move:\s*Object\.freeze\(\[10000, 11800\]\)/, "진천 핀이 먼저 나타난 뒤 인천에서 진천으로 이동해야 합니다.");
+  assert.match(sourceIntro, /daejeon:\s*Object\.freeze\(\{ revealAt:\s*11800, move:\s*Object\.freeze\(\[12300, 14000\]\)/, "대전 핀이 먼저 나타난 뒤 대전 이동을 시작해야 합니다.");
+  assert.match(sourceIntro, /const domesticTravelPoint[\s\S]*groundSegments\.jincheon[\s\S]*groundSegments\.daejeon/, "국내 이동은 인천→진천과 진천→대전 두 구간으로 분리해야 합니다.");
+  assert.doesNotMatch(sourceIntro, /guro|show-guro|韓国SGI本部|ソウル九老/, "인트로 코드에서 구로 본부 경유를 완전히 제거해야 합니다.");
   assert.match(sourceIntro, /groundPath\.setAttribute\("d", domesticRouteD\(elapsed\)\)/, "초록 점선은 이동점이 이동한 구간까지만 이어져야 합니다.");
-  assert.match(sourceHtml, /id="intro-ground-to-guro"[\s\S]*id="intro-ground-to-jincheon"[\s\S]*id="intro-ground-to-daejeon"/, "국내 이동용 세 SVG path가 있어야 합니다.");
-  assert.match(sourceHtml, /id="intro-point-guro" class="intro-domestic-point"/);
+  assert.match(sourceHtml, /id="intro-ground-to-jincheon"[\s\S]*id="intro-ground-to-daejeon"/, "국내 이동용 두 SVG path가 있어야 합니다.");
+  assert.doesNotMatch(sourceHtml, /intro-ground-to-guro|intro-point-guro|韓国SGI本部|ソウル九老/, "인트로 마크업에서 구로 본부 핀과 선분을 제거해야 합니다.");
   assert.match(sourceHtml, /id="intro-point-jincheon" class="intro-domestic-point"/);
   assert.match(sourceHtml, /id="intro-point-daejeon" class="intro-domestic-point"/);
   assert.ok(sourceHtml.indexOf("intro-korea-layer") < sourceHtml.indexOf("intro-japan-layer"), "SVG 그리기 순서에서 일본 지도가 대한민국보다 앞에 보여야 합니다.");
@@ -208,7 +208,7 @@ try {
   assert.match(sourceHtml, /id="intro-replay"/);
   assert.deepEqual(INTRO_ROUTE.cts.scenePoint, [910.8, 102.22], "CTS는 일본 SVG의 신치토세공항 위치를 사용해야 합니다.");
   assert.deepEqual(INTRO_ROUTE.icn.mapPoint, [214.2, 185.6], "ICN은 대한민국 지도에서 영종도 공항 위치를 사용해야 합니다.");
-  assert.ok(INTRO_ROUTE.guro.mapPoint[0] >= 245.72 && INTRO_ROUTE.guro.mapPoint[0] <= 285.99, "구로 본부 지점은 서울 도형 안에 있어야 합니다.");
+  assert.equal("guro" in INTRO_ROUTE, false, "인트로 경로 데이터에 구로 본부가 남으면 안 됩니다.");
   assert.ok(INTRO_ROUTE.jincheon.mapPoint[0] >= 296.24 && INTRO_ROUTE.jincheon.mapPoint[0] <= 324.82, "진천연수원 지점은 진천군 가로 범위 안에 있어야 합니다.");
   assert.ok(INTRO_ROUTE.jincheon.mapPoint[1] >= 241.83 && INTRO_ROUTE.jincheon.mapPoint[1] <= 273.42, "진천연수원 지점은 진천군 세로 범위 안에 있어야 합니다.");
   assert.ok(INTRO_ROUTE.daejeon.mapPoint[0] >= 291.77 && INTRO_ROUTE.daejeon.mapPoint[0] <= 322.08, "대전문화회관 지점은 대전 도형 안에 있어야 합니다.");
@@ -225,8 +225,18 @@ try {
     assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].hallPhoto, null);
     assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].meetingPhoto, null);
     assert.ok(EXHIBITION_CONTENT[branchKey].hallPhoto, "프로덕션 회관 전경 사진 슬롯이 있어야 합니다.");
-    assert.equal(EXHIBITION_CONTENT[branchKey].slogan, "", "확정되지 않은 프로덕션 슬로건을 만들면 안 됩니다.");
+    assert.ok(EXHIBITION_CONTENT[branchKey].slogan, "프로덕션 한국어 슬로건이 있어야 합니다.");
+    assert.ok(EXHIBITION_CONTENT[branchKey].sloganJa, "프로덕션 일본어 슬로건이 있어야 합니다.");
+    assert.ok(EXHIBITION_CONTENT[branchKey].introductionJa, "프로덕션 일본어 소개문이 있어야 합니다.");
   }
+  assert.equal(EXHIBITION_CONTENT.chungnam.slogan, "백제에서 미래로 — 문화의 은혜를 평화의 우정으로");
+  assert.equal(EXHIBITION_CONTENT.chungnam.sloganJa, "百済から未来へ―文化の恩を平和の友情へ");
+  assert.equal(EXHIBITION_CONTENT.chungbuk.slogan, "중원의 대지 — 조화를 배우고 사명을 계승하다");
+  assert.equal(EXHIBITION_CONTENT.chungbuk.sloganJa, "中原の大地―調和を学び、使命を受け継ぐ");
+  assert.equal(EXHIBITION_CONTENT.daejeon.slogan, "한 사람의 행동이 도시를 바꾼다");
+  assert.equal(EXHIBITION_CONTENT.daejeon.sloganJa, "一人の行動が都市を変える");
+  assert.match(sourceHtml, /class="language-tabs"[\s\S]*data-language="ko"[\s\S]*data-language="ja"/, "메인 화면에 한국어·일본어 언어 탭이 있어야 합니다.");
+  assert.match(sourceApp, /function applyLanguage\(language\)/, "언어 탭이 메인 화면 전체 문구를 전환해야 합니다.");
 
   const sourceManifestBeforeBuild = await fs.readFile(path.join(root, "assets", "gallery-manifest.json"), "utf8");
   await exec(process.execPath, [path.join(root, "scripts", "build.mjs")]);

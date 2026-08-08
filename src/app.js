@@ -12,6 +12,7 @@ import {
   municipalityNames
 } from "../data/regions.js";
 import { EXHIBITION_CONTENT } from "../data/exhibition-content.js";
+import { formatCopy, UI_COPY } from "../data/ui-copy.js";
 import {
   EMPTY_FIXTURE_CONTENT,
   EMPTY_FIXTURE_MANIFEST,
@@ -33,6 +34,7 @@ const query = new URLSearchParams(window.location.search);
 const fixtureMode = query.get("fixture");
 const previewMode = query.get("intro") === "preview";
 const debugMode = query.get("debug") === "1";
+let currentLanguage = query.get("lang") === "ja" ? "ja" : "ko";
 
 const app = document.querySelector("#app");
 const branchSwitcher = document.querySelector("#branch-switcher");
@@ -65,6 +67,7 @@ const lightboxPrevious = document.querySelector(".lightbox-nav.previous");
 const lightboxNext = document.querySelector(".lightbox-nav.next");
 const lightboxClose = document.querySelector(".lightbox-close");
 const mapAttribution = document.querySelector("#map-attribution");
+const languageButtons = Array.from(document.querySelectorAll("[data-language]"));
 
 let manifest = { photos: [] };
 let content = EXHIBITION_CONTENT;
@@ -75,6 +78,18 @@ let visiblePhotos = [];
 let lightboxItems = [];
 let lightboxIndex = 0;
 let lightboxOpener = null;
+
+const copy = () => UI_COPY[currentLanguage];
+const localizedValue = (source, key) => {
+  if (!source) return "";
+  if (currentLanguage === "ja") return source[`${key}Ja`] || source[key] || "";
+  return source[key] || "";
+};
+const branchName = (branch, short = false) => {
+  const key = short ? "shortName" : "name";
+  return currentLanguage === "ja" ? branch[`${key}Ja`] || branch[key] : branch[key];
+};
+const categoryName = (category) => currentLanguage === "ja" ? category.nameJa || category.name : category.name;
 
 const svgElement = (name, attributes) => {
   const element = document.createElementNS(SVG_NS, name);
@@ -89,7 +104,7 @@ function humaniseFilename(filename) {
     .replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
-    .trim() || "청년 활동의 순간";
+    .trim() || copy().fallbackCaption;
 }
 
 function renderBranchControls() {
@@ -100,20 +115,21 @@ function renderBranchControls() {
     chip.className = "branch-chip";
     chip.dataset.branch = branchKey;
     chip.setAttribute("aria-pressed", "false");
-    chip.setAttribute("aria-label", `${branch.name} 선택`);
+    chip.setAttribute("aria-label", formatCopy(copy().selectBranch, { branch: branchName(branch) }));
 
     const dot = document.createElement("span");
     dot.className = "branch-dot";
     dot.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
-    label.textContent = branch.name;
+    label.className = "branch-chip-label";
+    label.textContent = branchName(branch);
     chip.appendChild(dot);
     chip.appendChild(label);
     branchSwitcher.appendChild(chip);
 
     const legend = document.createElement("span");
     legend.className = `legend-item legend-${branchKey}`;
-    legend.textContent = branch.shortName;
+    legend.textContent = branchName(branch, true);
     mapLegend.appendChild(legend);
   });
 }
@@ -137,7 +153,7 @@ function renderCountryContext() {
   replaceChildren(mapLandmarkLayer, []);
   appendMapLandmarks(mapLandmarkLayer);
   appendMapLandmarks(introKoreaLayer);
-  mapAttribution.textContent = MAP_ATTRIBUTION;
+  mapAttribution.textContent = copy().mapAttribution || MAP_ATTRIBUTION;
 }
 
 function appendMapLandmarks(layer) {
@@ -148,7 +164,7 @@ function appendMapLandmarks(layer) {
     });
     const dot = svgElement("circle", { class: "map-landmark-dot", r: 1.6 });
     const title = svgElement("title");
-    title.textContent = landmark.name;
+    title.textContent = currentLanguage === "ja" && landmark.id === "dokdo" ? "独島" : landmark.name;
     dot.appendChild(title);
     group.appendChild(dot);
     layer.appendChild(group);
@@ -164,17 +180,19 @@ function renderMap() {
   Object.keys(BRANCHES).forEach((branchKey) => {
     const branch = BRANCHES[branchKey];
     const branchCopy = content[branchKey] || {};
-    const accessibleDescription = branchCopy.introduction || branch.description;
+    const accessibleDescription = localizedValue(branchCopy, "introduction")
+      || (currentLanguage === "ja" ? branch.descriptionJa : branch.description);
+    const name = branchName(branch);
     const region = svgElement("g", {
       class: `branch-region branch-${branchKey}`,
       "data-branch": branchKey,
       tabindex: "0",
       role: "button",
       "aria-pressed": "false",
-      "aria-label": `${branch.name} 선택. ${accessibleDescription}`
+      "aria-label": `${formatCopy(copy().selectBranch, { branch: name })}. ${accessibleDescription}`
     });
     const title = svgElement("title");
-    title.textContent = `${branch.name}. ${accessibleDescription}`;
+    title.textContent = `${name}. ${accessibleDescription}`;
     region.appendChild(title);
 
     const clipId = `branch-clip-${branchKey}`;
@@ -233,7 +251,7 @@ function renderMap() {
     region.appendChild(hitAreas);
 
     const label = svgElement("text", { class: "branch-label", x: branch.label[0], y: branch.label[1], "aria-hidden": "true" });
-    label.textContent = branch.name;
+    label.textContent = name;
     region.appendChild(label);
     branchMapLayer.appendChild(region);
   });
@@ -303,10 +321,10 @@ function setBranchMapTransform(region, active) {
 }
 
 function photoItem(source, fallbackCaption, detail) {
-  const caption = source.caption || fallbackCaption;
+  const caption = localizedValue(source, "caption") || fallbackCaption;
   return {
     src: source.full || source.src || source.photo,
-    alt: source.alt || caption,
+    alt: localizedValue(source, "alt") || caption,
     caption,
     detail: detail || ""
   };
@@ -338,13 +356,18 @@ function renderHall(branchKey) {
   hallCard.hidden = !hall || (!hall.src && !hall.photo);
   if (hallCard.hidden) return;
 
-  const item = photoItem(hall, `${BRANCHES[branchKey].name} 회관 전경`, "방면회관 전경");
+  const branch = BRANCHES[branchKey];
+  const item = photoItem(
+    hall,
+    formatCopy(copy().hallFallback, { branch: branchName(branch) }),
+    copy().hallCaption
+  );
   hallCaption.textContent = item.caption;
-  hallCard.setAttribute("aria-label", `${item.caption} 사진 크게 보기`);
+  hallCard.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption: item.caption }));
 
   const placeholder = document.createElement("span");
   placeholder.className = "hall-placeholder";
-  placeholder.textContent = "회관 전경 사진 준비 중";
+  placeholder.textContent = copy().hallPlaceholder;
   hallPhotoFrame.appendChild(placeholder);
 
   const image = imageWithFallback(item.src, item.alt, "hall-photo", () => {
@@ -364,11 +387,16 @@ function renderMeeting(branchKey) {
   meetingSection.hidden = !meeting || (!meeting.src && !meeting.photo);
   if (!meeting || (!meeting.src && !meeting.photo)) return;
 
-  const item = photoItem(meeting, `${BRANCHES[branchKey].name} 방면운영회의`, "방면운영회의");
+  const branch = BRANCHES[branchKey];
+  const item = photoItem(
+    meeting,
+    formatCopy(copy().meetingFallback, { branch: branchName(branch) }),
+    copy().meetingTitle
+  );
   const card = document.createElement("button");
   card.type = "button";
   card.className = "meeting-card";
-  card.setAttribute("aria-label", `${item.caption} 사진 크게 보기`);
+  card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption: item.caption }));
   const image = imageWithFallback(item.src, item.alt, "meeting-photo", () => card.classList.add("has-image"), () => {
     meetingSection.hidden = true;
   });
@@ -398,17 +426,17 @@ function renderPlaceholders() {
     motif.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.className = "placeholder-label";
-    label.textContent = category.name;
+    label.textContent = categoryName(category);
     const title = document.createElement("strong");
-    title.textContent = `${BRANCHES[selectedBranch].shortName}의 다음 장면을 기다립니다`;
-    const copy = document.createElement("span");
-    copy.className = "placeholder-copy";
-    copy.textContent = "활동 사진이 준비되면 이 자리에 전시됩니다.";
+    title.textContent = formatCopy(copy().nextScene, { branch: branchName(BRANCHES[selectedBranch], true) });
+    const placeholderCopy = document.createElement("span");
+    placeholderCopy.className = "placeholder-copy";
+    placeholderCopy.textContent = copy().photoSoon;
     card.appendChild(number);
     card.appendChild(motif);
     card.appendChild(label);
     card.appendChild(title);
-    card.appendChild(copy);
+    card.appendChild(placeholderCopy);
     photoGrid.appendChild(card);
   });
 }
@@ -420,32 +448,36 @@ function renderGallery() {
     && (selectedCategory === "all" || photo.category === selectedCategory)
   ));
   replaceChildren(photoGrid, []);
-  photoCount.textContent = `${visiblePhotos.length}장의 기록`;
+  photoCount.textContent = formatCopy(copy().photoCount, { count: visiblePhotos.length });
   galleryStatus.textContent = manifestAvailable
-    ? "사진을 눌러 크게 볼 수 있습니다."
-    : "사진 목록을 불러오지 못했습니다. 안내 카드를 표시합니다.";
+    ? copy().galleryReady
+    : copy().galleryUnavailable;
   if (!visiblePhotos.length) {
     renderPlaceholders();
     return;
   }
 
   visiblePhotos.forEach((photo, index) => {
-    const caption = photo.caption || humaniseFilename(photo.filename || "");
-    const item = photoItem(photo, caption, CATEGORIES[photo.category] ? CATEGORIES[photo.category].name : "활동 기록");
+    const caption = localizedValue(photo, "caption") || humaniseFilename(photo.filename || "");
+    const item = photoItem(
+      photo,
+      caption,
+      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
+    );
     const card = document.createElement("button");
     card.type = "button";
     card.className = `photo-card ${index % 7 === 0 ? "wide" : ""} ${index % 9 === 5 ? "tall" : ""}`.trim();
     card.dataset.photoIndex = String(index);
-    card.setAttribute("aria-label", `${caption} 사진 크게 보기`);
+    card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption }));
     const img = imageWithFallback(photo.thumbnail || photo.src, item.alt, "", null, () => {
       card.classList.add("image-missing");
       card.setAttribute("aria-disabled", "true");
-      card.setAttribute("aria-label", `${caption}. 이미지 파일을 불러올 수 없습니다.`);
+      card.setAttribute("aria-label", formatCopy(copy().missingPhoto, { caption }));
     });
     if (index < 2) img.loading = "eager";
     const fallback = document.createElement("span");
     fallback.className = "image-fallback";
-    fallback.textContent = "이미지를 준비하고 있습니다";
+    fallback.textContent = copy().imagePreparing;
     const meta = document.createElement("span");
     meta.className = "photo-meta";
     const title = document.createElement("strong");
@@ -497,11 +529,13 @@ function selectBranch(branchKey, options) {
   const branch = BRANCHES[branchKey];
   const branchContent = content[branchKey] || {};
   galleryKicker.textContent = branch.english;
-  galleryTitle.textContent = branch.name;
-  branchSlogan.textContent = branchContent.slogan || "";
-  branchSlogan.hidden = !branchContent.slogan;
-  galleryDescription.textContent = branchContent.introduction || "";
-  galleryDescription.hidden = !branchContent.introduction;
+  galleryTitle.textContent = branchName(branch);
+  const slogan = localizedValue(branchContent, "slogan");
+  const introduction = localizedValue(branchContent, "introduction");
+  branchSlogan.textContent = slogan;
+  branchSlogan.hidden = !slogan;
+  galleryDescription.textContent = introduction;
+  galleryDescription.hidden = !introduction;
   renderHall(branchKey);
   renderMeeting(branchKey);
   setCategory("all");
@@ -532,6 +566,94 @@ function clearSelection(options) {
   if (config.restoreFocus && previousBranch) {
     const trigger = document.querySelector(`.branch-chip[data-branch="${previousBranch}"]`);
     if (trigger) trigger.focus();
+  }
+}
+
+function applyLanguage(language) {
+  currentLanguage = language === "ja" ? "ja" : "ko";
+  const ui = copy();
+  document.documentElement.lang = currentLanguage;
+  document.title = ui.documentTitle;
+  document.querySelector("#meta-description").setAttribute("content", ui.metaDescription);
+  document.querySelector("#skip-link").textContent = ui.skipLink;
+  document.querySelector(".language-tabs").setAttribute("aria-label", ui.languageLabel);
+  languageButtons.forEach((button) => {
+    const active = button.dataset.language === currentLanguage;
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+
+  document.querySelector(".map-panel").setAttribute("aria-label", ui.mapPanelLabel);
+  document.querySelector("#hero-title").textContent = ui.heroTitle;
+  document.querySelector("#hero-subtitle").textContent = ui.heroSubtitle;
+  branchSwitcher.setAttribute("aria-label", ui.branchSwitcherLabel);
+  document.querySelector("#map-title").textContent = ui.mapTitle;
+  document.querySelector("#map-desc").textContent = ui.mapDescription;
+  mapLegend.setAttribute("aria-label", ui.mapLegend);
+  document.querySelector("#intro-replay").setAttribute("aria-label", ui.replayLabel);
+  document.querySelector("#intro-replay").textContent = ui.replay;
+  document.querySelector("#footer-label").textContent = ui.footer;
+  document.querySelector("#map-info-label").textContent = ui.mapInfo;
+  mapAttribution.textContent = ui.mapAttribution;
+  galleryPanel.setAttribute("aria-label", ui.galleryPanelLabel);
+  backButton.setAttribute("aria-label", ui.backLabel);
+  document.querySelector("#back-button-label").textContent = ui.back;
+  document.querySelector("#meeting-section-title").textContent = ui.meetingTitle;
+  document.querySelector("#activity-section-title").textContent = ui.activityTitle;
+  document.querySelector(".category-tabs").setAttribute("aria-label", ui.categoryLabel);
+  categoryButtons.forEach((button) => {
+    const category = button.dataset.category;
+    button.textContent = category === "all" ? ui.all : categoryName(CATEGORIES[category]);
+  });
+  lightboxClose.setAttribute("aria-label", ui.closePhoto);
+  lightboxPrevious.setAttribute("aria-label", ui.previousPhoto);
+  lightboxNext.setAttribute("aria-label", ui.nextPhoto);
+  lightboxError.textContent = ui.lightboxError;
+
+  BRANCH_KEYS.forEach((branchKey) => {
+    const branch = BRANCHES[branchKey];
+    const name = branchName(branch);
+    const branchCopy = content[branchKey] || {};
+    const description = localizedValue(branchCopy, "introduction")
+      || (currentLanguage === "ja" ? branch.descriptionJa : branch.description);
+    const ariaLabel = `${formatCopy(ui.selectBranch, { branch: name })}. ${description}`;
+    const chip = branchSwitcher.querySelector(`[data-branch="${branchKey}"]`);
+    if (chip) {
+      chip.setAttribute("aria-label", formatCopy(ui.selectBranch, { branch: name }));
+      chip.querySelector(".branch-chip-label").textContent = name;
+    }
+    const legend = mapLegend.querySelector(`.legend-${branchKey}`);
+    if (legend) legend.textContent = branchName(branch, true);
+    const region = branchMapLayer.querySelector(`[data-branch="${branchKey}"]`);
+    if (region) {
+      region.setAttribute("aria-label", ariaLabel);
+      region.querySelector("title").textContent = `${name}. ${description}`;
+      region.querySelector(".branch-label").textContent = name;
+    }
+  });
+  mapLandmarkLayer.querySelectorAll(".map-landmark-dokdo title").forEach((title) => {
+    title.textContent = currentLanguage === "ja" ? "独島" : "독도";
+  });
+
+  if (selectedBranch) {
+    const branch = BRANCHES[selectedBranch];
+    const branchContent = content[selectedBranch] || {};
+    const introduction = localizedValue(branchContent, "introduction");
+    const slogan = localizedValue(branchContent, "slogan");
+    galleryTitle.textContent = branchName(branch);
+    galleryDescription.textContent = introduction;
+    galleryDescription.hidden = !introduction;
+    branchSlogan.textContent = slogan;
+    branchSlogan.hidden = !slogan;
+    renderHall(selectedBranch);
+    renderMeeting(selectedBranch);
+    renderGallery();
+  } else {
+    galleryTitle.textContent = ui.galleryPrompt;
+    hallCard.setAttribute("aria-label", ui.hallOpen);
+    hallCaption.textContent = ui.hallCaption;
+    photoCount.textContent = formatCopy(ui.photoCount, { count: 0 });
+    galleryStatus.textContent = ui.galleryReady;
   }
 }
 
@@ -570,6 +692,17 @@ function moveLightbox(direction) {
 }
 
 function bindEvents() {
+  languageButtons.forEach((button, index) => {
+    button.addEventListener("click", () => applyLanguage(button.dataset.language));
+    button.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      const next = languageButtons[(index + offset + languageButtons.length) % languageButtons.length];
+      applyLanguage(next.dataset.language);
+      next.focus();
+    });
+  });
   branchTriggers().forEach((trigger) => {
     trigger.addEventListener("click", () => selectBranch(trigger.dataset.branch));
     if (trigger.classList.contains("branch-region")) {
@@ -601,8 +734,8 @@ function bindEvents() {
     if (!card) return;
     const items = visiblePhotos.map((photo) => photoItem(
       photo,
-      photo.caption || humaniseFilename(photo.filename || ""),
-      CATEGORIES[photo.category] ? CATEGORIES[photo.category].name : "활동 기록"
+      localizedValue(photo, "caption") || humaniseFilename(photo.filename || ""),
+      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
     ));
     openLightbox(items, Number(card.dataset.photoIndex), card);
   });
@@ -641,6 +774,7 @@ async function boot() {
   renderBranchControls();
   renderCountryContext();
   renderMap();
+  applyLanguage(currentLanguage);
   setRegionInteractive(galleryPanel, false);
   bindEvents();
   initializeIntro({

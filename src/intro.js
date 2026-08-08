@@ -28,9 +28,8 @@ function haversineDistance(from, to) {
 
 export const CTS_ICN_DISTANCE = Math.round(haversineDistance(CTS, ICN) / 10) * 10;
 const DOMESTIC_STOPS = Object.freeze({
-  guro: Object.freeze({ revealAt: 9500, move: Object.freeze([10000, 10800]) }),
-  jincheon: Object.freeze({ revealAt: 10800, move: Object.freeze([11300, 12400]) }),
-  daejeon: Object.freeze({ revealAt: 12400, move: Object.freeze([12900, 14000]) })
+  jincheon: Object.freeze({ revealAt: 9500, move: Object.freeze([10000, 11800]) }),
+  daejeon: Object.freeze({ revealAt: 11800, move: Object.freeze([12300, 14000]) })
 });
 
 const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
@@ -46,7 +45,6 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
   const flightPath = document.querySelector("#intro-flight-path");
   const groundPath = document.querySelector("#intro-ground-path");
   const groundSegments = {
-    guro: document.querySelector("#intro-ground-to-guro"),
     jincheon: document.querySelector("#intro-ground-to-jincheon"),
     daejeon: document.querySelector("#intro-ground-to-daejeon")
   };
@@ -78,9 +76,8 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
   let lastStage = "";
 
   flightPath.setAttribute("d", `M${point(CTS)} C755 58 485 178 ${point(ICN)}`);
-  groundPath.setAttribute("d", `M${point(ICN)} C218 278 228 278 ${point(INTRO_ROUTE.guro)} C243 288 258 307 ${point(INTRO_ROUTE.jincheon)} C267 333 265 346 ${point(INTRO_ROUTE.daejeon)}`);
-  groundSegments.guro.setAttribute("d", `M${point(ICN)} C218 278 228 278 ${point(INTRO_ROUTE.guro)}`);
-  groundSegments.jincheon.setAttribute("d", `M${point(INTRO_ROUTE.guro)} C243 288 258 307 ${point(INTRO_ROUTE.jincheon)}`);
+  groundPath.setAttribute("d", `M${point(ICN)} C226 292 249 310 ${point(INTRO_ROUTE.jincheon)} C268 333 265 346 ${point(INTRO_ROUTE.daejeon)}`);
+  groundSegments.jincheon.setAttribute("d", `M${point(ICN)} C226 292 249 310 ${point(INTRO_ROUTE.jincheon)}`);
   groundSegments.daejeon.setAttribute("d", `M${point(INTRO_ROUTE.jincheon)} C267 333 265 346 ${point(INTRO_ROUTE.daejeon)}`);
   for (const [key, location] of Object.entries(INTRO_ROUTE)) {
     const marker = document.querySelector(`#intro-point-${key}`);
@@ -105,7 +102,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
     pauseStarted = 0;
     startButton.disabled = false;
     pauseButton.textContent = "一時停止";
-    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-guro", "show-jincheon", "show-daejeon", "reduced-sequence");
+    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-jincheon", "show-daejeon", "reduced-sequence");
     root.classList.add("is-visible");
     root.setAttribute("aria-hidden", "false");
     app.setAttribute("aria-hidden", "true");
@@ -152,7 +149,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
 
   const domesticRouteD = (elapsed) => {
     const points = [{ x: ICN.scenePoint[0], y: ICN.scenePoint[1] }];
-    for (const key of ["guro", "jincheon", "daejeon"]) {
+    for (const key of ["jincheon", "daejeon"]) {
       const progress = movementProgress(elapsed, DOMESTIC_STOPS[key]);
       if (progress <= 0) break;
       const path = groundSegments[key];
@@ -167,11 +164,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
   };
 
   const domesticTravelPoint = (elapsed) => {
-    if (elapsed < DOMESTIC_STOPS.guro.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
-    if (elapsed < DOMESTIC_STOPS.guro.move[1]) {
-      return pointOnPath(groundSegments.guro, ease(progressBetween(elapsed, DOMESTIC_STOPS.guro.move)));
-    }
-    if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: INTRO_ROUTE.guro.scenePoint[0], y: INTRO_ROUTE.guro.scenePoint[1] };
+    if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
     if (elapsed < DOMESTIC_STOPS.jincheon.move[1]) {
       return pointOnPath(groundSegments.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
     }
@@ -184,8 +177,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
     if (elapsed < INTRO_TIMELINE.flight[0]) return "韓国へ向けてズームアウト";
     if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "CTS → ICN 飛行中";
     if (elapsed < INTRO_TIMELINE.ground[0]) return "仁川国際空港に到着";
-    if (elapsed < 10800) return "仁川国際空港 → 韓国SGI本部";
-    if (elapsed < 12400) return "韓国SGI本部 → 鎮川研修院";
+    if (elapsed < 11800) return "仁川国際空港 → 鎮川研修院";
     if (elapsed < INTRO_TIMELINE.arrival[0]) return "鎮川研修院 → 大田文化会館";
     return "大田文化会館に到着";
   };
@@ -223,7 +215,6 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
       groundPath.setAttribute("d", domesticRouteD(elapsed));
       travelDot.setAttribute("transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`);
     }
-    root.classList.toggle("show-guro", elapsed >= DOMESTIC_STOPS.guro.revealAt);
     root.classList.toggle("show-jincheon", elapsed >= DOMESTIC_STOPS.jincheon.revealAt);
     root.classList.toggle("show-daejeon", elapsed >= DOMESTIC_STOPS.daejeon.revealAt);
     const label = updateStage(elapsed);
@@ -259,9 +250,8 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
     const steps = [
       ["新千歳空港を出発", 0],
       ["仁川国際空港に到着", 350],
-      ["韓国SGI本部 · ソウル九老", 700],
-      ["韓国SGI鎮川研修院", 1050],
-      ["韓国SGI大田文化会館に到着", 1400]
+      ["韓国SGI鎮川研修院", 700],
+      ["韓国SGI大田文化会館に到着", 1050]
     ];
     steps.forEach(([label, delay], index) => {
       const timeout = window.setTimeout(() => {
@@ -269,9 +259,8 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
           japanLayer.style.opacity = "0";
           koreaLayer.style.opacity = "1";
         }
-        if (index >= 2) root.classList.add("show-guro");
-        if (index >= 3) root.classList.add("show-jincheon");
-        if (index >= 4) root.classList.add("show-daejeon");
+        if (index >= 2) root.classList.add("show-jincheon");
+        if (index >= 3) root.classList.add("show-daejeon");
         stageLabel.textContent = label;
         setRuntimeStatus("intro", `簡易モーション · ${label}`);
         root.dataset.reducedStep = String(index);
@@ -303,7 +292,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
   const skip = () => {
     clearAsync();
     running = false;
-    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-guro", "show-jincheon", "show-daejeon", "reduced-sequence");
+    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-jincheon", "show-daejeon", "reduced-sequence");
     setRuntimeStatus("intro", "スキップ");
     if (previewMode) {
       resetScene();

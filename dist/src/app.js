@@ -112,6 +112,8 @@ var BRANCHES = Object.freeze({
   "chungnam": {
     "name": "충남방면",
     "shortName": "충남",
+    "nameJa": "忠南方面",
+    "shortNameJa": "忠南",
     "english": "CHUNGNAM AREA",
     "color": "coral",
     "zones": [
@@ -120,6 +122,7 @@ var BRANCHES = Object.freeze({
       "천안권"
     ],
     "description": "백제문화의 중심지로 일본 고대문화 형성에 깊은 영향을 전하고, 근대에는 비폭력 독립정신이 꽃핀 역사와 평화의 가치를 이어가는 방면입니다.",
+    "descriptionJa": "百済文化の中心地として日本の古代文化形成に深い影響を与え、近代には非暴力の独立精神が花開いた歴史と平和の価値を受け継ぐ方面です。",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 충청남도 시·군 가운데 계룡시와 금산군은 대전방면에 표시합니다.",
     "label": [
       248.79,
@@ -309,6 +312,8 @@ var BRANCHES = Object.freeze({
   "chungbuk": {
     "name": "충북방면",
     "shortName": "충북",
+    "nameJa": "忠北方面",
+    "shortNameJa": "忠北",
     "english": "CHUNGBUK AREA",
     "color": "teal",
     "zones": [
@@ -318,6 +323,7 @@ var BRANCHES = Object.freeze({
       "충주권"
     ],
     "description": "한반도의 중심에서 다양한 문화가 만나 조화를 이루며, 사제의 정신을 다음 세대에 꾸준히 계승해 온 방면입니다.",
+    "descriptionJa": "朝鮮半島の中央で多様な文化が出会い、調和を育みながら、師弟の精神を次の世代へと脈々と受け継いできた方面です。",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 옥천군은 대전방면에 표시하고 영동군은 충북방면에서 제외합니다. 제천권의 강원도 영월군은 충북방면에 표시합니다.",
     "label": [
       360.61,
@@ -493,6 +499,8 @@ var BRANCHES = Object.freeze({
   "daejeon": {
     "name": "대전방면",
     "shortName": "대전",
+    "nameJa": "大田方面",
+    "shortNameJa": "大田",
     "english": "DAEJEON AREA",
     "color": "cobalt",
     "zones": [
@@ -502,6 +510,7 @@ var BRANCHES = Object.freeze({
       "세종권"
     ],
     "description": "이케다 선생님의 고향 오타(大田)와 같은 한자를 쓰는 인연을 품고, 과학·교육·행정·교통의 중심에서 인간주의를 시민행동으로 실천해 온 방면입니다.",
+    "descriptionJa": "池田先生の故郷・大田（おおた）と同じ漢字を持つ縁を胸に、科学・教育・行政・交通の中心地として、人間主義を市民の行動に移してきた方面です。",
     "boundaryNote": "행정구역은 방면의 지도 범위를 나타내며, 세종특별자치시와 계룡시·금산군·옥천군을 행정 도 경계와 관계없이 함께 표시합니다.",
     "label": [
       311.57,
@@ -628,11 +637,15 @@ var BRANCHES = Object.freeze({
 var CATEGORIES = Object.freeze({
   "future": {
     "name": "청년미래총회",
-    "shortName": "미래총회"
+    "shortName": "미래총회",
+    "nameJa": "青年未来総会",
+    "shortNameJa": "未来総会"
   },
   "visit": {
     "name": "방문 일대일 근행회",
-    "shortName": "방문 근행회"
+    "shortName": "방문 근행회",
+    "nameJa": "訪問一対一勤行会",
+    "shortNameJa": "訪問勤行会"
   }
 });
 var BRANCH_KEYS = Object.freeze(Object.keys(BRANCHES));
@@ -643,41 +656,160 @@ function municipalityNames(branchKey) {
 }
 
 // data/exhibition-content.js
-var hallPhoto = (branch, name) => ({
+var hallPhoto = (branch, name, nameJa) => ({
   photo: "./assets/halls/".concat(branch, "/exterior.jpg"),
   alt: "".concat(name, " 회관 전경"),
   caption: "".concat(name, " 회관 전경"),
+  altJa: "".concat(nameJa, "会館の外観"),
+  captionJa: "".concat(nameJa, "会館の外観"),
   objectPosition: "50% 50%"
 });
 var EXHIBITION_CONTENT = Object.freeze({
   chungnam: {
-    slogan: "",
+    slogan: "백제에서 미래로 — 문화의 은혜를 평화의 우정으로",
+    sloganJa: "百済から未来へ―文化の恩を平和の友情へ",
     introduction: "백제문화의 중심지로 일본 고대문화 형성에 깊은 영향을 전하고, 근대에는 비폭력 독립정신이 꽃핀 역사와 평화의 가치를 이어가는 방면입니다.",
-    hallPhoto: hallPhoto("chungnam", "충남방면"),
+    introductionJa: "百済文化の中心地として日本の古代文化形成に深い影響を与え、近代には非暴力の独立精神が花開いた歴史と平和の価値を受け継ぐ方面です。",
+    hallPhoto: hallPhoto("chungnam", "충남방면", "忠南方面"),
     meetingPhoto: null,
     futureMedia: null
   },
   chungbuk: {
-    slogan: "",
+    slogan: "중원의 대지 — 조화를 배우고 사명을 계승하다",
+    sloganJa: "中原の大地―調和を学び、使命を受け継ぐ",
     introduction: "한반도의 중심에서 다양한 문화가 만나 조화를 이루며, 사제의 정신을 다음 세대에 꾸준히 계승해 온 방면입니다.",
-    hallPhoto: hallPhoto("chungbuk", "충북방면"),
+    introductionJa: "朝鮮半島の中央で多様な文化が出会い、調和を育みながら、師弟の精神を次の世代へと脈々と受け継いできた方面です。",
+    hallPhoto: hallPhoto("chungbuk", "충북방면", "忠北方面"),
     meetingPhoto: null,
     futureMedia: null
   },
   daejeon: {
-    slogan: "",
+    slogan: "한 사람의 행동이 도시를 바꾼다",
+    sloganJa: "一人の行動が都市を変える",
     introduction: "이케다 선생님의 고향 오타(大田)와 같은 한자를 쓰는 인연을 품고, 과학·교육·행정·교통의 중심에서 인간주의를 시민행동으로 실천해 온 방면입니다.",
-    hallPhoto: hallPhoto("daejeon", "대전방면"),
+    introductionJa: "池田先生の故郷・大田（おおた）と同じ漢字を持つ縁を胸に、科学・教育・行政・交通の中心地として、人間主義を市民の行動に移してきた方面です。",
+    hallPhoto: hallPhoto("daejeon", "대전방면", "大田方面"),
     meetingPhoto: null,
     futureMedia: null
   }
 });
+
+// data/ui-copy.js
+var UI_COPY = Object.freeze({
+  ko: Object.freeze({
+    documentTitle: "마음과 마음을 잇는 청년의 발자취",
+    metaDescription: "충남·충북·대전방면 청년 활동 오프라인 전시",
+    skipLink: "방면 선택으로 건너뛰기",
+    languageLabel: "표시 언어",
+    mapPanelLabel: "대한민국 지도에서 방면 선택",
+    heroTitle: "마음과 마음을 잇는 청년의 발자취",
+    heroSubtitle: "지도에서 방면을 선택해 활동의 순간을 만나보세요.",
+    branchSwitcherLabel: "방면 선택",
+    mapTitle: "대한민국 지도와 충남, 충북, 대전방면",
+    mapDescription: "낮은 대비의 대한민국 지도 위에 충남방면, 충북방면, 대전방면을 서로 다른 색으로 표시하고 동쪽에 독도 위치점을 표시했습니다.",
+    mapLegend: "지도 범례",
+    replayLabel: "홋카이도에서 대전까지의 여정 다시 보기",
+    replay: "여정 다시 보기",
+    footer: "충남 · 충북 · 대전 청년부",
+    mapInfo: "지도 정보",
+    mapAttribution: "통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화",
+    galleryPanelLabel: "방면 활동 콘텐츠",
+    backLabel: "전체 지도로 돌아가기",
+    back: "전체 지도",
+    galleryPrompt: "방면을 선택해 주세요",
+    hallOpen: "방면회관 전경 사진 크게 보기",
+    hallCaption: "방면회관 전경",
+    hallPlaceholder: "회관 전경 사진 준비 중",
+    meetingTitle: "방면운영회의",
+    activityTitle: "청년 활동 기록",
+    categoryLabel: "활동 유형",
+    all: "전체",
+    future: "청년미래총회",
+    visit: "방문 일대일 근행회",
+    photoCount: "{count}장의 기록",
+    galleryReady: "사진을 눌러 크게 볼 수 있습니다.",
+    galleryUnavailable: "사진 목록을 불러오지 못했습니다. 안내 카드를 표시합니다.",
+    nextScene: "{branch}의 다음 장면을 기다립니다",
+    photoSoon: "활동 사진이 준비되면 이 자리에 전시됩니다.",
+    imagePreparing: "이미지를 준비하고 있습니다",
+    activityRecord: "활동 기록",
+    openPhoto: "{caption} 사진 크게 보기",
+    missingPhoto: "{caption}. 이미지 파일을 불러올 수 없습니다.",
+    selectBranch: "{branch} 선택",
+    closePhoto: "사진 닫기",
+    previousPhoto: "이전 사진",
+    nextPhoto: "다음 사진",
+    lightboxError: "이미지를 불러올 수 없습니다.",
+    fallbackCaption: "청년 활동의 순간",
+    hallFallback: "{branch} 회관 전경",
+    meetingFallback: "{branch} 운영회의"
+  }),
+  ja: Object.freeze({
+    documentTitle: "心と心を結ぶ青年の足跡",
+    metaDescription: "忠南・忠北・大田方面の青年活動を紹介する展示",
+    skipLink: "方面選択へ移動",
+    languageLabel: "表示言語",
+    mapPanelLabel: "韓国地図から方面を選択",
+    heroTitle: "心と心を結ぶ青年の足跡",
+    heroSubtitle: "地図から方面を選び、青年たちの活動の軌跡をご覧ください。",
+    branchSwitcherLabel: "方面を選択",
+    mapTitle: "韓国地図と忠南・忠北・大田方面",
+    mapDescription: "淡い韓国地図の上に忠南・忠北・大田の各方面を色分けし、東側に独島の位置を点で示しています。",
+    mapLegend: "地図の凡例",
+    replayLabel: "北海道から大田までの旅をもう一度見る",
+    replay: "旅をもう一度見る",
+    footer: "忠南・忠北・大田 青年部",
+    mapInfo: "地図情報",
+    mapAttribution: "韓国統計庁SGISの2020年行政区域境界を基にした展示用簡略図",
+    galleryPanelLabel: "方面別の青年活動",
+    backLabel: "全体地図に戻る",
+    back: "全体地図",
+    galleryPrompt: "方面を選択してください",
+    hallOpen: "方面会館の外観写真を拡大表示",
+    hallCaption: "方面会館の外観",
+    hallPlaceholder: "会館の外観写真を準備中です",
+    meetingTitle: "方面運営会議",
+    activityTitle: "青年活動の記録",
+    categoryLabel: "活動カテゴリー",
+    all: "すべて",
+    future: "青年未来総会",
+    visit: "訪問一対一勤行会",
+    photoCount: "{count}枚の記録",
+    galleryReady: "写真を押すと拡大してご覧いただけます。",
+    galleryUnavailable: "写真一覧を読み込めませんでした。案内カードを表示します。",
+    nextScene: "{branch}の次の一枚をお待ちしています",
+    photoSoon: "活動写真の準備が整い次第、こちらに展示します。",
+    imagePreparing: "画像を準備しています",
+    activityRecord: "活動の記録",
+    openPhoto: "{caption}を拡大表示",
+    missingPhoto: "{caption}。画像を読み込めませんでした。",
+    selectBranch: "{branch}を選択",
+    closePhoto: "写真を閉じる",
+    previousPhoto: "前の写真",
+    nextPhoto: "次の写真",
+    lightboxError: "画像を読み込めませんでした。",
+    fallbackCaption: "青年活動のひとこま",
+    hallFallback: "{branch}会館の外観",
+    meetingFallback: "{branch}運営会議"
+  })
+});
+function formatCopy(template, values = {}) {
+  return Object.entries(values).reduce(
+    (result, [key, value]) => result.replaceAll("{".concat(key, "}"), String(value)),
+    template
+  );
+}
 
 // data/fixture-content.js
 var BRANCH_NAMES = {
   chungnam: "충남방면",
   chungbuk: "충북방면",
   daejeon: "대전방면"
+};
+var BRANCH_NAMES_JA = {
+  chungnam: "忠南方面",
+  chungbuk: "忠北方面",
+  daejeon: "大田方面"
 };
 var CATEGORY_SEQUENCE = ["future", "visit", "future", "visit", "future", "visit"];
 var EMPTY_FIXTURE_MANIFEST = Object.freeze({ version: 1, fixture: "empty", photos: [] });
@@ -692,7 +824,9 @@ Object.keys(BRANCH_NAMES).forEach((branch) => {
       src: "./fixtures/full/gallery/activity-".concat(index + 1, ".svg"),
       thumbnail: "./fixtures/full/gallery/activity-".concat(index + 1, ".svg"),
       caption: "".concat(BRANCH_NAMES[branch], " 테스트 활동 ").concat(index + 1),
-      alt: "".concat(BRANCH_NAMES[branch], " 활동 사진 레이아웃을 확인하는 추상 그래픽 ").concat(index + 1)
+      alt: "".concat(BRANCH_NAMES[branch], " 활동 사진 레이아웃을 확인하는 추상 그래픽 ").concat(index + 1),
+      captionJa: "".concat(BRANCH_NAMES_JA[branch], " テスト活動 ").concat(index + 1),
+      altJa: "".concat(BRANCH_NAMES_JA[branch], "の活動写真レイアウトを確認する抽象グラフィック ").concat(index + 1)
     });
   });
 });
@@ -705,24 +839,33 @@ var fullContent = {};
 var emptyContent = {};
 Object.keys(BRANCH_NAMES).forEach((branch) => {
   const name = BRANCH_NAMES[branch];
+  const nameJa = BRANCH_NAMES_JA[branch];
   fullContent[branch] = {
     slogan: "".concat(name, " 테스트 슬로건"),
+    sloganJa: "".concat(nameJa, "のテストスローガン"),
     introduction: "".concat(name, " 전시 콘텐츠의 전체 상태를 확인하는 테스트 소개입니다."),
+    introductionJa: "".concat(nameJa, "の展示コンテンツ全体を確認するためのテスト紹介文です。"),
     hallPhoto: {
       photo: "./fixtures/full/meeting/group.svg",
       alt: "".concat(name, " 회관 전경 영역 테스트용 추상 그래픽"),
-      caption: "".concat(name, " 회관 전경 테스트 이미지")
+      caption: "".concat(name, " 회관 전경 테스트 이미지"),
+      altJa: "".concat(nameJa, "会館の外観枠を確認するテスト用グラフィック"),
+      captionJa: "".concat(nameJa, "会館の外観テスト画像")
     },
     meetingPhoto: {
       photo: "./fixtures/full/meeting/group.svg",
       alt: "".concat(name, " 단체사진 영역 테스트용 추상 그래픽"),
-      caption: "".concat(name, " 방면운영회의 테스트 이미지")
+      caption: "".concat(name, " 방면운영회의 테스트 이미지"),
+      altJa: "".concat(nameJa, "の集合写真枠を確認するテスト用グラフィック"),
+      captionJa: "".concat(nameJa, "運営会議のテスト画像")
     },
     futureMedia: null
   };
   emptyContent[branch] = {
     slogan: "",
+    sloganJa: "",
     introduction: "",
+    introductionJa: "",
     hallPhoto: null,
     meetingPhoto: null,
     futureMedia: null
@@ -860,10 +1003,10 @@ function updateDebugPanel() {
   replaceChildren(panel, rows.map(([term, value]) => {
     const row = document.createElement("div");
     const label = document.createElement("strong");
-    const copy = document.createElement("span");
+    const copy2 = document.createElement("span");
     label.textContent = term;
-    copy.textContent = value;
-    row.append(label, copy);
+    copy2.textContent = value;
+    row.append(label, copy2);
     return row;
   }));
 }
@@ -912,14 +1055,6 @@ var INTRO_ROUTE = Object.freeze({
     mapPoint: Object.freeze([214.2, 185.6]),
     scenePoint: koreaToScene([214.2, 185.6])
   }),
-  guro: Object.freeze({
-    label: "韓国SGI本部 · ソウル九老",
-    latitude: 37.501827,
-    longitude: 126.890334,
-    address: "서울특별시 구로구 공원로 54",
-    mapPoint: Object.freeze([258.1, 182.4]),
-    scenePoint: koreaToScene([258.1, 182.4])
-  }),
   jincheon: Object.freeze({
     label: "韓国SGI鎮川研修院",
     latitude: 36.81428,
@@ -960,9 +1095,8 @@ function haversineDistance(from, to) {
 }
 var CTS_ICN_DISTANCE = Math.round(haversineDistance(CTS, ICN) / 10) * 10;
 var DOMESTIC_STOPS = Object.freeze({
-  guro: Object.freeze({ revealAt: 9500, move: Object.freeze([1e4, 10800]) }),
-  jincheon: Object.freeze({ revealAt: 10800, move: Object.freeze([11300, 12400]) }),
-  daejeon: Object.freeze({ revealAt: 12400, move: Object.freeze([12900, 14e3]) })
+  jincheon: Object.freeze({ revealAt: 9500, move: Object.freeze([1e4, 11800]) }),
+  daejeon: Object.freeze({ revealAt: 11800, move: Object.freeze([12300, 14e3]) })
 });
 var clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 var progressBetween = (elapsed, range) => clamp((elapsed - range[0]) / (range[1] - range[0]), 0, 1);
@@ -976,7 +1110,6 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   const flightPath = document.querySelector("#intro-flight-path");
   const groundPath = document.querySelector("#intro-ground-path");
   const groundSegments = {
-    guro: document.querySelector("#intro-ground-to-guro"),
     jincheon: document.querySelector("#intro-ground-to-jincheon"),
     daejeon: document.querySelector("#intro-ground-to-daejeon")
   };
@@ -1004,9 +1137,8 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   let speed = 1;
   let lastStage = "";
   flightPath.setAttribute("d", "M".concat(point(CTS), " C755 58 485 178 ").concat(point(ICN)));
-  groundPath.setAttribute("d", "M".concat(point(ICN), " C218 278 228 278 ").concat(point(INTRO_ROUTE.guro), " C243 288 258 307 ").concat(point(INTRO_ROUTE.jincheon), " C267 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
-  groundSegments.guro.setAttribute("d", "M".concat(point(ICN), " C218 278 228 278 ").concat(point(INTRO_ROUTE.guro)));
-  groundSegments.jincheon.setAttribute("d", "M".concat(point(INTRO_ROUTE.guro), " C243 288 258 307 ").concat(point(INTRO_ROUTE.jincheon)));
+  groundPath.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon), " C268 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
+  groundSegments.jincheon.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon)));
   groundSegments.daejeon.setAttribute("d", "M".concat(point(INTRO_ROUTE.jincheon), " C267 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
   for (const [key, location2] of Object.entries(INTRO_ROUTE)) {
     const marker = document.querySelector("#intro-point-".concat(key));
@@ -1029,7 +1161,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     pauseStarted = 0;
     startButton.disabled = false;
     pauseButton.textContent = "一時停止";
-    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-guro", "show-jincheon", "show-daejeon", "reduced-sequence");
+    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-jincheon", "show-daejeon", "reduced-sequence");
     root.classList.add("is-visible");
     root.setAttribute("aria-hidden", "false");
     app2.setAttribute("aria-hidden", "true");
@@ -1072,7 +1204,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   };
   const domesticRouteD = (elapsed) => {
     const points = [{ x: ICN.scenePoint[0], y: ICN.scenePoint[1] }];
-    for (const key of ["guro", "jincheon", "daejeon"]) {
+    for (const key of ["jincheon", "daejeon"]) {
       const progress = movementProgress(elapsed, DOMESTIC_STOPS[key]);
       if (progress <= 0) break;
       const path = groundSegments[key];
@@ -1086,11 +1218,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     return points.map((routePoint, index) => "".concat(index ? "L" : "M").concat(routePoint.x.toFixed(2), " ").concat(routePoint.y.toFixed(2))).join(" ");
   };
   const domesticTravelPoint = (elapsed) => {
-    if (elapsed < DOMESTIC_STOPS.guro.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
-    if (elapsed < DOMESTIC_STOPS.guro.move[1]) {
-      return pointOnPath(groundSegments.guro, ease(progressBetween(elapsed, DOMESTIC_STOPS.guro.move)));
-    }
-    if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: INTRO_ROUTE.guro.scenePoint[0], y: INTRO_ROUTE.guro.scenePoint[1] };
+    if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
     if (elapsed < DOMESTIC_STOPS.jincheon.move[1]) {
       return pointOnPath(groundSegments.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
     }
@@ -1102,8 +1230,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     if (elapsed < INTRO_TIMELINE.flight[0]) return "韓国へ向けてズームアウト";
     if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "CTS → ICN 飛行中";
     if (elapsed < INTRO_TIMELINE.ground[0]) return "仁川国際空港に到着";
-    if (elapsed < 10800) return "仁川国際空港 → 韓国SGI本部";
-    if (elapsed < 12400) return "韓国SGI本部 → 鎮川研修院";
+    if (elapsed < 11800) return "仁川国際空港 → 鎮川研修院";
     if (elapsed < INTRO_TIMELINE.arrival[0]) return "鎮川研修院 → 大田文化会館";
     return "大田文化会館に到着";
   };
@@ -1138,7 +1265,6 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
       groundPath.setAttribute("d", domesticRouteD(elapsed));
       travelDot.setAttribute("transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ")"));
     }
-    root.classList.toggle("show-guro", elapsed >= DOMESTIC_STOPS.guro.revealAt);
     root.classList.toggle("show-jincheon", elapsed >= DOMESTIC_STOPS.jincheon.revealAt);
     root.classList.toggle("show-daejeon", elapsed >= DOMESTIC_STOPS.daejeon.revealAt);
     const label = updateStage(elapsed);
@@ -1172,9 +1298,8 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     const steps = [
       ["新千歳空港を出発", 0],
       ["仁川国際空港に到着", 350],
-      ["韓国SGI本部 · ソウル九老", 700],
-      ["韓国SGI鎮川研修院", 1050],
-      ["韓国SGI大田文化会館に到着", 1400]
+      ["韓国SGI鎮川研修院", 700],
+      ["韓国SGI大田文化会館に到着", 1050]
     ];
     steps.forEach(([label, delay], index) => {
       const timeout = window.setTimeout(() => {
@@ -1182,9 +1307,8 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
           japanLayer.style.opacity = "0";
           koreaLayer.style.opacity = "1";
         }
-        if (index >= 2) root.classList.add("show-guro");
-        if (index >= 3) root.classList.add("show-jincheon");
-        if (index >= 4) root.classList.add("show-daejeon");
+        if (index >= 2) root.classList.add("show-jincheon");
+        if (index >= 3) root.classList.add("show-daejeon");
         stageLabel.textContent = label;
         setRuntimeStatus("intro", "簡易モーション · ".concat(label));
         root.dataset.reducedStep = String(index);
@@ -1214,7 +1338,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   const skip = () => {
     clearAsync();
     running = false;
-    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-guro", "show-jincheon", "show-daejeon", "reduced-sequence");
+    root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-jincheon", "show-daejeon", "reduced-sequence");
     setRuntimeStatus("intro", "スキップ");
     if (previewMode2) {
       resetScene();
@@ -1269,6 +1393,7 @@ var query = new URLSearchParams(window.location.search);
 var fixtureMode = query.get("fixture");
 var previewMode = query.get("intro") === "preview";
 var debugMode = query.get("debug") === "1";
+var currentLanguage = query.get("lang") === "ja" ? "ja" : "ko";
 var app = document.querySelector("#app");
 var branchSwitcher = document.querySelector("#branch-switcher");
 var koreaMap = document.querySelector(".korea-map");
@@ -1300,6 +1425,7 @@ var lightboxPrevious = document.querySelector(".lightbox-nav.previous");
 var lightboxNext = document.querySelector(".lightbox-nav.next");
 var lightboxClose = document.querySelector(".lightbox-close");
 var mapAttribution = document.querySelector("#map-attribution");
+var languageButtons = Array.from(document.querySelectorAll("[data-language]"));
 var manifest = { photos: [] };
 var content = EXHIBITION_CONTENT;
 var manifestAvailable = true;
@@ -1309,6 +1435,17 @@ var visiblePhotos = [];
 var lightboxItems = [];
 var lightboxIndex = 0;
 var lightboxOpener = null;
+var copy = () => UI_COPY[currentLanguage];
+var localizedValue = (source, key) => {
+  if (!source) return "";
+  if (currentLanguage === "ja") return source["".concat(key, "Ja")] || source[key] || "";
+  return source[key] || "";
+};
+var branchName = (branch, short = false) => {
+  const key = short ? "shortName" : "name";
+  return currentLanguage === "ja" ? branch["".concat(key, "Ja")] || branch[key] : branch[key];
+};
+var categoryName = (category) => currentLanguage === "ja" ? category.nameJa || category.name : category.name;
 var svgElement = (name, attributes) => {
   const element = document.createElementNS(SVG_NS, name);
   const source = attributes || {};
@@ -1316,7 +1453,7 @@ var svgElement = (name, attributes) => {
   return element;
 };
 function humaniseFilename(filename) {
-  return filename.replace(/\.[^.]+$/, "").replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() || "청년 활동의 순간";
+  return filename.replace(/\.[^.]+$/, "").replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() || copy().fallbackCaption;
 }
 function renderBranchControls() {
   Object.keys(BRANCHES).forEach((branchKey) => {
@@ -1326,18 +1463,19 @@ function renderBranchControls() {
     chip.className = "branch-chip";
     chip.dataset.branch = branchKey;
     chip.setAttribute("aria-pressed", "false");
-    chip.setAttribute("aria-label", "".concat(branch.name, " 선택"));
+    chip.setAttribute("aria-label", formatCopy(copy().selectBranch, { branch: branchName(branch) }));
     const dot = document.createElement("span");
     dot.className = "branch-dot";
     dot.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
-    label.textContent = branch.name;
+    label.className = "branch-chip-label";
+    label.textContent = branchName(branch);
     chip.appendChild(dot);
     chip.appendChild(label);
     branchSwitcher.appendChild(chip);
     const legend = document.createElement("span");
     legend.className = "legend-item legend-".concat(branchKey);
-    legend.textContent = branch.shortName;
+    legend.textContent = branchName(branch, true);
     mapLegend.appendChild(legend);
   });
 }
@@ -1359,7 +1497,7 @@ function renderCountryContext() {
   replaceChildren(mapLandmarkLayer, []);
   appendMapLandmarks(mapLandmarkLayer);
   appendMapLandmarks(introKoreaLayer);
-  mapAttribution.textContent = MAP_ATTRIBUTION;
+  mapAttribution.textContent = copy().mapAttribution || MAP_ATTRIBUTION;
 }
 function appendMapLandmarks(layer) {
   MAP_LANDMARKS.forEach((landmark) => {
@@ -1369,7 +1507,7 @@ function appendMapLandmarks(layer) {
     });
     const dot = svgElement("circle", { class: "map-landmark-dot", r: 1.6 });
     const title = svgElement("title");
-    title.textContent = landmark.name;
+    title.textContent = currentLanguage === "ja" && landmark.id === "dokdo" ? "独島" : landmark.name;
     dot.appendChild(title);
     group.appendChild(dot);
     layer.appendChild(group);
@@ -1383,17 +1521,18 @@ function renderMap() {
   Object.keys(BRANCHES).forEach((branchKey) => {
     const branch = BRANCHES[branchKey];
     const branchCopy = content[branchKey] || {};
-    const accessibleDescription = branchCopy.introduction || branch.description;
+    const accessibleDescription = localizedValue(branchCopy, "introduction") || (currentLanguage === "ja" ? branch.descriptionJa : branch.description);
+    const name = branchName(branch);
     const region = svgElement("g", {
       class: "branch-region branch-".concat(branchKey),
       "data-branch": branchKey,
       tabindex: "0",
       role: "button",
       "aria-pressed": "false",
-      "aria-label": "".concat(branch.name, " 선택. ").concat(accessibleDescription)
+      "aria-label": "".concat(formatCopy(copy().selectBranch, { branch: name }), ". ").concat(accessibleDescription)
     });
     const title = svgElement("title");
-    title.textContent = "".concat(branch.name, ". ").concat(accessibleDescription);
+    title.textContent = "".concat(name, ". ").concat(accessibleDescription);
     region.appendChild(title);
     const clipId = "branch-clip-".concat(branchKey);
     const clipPath = svgElement("clipPath", { id: clipId, clipPathUnits: "userSpaceOnUse" });
@@ -1447,7 +1586,7 @@ function renderMap() {
     region.appendChild(outlines);
     region.appendChild(hitAreas);
     const label = svgElement("text", { class: "branch-label", x: branch.label[0], y: branch.label[1], "aria-hidden": "true" });
-    label.textContent = branch.name;
+    label.textContent = name;
     region.appendChild(label);
     branchMapLayer.appendChild(region);
   });
@@ -1508,10 +1647,10 @@ function setBranchMapTransform(region, active) {
   );
 }
 function photoItem(source, fallbackCaption, detail) {
-  const caption = source.caption || fallbackCaption;
+  const caption = localizedValue(source, "caption") || fallbackCaption;
   return {
     src: source.full || source.src || source.photo,
-    alt: source.alt || caption,
+    alt: localizedValue(source, "alt") || caption,
     caption,
     detail: detail || ""
   };
@@ -1540,12 +1679,17 @@ function renderHall(branchKey) {
   hallCard.onclick = null;
   hallCard.hidden = !hall || !hall.src && !hall.photo;
   if (hallCard.hidden) return;
-  const item = photoItem(hall, "".concat(BRANCHES[branchKey].name, " 회관 전경"), "방면회관 전경");
+  const branch = BRANCHES[branchKey];
+  const item = photoItem(
+    hall,
+    formatCopy(copy().hallFallback, { branch: branchName(branch) }),
+    copy().hallCaption
+  );
   hallCaption.textContent = item.caption;
-  hallCard.setAttribute("aria-label", "".concat(item.caption, " 사진 크게 보기"));
+  hallCard.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption: item.caption }));
   const placeholder = document.createElement("span");
   placeholder.className = "hall-placeholder";
-  placeholder.textContent = "회관 전경 사진 준비 중";
+  placeholder.textContent = copy().hallPlaceholder;
   hallPhotoFrame.appendChild(placeholder);
   const image = imageWithFallback(item.src, item.alt, "hall-photo", () => {
     hallCard.classList.add("has-image");
@@ -1562,11 +1706,16 @@ function renderMeeting(branchKey) {
   replaceChildren(meetingContent, []);
   meetingSection.hidden = !meeting || !meeting.src && !meeting.photo;
   if (!meeting || !meeting.src && !meeting.photo) return;
-  const item = photoItem(meeting, "".concat(BRANCHES[branchKey].name, " 방면운영회의"), "방면운영회의");
+  const branch = BRANCHES[branchKey];
+  const item = photoItem(
+    meeting,
+    formatCopy(copy().meetingFallback, { branch: branchName(branch) }),
+    copy().meetingTitle
+  );
   const card = document.createElement("button");
   card.type = "button";
   card.className = "meeting-card";
-  card.setAttribute("aria-label", "".concat(item.caption, " 사진 크게 보기"));
+  card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption: item.caption }));
   const image = imageWithFallback(item.src, item.alt, "meeting-photo", () => card.classList.add("has-image"), () => {
     meetingSection.hidden = true;
   });
@@ -1595,17 +1744,17 @@ function renderPlaceholders() {
     motif.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.className = "placeholder-label";
-    label.textContent = category.name;
+    label.textContent = categoryName(category);
     const title = document.createElement("strong");
-    title.textContent = "".concat(BRANCHES[selectedBranch].shortName, "의 다음 장면을 기다립니다");
-    const copy = document.createElement("span");
-    copy.className = "placeholder-copy";
-    copy.textContent = "활동 사진이 준비되면 이 자리에 전시됩니다.";
+    title.textContent = formatCopy(copy().nextScene, { branch: branchName(BRANCHES[selectedBranch], true) });
+    const placeholderCopy = document.createElement("span");
+    placeholderCopy.className = "placeholder-copy";
+    placeholderCopy.textContent = copy().photoSoon;
     card.appendChild(number);
     card.appendChild(motif);
     card.appendChild(label);
     card.appendChild(title);
-    card.appendChild(copy);
+    card.appendChild(placeholderCopy);
     photoGrid.appendChild(card);
   });
 }
@@ -1613,29 +1762,33 @@ function renderGallery() {
   if (!selectedBranch) return;
   visiblePhotos = manifest.photos.filter((photo) => photo.branch === selectedBranch && (selectedCategory === "all" || photo.category === selectedCategory));
   replaceChildren(photoGrid, []);
-  photoCount.textContent = "".concat(visiblePhotos.length, "장의 기록");
-  galleryStatus.textContent = manifestAvailable ? "사진을 눌러 크게 볼 수 있습니다." : "사진 목록을 불러오지 못했습니다. 안내 카드를 표시합니다.";
+  photoCount.textContent = formatCopy(copy().photoCount, { count: visiblePhotos.length });
+  galleryStatus.textContent = manifestAvailable ? copy().galleryReady : copy().galleryUnavailable;
   if (!visiblePhotos.length) {
     renderPlaceholders();
     return;
   }
   visiblePhotos.forEach((photo, index) => {
-    const caption = photo.caption || humaniseFilename(photo.filename || "");
-    const item = photoItem(photo, caption, CATEGORIES[photo.category] ? CATEGORIES[photo.category].name : "활동 기록");
+    const caption = localizedValue(photo, "caption") || humaniseFilename(photo.filename || "");
+    const item = photoItem(
+      photo,
+      caption,
+      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
+    );
     const card = document.createElement("button");
     card.type = "button";
     card.className = "photo-card ".concat(index % 7 === 0 ? "wide" : "", " ").concat(index % 9 === 5 ? "tall" : "").trim();
     card.dataset.photoIndex = String(index);
-    card.setAttribute("aria-label", "".concat(caption, " 사진 크게 보기"));
+    card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption }));
     const img = imageWithFallback(photo.thumbnail || photo.src, item.alt, "", null, () => {
       card.classList.add("image-missing");
       card.setAttribute("aria-disabled", "true");
-      card.setAttribute("aria-label", "".concat(caption, ". 이미지 파일을 불러올 수 없습니다."));
+      card.setAttribute("aria-label", formatCopy(copy().missingPhoto, { caption }));
     });
     if (index < 2) img.loading = "eager";
     const fallback = document.createElement("span");
     fallback.className = "image-fallback";
-    fallback.textContent = "이미지를 준비하고 있습니다";
+    fallback.textContent = copy().imagePreparing;
     const meta = document.createElement("span");
     meta.className = "photo-meta";
     const title = document.createElement("strong");
@@ -1684,11 +1837,13 @@ function selectBranch(branchKey, options) {
   const branch = BRANCHES[branchKey];
   const branchContent = content[branchKey] || {};
   galleryKicker.textContent = branch.english;
-  galleryTitle.textContent = branch.name;
-  branchSlogan.textContent = branchContent.slogan || "";
-  branchSlogan.hidden = !branchContent.slogan;
-  galleryDescription.textContent = branchContent.introduction || "";
-  galleryDescription.hidden = !branchContent.introduction;
+  galleryTitle.textContent = branchName(branch);
+  const slogan = localizedValue(branchContent, "slogan");
+  const introduction = localizedValue(branchContent, "introduction");
+  branchSlogan.textContent = slogan;
+  branchSlogan.hidden = !slogan;
+  galleryDescription.textContent = introduction;
+  galleryDescription.hidden = !introduction;
   renderHall(branchKey);
   renderMeeting(branchKey);
   setCategory("all");
@@ -1717,6 +1872,89 @@ function clearSelection(options) {
   if (config.restoreFocus && previousBranch) {
     const trigger = document.querySelector('.branch-chip[data-branch="'.concat(previousBranch, '"]'));
     if (trigger) trigger.focus();
+  }
+}
+function applyLanguage(language) {
+  currentLanguage = language === "ja" ? "ja" : "ko";
+  const ui = copy();
+  document.documentElement.lang = currentLanguage;
+  document.title = ui.documentTitle;
+  document.querySelector("#meta-description").setAttribute("content", ui.metaDescription);
+  document.querySelector("#skip-link").textContent = ui.skipLink;
+  document.querySelector(".language-tabs").setAttribute("aria-label", ui.languageLabel);
+  languageButtons.forEach((button) => {
+    const active = button.dataset.language === currentLanguage;
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+  document.querySelector(".map-panel").setAttribute("aria-label", ui.mapPanelLabel);
+  document.querySelector("#hero-title").textContent = ui.heroTitle;
+  document.querySelector("#hero-subtitle").textContent = ui.heroSubtitle;
+  branchSwitcher.setAttribute("aria-label", ui.branchSwitcherLabel);
+  document.querySelector("#map-title").textContent = ui.mapTitle;
+  document.querySelector("#map-desc").textContent = ui.mapDescription;
+  mapLegend.setAttribute("aria-label", ui.mapLegend);
+  document.querySelector("#intro-replay").setAttribute("aria-label", ui.replayLabel);
+  document.querySelector("#intro-replay").textContent = ui.replay;
+  document.querySelector("#footer-label").textContent = ui.footer;
+  document.querySelector("#map-info-label").textContent = ui.mapInfo;
+  mapAttribution.textContent = ui.mapAttribution;
+  galleryPanel.setAttribute("aria-label", ui.galleryPanelLabel);
+  backButton.setAttribute("aria-label", ui.backLabel);
+  document.querySelector("#back-button-label").textContent = ui.back;
+  document.querySelector("#meeting-section-title").textContent = ui.meetingTitle;
+  document.querySelector("#activity-section-title").textContent = ui.activityTitle;
+  document.querySelector(".category-tabs").setAttribute("aria-label", ui.categoryLabel);
+  categoryButtons.forEach((button) => {
+    const category = button.dataset.category;
+    button.textContent = category === "all" ? ui.all : categoryName(CATEGORIES[category]);
+  });
+  lightboxClose.setAttribute("aria-label", ui.closePhoto);
+  lightboxPrevious.setAttribute("aria-label", ui.previousPhoto);
+  lightboxNext.setAttribute("aria-label", ui.nextPhoto);
+  lightboxError.textContent = ui.lightboxError;
+  BRANCH_KEYS.forEach((branchKey) => {
+    const branch = BRANCHES[branchKey];
+    const name = branchName(branch);
+    const branchCopy = content[branchKey] || {};
+    const description = localizedValue(branchCopy, "introduction") || (currentLanguage === "ja" ? branch.descriptionJa : branch.description);
+    const ariaLabel = "".concat(formatCopy(ui.selectBranch, { branch: name }), ". ").concat(description);
+    const chip = branchSwitcher.querySelector('[data-branch="'.concat(branchKey, '"]'));
+    if (chip) {
+      chip.setAttribute("aria-label", formatCopy(ui.selectBranch, { branch: name }));
+      chip.querySelector(".branch-chip-label").textContent = name;
+    }
+    const legend = mapLegend.querySelector(".legend-".concat(branchKey));
+    if (legend) legend.textContent = branchName(branch, true);
+    const region = branchMapLayer.querySelector('[data-branch="'.concat(branchKey, '"]'));
+    if (region) {
+      region.setAttribute("aria-label", ariaLabel);
+      region.querySelector("title").textContent = "".concat(name, ". ").concat(description);
+      region.querySelector(".branch-label").textContent = name;
+    }
+  });
+  mapLandmarkLayer.querySelectorAll(".map-landmark-dokdo title").forEach((title) => {
+    title.textContent = currentLanguage === "ja" ? "独島" : "독도";
+  });
+  if (selectedBranch) {
+    const branch = BRANCHES[selectedBranch];
+    const branchContent = content[selectedBranch] || {};
+    const introduction = localizedValue(branchContent, "introduction");
+    const slogan = localizedValue(branchContent, "slogan");
+    galleryTitle.textContent = branchName(branch);
+    galleryDescription.textContent = introduction;
+    galleryDescription.hidden = !introduction;
+    branchSlogan.textContent = slogan;
+    branchSlogan.hidden = !slogan;
+    renderHall(selectedBranch);
+    renderMeeting(selectedBranch);
+    renderGallery();
+  } else {
+    galleryTitle.textContent = ui.galleryPrompt;
+    hallCard.setAttribute("aria-label", ui.hallOpen);
+    hallCaption.textContent = ui.hallCaption;
+    photoCount.textContent = formatCopy(ui.photoCount, { count: 0 });
+    galleryStatus.textContent = ui.galleryReady;
   }
 }
 var dialogController = createDialogController(lightbox, () => {
@@ -1750,6 +1988,17 @@ function moveLightbox(direction) {
   updateLightbox((lightboxIndex + direction + lightboxItems.length) % lightboxItems.length);
 }
 function bindEvents() {
+  languageButtons.forEach((button, index) => {
+    button.addEventListener("click", () => applyLanguage(button.dataset.language));
+    button.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      const next = languageButtons[(index + offset + languageButtons.length) % languageButtons.length];
+      applyLanguage(next.dataset.language);
+      next.focus();
+    });
+  });
   branchTriggers().forEach((trigger) => {
     trigger.addEventListener("click", () => selectBranch(trigger.dataset.branch));
     if (trigger.classList.contains("branch-region")) {
@@ -1781,8 +2030,8 @@ function bindEvents() {
     if (!card) return;
     const items = visiblePhotos.map((photo) => photoItem(
       photo,
-      photo.caption || humaniseFilename(photo.filename || ""),
-      CATEGORIES[photo.category] ? CATEGORIES[photo.category].name : "활동 기록"
+      localizedValue(photo, "caption") || humaniseFilename(photo.filename || ""),
+      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
     ));
     openLightbox(items, Number(card.dataset.photoIndex), card);
   });
@@ -1820,6 +2069,7 @@ async function boot() {
   renderBranchControls();
   renderCountryContext();
   renderMap();
+  applyLanguage(currentLanguage);
   setRegionInteractive(galleryPanel, false);
   bindEvents();
   initializeIntro({

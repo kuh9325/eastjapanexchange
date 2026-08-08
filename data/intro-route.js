@@ -14,7 +14,7 @@ const japanToScene = ([x, y]) => Object.freeze([
 /*
  * 화면 픽셀을 직접 찍지 않고, 각 로컬 SVG의 고유 좌표계에 지점을 보관한다.
  * 대한민국 지점은 regions.js와 같은 780×760 좌표계이며, ICN은 영종도 공항,
- * 나머지는 실제 시설 주소가 속한 도형 안의 위치를 기준으로 잡았다.
+ * 진천과 대전은 실제 시설 주소가 속한 도형 안의 위치를 기준으로 잡았다.
  */
 export const INTRO_ROUTE = Object.freeze({
   cts: Object.freeze({
@@ -30,14 +30,6 @@ export const INTRO_ROUTE = Object.freeze({
     longitude: 126.4407,
     mapPoint: Object.freeze([214.2, 185.6]),
     scenePoint: koreaToScene([214.2, 185.6])
-  }),
-  guro: Object.freeze({
-    label: "韓国SGI本部 · ソウル九老",
-    latitude: 37.501827,
-    longitude: 126.890334,
-    address: "서울특별시 구로구 공원로 54",
-    mapPoint: Object.freeze([258.1, 182.4]),
-    scenePoint: koreaToScene([258.1, 182.4])
   }),
   jincheon: Object.freeze({
     label: "韓国SGI鎮川研修院",

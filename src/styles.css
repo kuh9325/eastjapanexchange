@@ -104,6 +104,28 @@ button { cursor: pointer; }
   overflow: hidden;
 }
 .hero-header { text-align: center; }
+.language-tabs {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0 4px 4px;
+}
+.language-tabs button {
+  min-width: 72px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--muted);
+  font-weight: 900;
+}
+.language-tabs button[aria-selected="true"] {
+  border-color: var(--cobalt);
+  background: var(--cobalt);
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(49, 95, 196, 0.2);
+}
 .eyebrow {
   margin: 0 0 4px;
   color: var(--cobalt);
@@ -557,7 +579,6 @@ h1 {
 .intro-screen.show-flight .intro-plane { opacity: 1; }
 .intro-screen.is-running .intro-flight-path,
 .intro-screen.is-running .intro-air-point { opacity: 1; }
-.intro-screen.show-guro #intro-point-guro,
 .intro-screen.show-jincheon #intro-point-jincheon,
 .intro-screen.show-daejeon #intro-point-daejeon { opacity: 1; }
 .intro-screen.show-ground .intro-ground-path { opacity: 0.55; }
