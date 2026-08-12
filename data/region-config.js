@@ -60,8 +60,8 @@ export const BRANCH_CONFIG = Object.freeze({
 });
 
 export const CATEGORY_CONFIG = Object.freeze({
-  future: { name: "청년미래총회", shortName: "미래총회", nameJa: "青年未来総会", shortNameJa: "未来総会" },
-  visit: { name: "방문 일대일 근행회", shortName: "방문 근행회", nameJa: "訪問一対一勤行会", shortNameJa: "訪問勤行会" }
+  school: { name: "창가청년스쿨", shortName: "청년스쿨", nameJa: "創価青年スクール", shortNameJa: "青年スクール" },
+  visit: { name: "일대일근행회", shortName: "근행회", nameJa: "一対一勤行会", shortNameJa: "勤行会" }
 });
 
 // 서로 다른 단순화 단계의 SVG를 boolean 연산할 때 예외 지역 가장자리에

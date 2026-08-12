@@ -3,15 +3,17 @@
 방면과 활동 종류에 맞는 폴더에 이미지를 넣습니다.
 
 ```text
-assets/gallery/{chungnam|chungbuk|daejeon}/{future|visit}/
+assets/gallery/{chungnam|chungbuk|daejeon}/{school|visit}/{권}/
 ```
 
 | 폴더 | 화면 표시 |
 | --- | --- |
-| `future` | 청년미래총회 |
-| `visit` | 방문 일대일 근행회 |
+| `school` | 창가청년스쿨 |
+| `visit` | 일대일근행회 |
 
-각 카테고리에 약 10장씩 넣을 수 있습니다. 지원 형식은 JPG, JPEG, PNG, WebP, AVIF이며 대소문자를 구분하지 않습니다. 하위 폴더는 재귀적으로 읽지 않습니다.
+manifest 생성기는 JPG, JPEG, PNG, WebP, AVIF를 읽지만 프로덕션 사진은 `npm run assets:drive`로 모두 WebP 사본을 만듭니다. 권별 하위 폴더까지 재귀적으로 읽되 화면에서는 방면 단위로 합쳐 표시합니다.
+
+파일명 앞의 `남)`, `(남)`, `남자부`, `여)`, `(여)`, `여자부`를 부서 메타데이터로 변환합니다. 썸네일과 확대 화면에는 파일명 대신 `권 | 부서 | 활동`이 표시되며 일본어 전환 시 권·부서·활동이 함께 번역됩니다. 부서 표식이 없는 파일은 `청년부`로 표시합니다.
 
 사진 추가 후 다음 명령으로 `assets/gallery-manifest.json`을 갱신합니다.
 
@@ -27,8 +29,8 @@ npm run assets
 
 ```json
 {
-  "2026-07-19_동대전_청년미래총회.jpg": {
-    "caption": "동대전지역 청년미래총회",
+  "2026-07-19_대전권_창가청년스쿨.webp": {
+    "caption": "대전권 창가청년스쿨",
     "alt": "무대 앞에서 함께 기념 촬영한 참가자들"
   }
 }

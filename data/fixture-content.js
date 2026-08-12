@@ -9,7 +9,7 @@ const BRANCH_NAMES_JA = {
   daejeon: "大田方面"
 };
 
-const CATEGORY_SEQUENCE = ["future", "visit", "future", "visit", "future", "visit"];
+const CATEGORY_SEQUENCE = ["school", "visit", "school", "visit", "school", "visit"];
 
 export const EMPTY_FIXTURE_MANIFEST = Object.freeze({ version: 1, fixture: "empty", photos: [] });
 

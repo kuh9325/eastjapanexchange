@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   BRANCHES,
   BRANCH_KEYS,
+  CATEGORIES,
   CATEGORY_KEYS,
   COUNTRY_CONTEXT,
   MAP_ATTRIBUTION,
@@ -20,6 +21,12 @@ import {
 import { ADMIN_SOURCES } from "../data/region-config.js";
 import { EXHIBITION_CONTENT } from "../data/exhibition-content.js";
 import { INTRO_ROUTE } from "../data/intro-route.js";
+import { UI_COPY } from "../data/ui-copy.js";
+import {
+  DEPARTMENT_LABELS,
+  inferDepartment,
+  ZONE_LABELS
+} from "../data/gallery-metadata.js";
 import {
   EMPTY_FIXTURE_CONTENT,
   EMPTY_FIXTURE_MANIFEST,
@@ -42,13 +49,17 @@ try {
       await fs.writeFile(path.join(directory, `2026-08-02_${branch}_${category}.png`), tinyPng);
     }
   }
-  await fs.writeFile(path.join(galleryRoot, "chungnam", "future", "ignored.gif"), tinyPng);
+  const nestedDirectory = path.join(galleryRoot, "chungnam", "school", "baekje");
+  await fs.mkdir(nestedDirectory, { recursive: true });
+  await fs.writeFile(path.join(nestedDirectory, "nested.png"), tinyPng);
+  await fs.writeFile(path.join(galleryRoot, "chungnam", "school", "ignored.gif"), tinyPng);
   await fs.writeFile(
-    path.join(galleryRoot, "daejeon", "future", "captions.json"),
+    path.join(galleryRoot, "daejeon", "school", "captions.json"),
     JSON.stringify({
-      "2026-08-02_daejeon_future.png": {
-        caption: "대전방면 청년미래총회",
-        alt: "청년미래총회에서 함께 기념 촬영한 참가자들"
+      "2026-08-02_daejeon_school.png": {
+        caption: "대전방면 창가청년스쿨",
+        alt: "창가청년스쿨에서 함께 기념 촬영한 참가자들",
+        department: "women"
       }
     })
   );
@@ -60,20 +71,28 @@ try {
     "--src-prefix", "./fixtures"
   ]);
   const manifest = JSON.parse(await fs.readFile(outputPath, "utf8"));
-  assert.equal(manifest.photos.length, BRANCH_KEYS.length * CATEGORY_KEYS.length, "방면별 두 카테고리의 지원 이미지만 포함해야 합니다.");
+  assert.equal(manifest.photos.length, BRANCH_KEYS.length * CATEGORY_KEYS.length + 1, "방면별 두 카테고리와 권별 하위 폴더의 지원 이미지만 포함해야 합니다.");
   for (const branch of BRANCH_KEYS) {
     for (const category of CATEGORY_KEYS) {
       assert.equal(
         manifest.photos.filter((photo) => photo.branch === branch && photo.category === category).length,
-        1,
+        branch === "chungnam" && category === "school" ? 2 : 1,
         `${branch}/${category} 필터 결과가 정확해야 합니다.`
       );
     }
   }
   assert.equal(manifest.photos.some(({ filename }) => filename === "ignored.gif"), false, "GIF는 지원 형식이 아닙니다.");
-  const override = manifest.photos.find((photo) => photo.branch === "daejeon" && photo.category === "future");
-  assert.equal(override.caption, "대전방면 청년미래총회");
-  assert.equal(override.alt, "청년미래총회에서 함께 기념 촬영한 참가자들");
+  const nested = manifest.photos.find(({ filename }) => filename === "nested.png");
+  assert.equal(nested.zone, "baekje", "권별 하위 폴더명은 manifest의 zone 메타데이터로 보존해야 합니다.");
+  assert.equal(nested.department, "youth", "부서 표식이 없는 파일은 청년부 공통으로 안전하게 분류해야 합니다.");
+  assert.match(nested.src, /chungnam\/school\/baekje\/nested\.png$/);
+  const override = manifest.photos.find((photo) => photo.branch === "daejeon" && photo.category === "school");
+  assert.equal(override.caption, "대전방면 창가청년스쿨");
+  assert.equal(override.alt, "창가청년스쿨에서 함께 기념 촬영한 참가자들");
+  assert.equal(override.department, "women", "captions.json의 명시적 부서가 파일명 추론보다 우선해야 합니다.");
+  assert.equal(inferDepartment("(남)충주권 창가청년스쿨-01.jpg"), "men");
+  assert.equal(inferDepartment("여) 충주권 일대일근행회-01.jpg"), "women");
+  assert.equal(inferDepartment("충주권 창가청년스쿨-01.jpg"), "youth");
 
   assert.equal(COUNTRY_CONTEXT.length, 17, "전국 17개 시도 path가 모두 있어야 합니다.");
   assert.deepEqual(MAP_VIEWBOX, { x: 0, y: 0, width: 780, height: 760 });
@@ -81,7 +100,16 @@ try {
   assert.deepEqual(MAP_FOCUS_VIEWBOX, { x: 145, y: 150, width: 350, height: 300 }, "활동 화면에서는 세 방면을 중심으로 지도를 확대해야 합니다.");
   assert.deepEqual(MAP_LANDMARKS, [{ id: "dokdo", name: "독도", point: [724, 199] }], "원본에 없는 독도는 실제 상대 위치의 점으로 보완해야 합니다.");
   assert.equal(MAP_ATTRIBUTION, "통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화");
-  assert.deepEqual(CATEGORY_KEYS, ["future", "visit"], "활동 카테고리는 청년미래총회와 방문 일대일 근행회만 제공해야 합니다.");
+  assert.deepEqual(CATEGORY_KEYS, ["school", "visit"], "활동 카테고리는 창가청년스쿨과 일대일근행회만 제공해야 합니다.");
+  assert.deepEqual(CATEGORIES.school, { name: "창가청년스쿨", shortName: "청년스쿨", nameJa: "創価青年スクール", shortNameJa: "青年スクール" });
+  assert.deepEqual(CATEGORIES.visit, { name: "일대일근행회", shortName: "근행회", nameJa: "一対一勤行会", shortNameJa: "勤行会" });
+  assert.equal(UI_COPY.ko.school, "창가청년스쿨");
+  assert.equal(UI_COPY.ko.visit, "일대일근행회");
+  assert.equal(UI_COPY.ja.school, "創価青年スクール");
+  assert.equal(UI_COPY.ja.visit, "一対一勤行会");
+  assert.equal(ZONE_LABELS.chungju.ja, "忠州圏");
+  assert.equal(DEPARTMENT_LABELS.men.ja, "男子部");
+  assert.equal(DEPARTMENT_LABELS.women.ja, "女子部");
 
   assert.deepEqual(municipalityNames("chungnam"), [
     "공주시", "논산시", "당진시", "보령시", "부여군", "서산시", "서천군",
@@ -155,6 +183,9 @@ try {
   assert.match(sourceStyles, /\.exhibition\s*\{[^}]*height:\s*100vh/s, "100vh 기본값이 있어야 합니다.");
   assert.match(sourceStyles, /@supports\s*\(height:\s*100dvh\)/, "지원 브라우저용 100dvh 향상이 있어야 합니다.");
   assert.match(sourceStyles, /\.gallery-panel\s*\{[^}]*overflow-y:\s*auto[^}]*overscroll-behavior:\s*contain/s, "오른쪽 패널만 스크롤되고 overscroll을 가둬야 합니다.");
+  assert.doesNotMatch(sourceStyles, /\.activity-toolbar\s*\{[^}]*position:\s*sticky/s, "활동 제목과 카테고리 탭은 사진 화면을 가리지 않도록 스크롤되어야 합니다.");
+  assert.match(sourceHtml, /class="activity-toolbar"[\s\S]*class="section-heading"[\s\S]*class="category-tabs"/, "활동 제목과 카테고리 탭은 하나의 일반 툴바로 묶어야 합니다.");
+  assert.doesNotMatch(sourceApp, /syncGalleryStickyOffset|--gallery-header-height/, "활동 툴바용 고정 오프셋 로직을 남기면 안 됩니다.");
   assert.match(sourceStyles, /\.exhibition\.has-selection \.stage\s*\{[^}]*grid-template-columns:\s*minmax\(420px,\s*30fr\)\s*minmax\(0,\s*70fr\)/s, "방면 선택 후 지도와 사진 영역은 3:7 비율이어야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*min-width:\s*420px/s, "대형 화면의 축소된 지도 패널은 최소 420px을 유지해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*position:\s*sticky[^}]*height:\s*100%/s, "가로 화면의 왼쪽 지도 패널은 고정되어야 합니다.");
@@ -236,9 +267,18 @@ try {
   assert.equal(EXHIBITION_CONTENT.daejeon.slogan, "한 사람의 행동이 도시를 바꾼다");
   assert.equal(EXHIBITION_CONTENT.daejeon.sloganJa, "一人の行動が都市を変える");
   assert.match(sourceHtml, /class="language-tabs"[\s\S]*data-language="ko"[\s\S]*data-language="ja"/, "메인 화면에 한국어·일본어 언어 탭이 있어야 합니다.");
+  assert.match(sourceHtml, /id="tab-school"[^>]*data-category="school"[^>]*>창가청년스쿨<\/button>/, "한국어 기본 화면에 창가청년스쿨 탭이 있어야 합니다.");
+  assert.match(sourceHtml, /id="tab-visit"[^>]*data-category="visit"[^>]*>일대일근행회<\/button>/, "한국어 기본 화면에 일대일근행회 탭이 있어야 합니다.");
   assert.match(sourceApp, /function applyLanguage\(language\)/, "언어 탭이 메인 화면 전체 문구를 전환해야 합니다.");
+  assert.match(sourceApp, /function galleryMetadataLabels\(photo\)/, "권·부서·활동 메타데이터를 파일명 대신 화면 객체로 렌더링해야 합니다.");
+  assert.match(sourceApp, /meta\.appendChild\(tag\)/, "썸네일에 구조화된 메타데이터 태그를 추가해야 합니다.");
 
   const sourceManifestBeforeBuild = await fs.readFile(path.join(root, "assets", "gallery-manifest.json"), "utf8");
+  const productionManifest = JSON.parse(sourceManifestBeforeBuild);
+  assert.ok(productionManifest.photos.length > 0, "프로덕션 사진 manifest가 비어 있으면 안 됩니다.");
+  assert.ok(productionManifest.photos.every(({ src }) => src.endsWith(".webp")), "전시용 사진은 모두 WebP여야 합니다.");
+  assert.ok(productionManifest.photos.every(({ zone }) => Object.hasOwn(ZONE_LABELS, zone)), "모든 전시 사진은 알려진 권 폴더에 속해야 합니다.");
+  assert.ok(productionManifest.photos.every(({ department }) => Object.hasOwn(DEPARTMENT_LABELS, department)), "모든 전시 사진은 부서 메타데이터가 있어야 합니다.");
   await exec(process.execPath, [path.join(root, "scripts", "build.mjs")]);
   const sourceManifestAfterBuild = await fs.readFile(path.join(root, "assets", "gallery-manifest.json"), "utf8");
   assert.equal(sourceManifestAfterBuild, sourceManifestBeforeBuild, "사진 목록이 같으면 manifest 생성 시각과 내용이 결정적으로 유지되어야 합니다.");

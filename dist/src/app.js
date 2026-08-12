@@ -635,17 +635,17 @@ var BRANCHES = Object.freeze({
   }
 });
 var CATEGORIES = Object.freeze({
-  "future": {
-    "name": "청년미래총회",
-    "shortName": "미래총회",
-    "nameJa": "青年未来総会",
-    "shortNameJa": "未来総会"
+  "school": {
+    "name": "창가청년스쿨",
+    "shortName": "청년스쿨",
+    "nameJa": "創価青年スクール",
+    "shortNameJa": "青年スクール"
   },
   "visit": {
-    "name": "방문 일대일 근행회",
-    "shortName": "방문 근행회",
-    "nameJa": "訪問一対一勤行会",
-    "shortNameJa": "訪問勤行会"
+    "name": "일대일근행회",
+    "shortName": "근행회",
+    "nameJa": "一対一勤行会",
+    "shortNameJa": "勤行会"
   }
 });
 var BRANCH_KEYS = Object.freeze(Object.keys(BRANCHES));
@@ -694,6 +694,30 @@ var EXHIBITION_CONTENT = Object.freeze({
   }
 });
 
+// data/gallery-metadata.js
+var ZONE_LABELS = Object.freeze({
+  baekje: Object.freeze({ ko: "백제권", ja: "百済圏" }),
+  seohae: Object.freeze({ ko: "서해권", ja: "西海圏" }),
+  cheonan: Object.freeze({ ko: "천안권", ja: "天安圏" }),
+  "east-cheongju": Object.freeze({ ko: "동청주권", ja: "東清州圏" }),
+  "west-cheongju": Object.freeze({ ko: "서청주권", ja: "西清州圏" }),
+  jecheon: Object.freeze({ ko: "제천권", ja: "堤川圏" }),
+  chungju: Object.freeze({ ko: "충주권", ja: "忠州圏" }),
+  "south-daejeon": Object.freeze({ ko: "남대전권", ja: "南大田圏" }),
+  daejeon: Object.freeze({ ko: "대전권", ja: "大田圏" }),
+  "west-daejeon": Object.freeze({ ko: "서대전권", ja: "西大田圏" }),
+  sejong: Object.freeze({ ko: "세종권", ja: "世宗圏" })
+});
+var DEPARTMENT_LABELS = Object.freeze({
+  men: Object.freeze({ ko: "남자부", ja: "男子部" }),
+  women: Object.freeze({ ko: "여자부", ja: "女子部" }),
+  youth: Object.freeze({ ko: "청년부", ja: "青年部" })
+});
+function localizedMetadataLabel(labels, language) {
+  if (!labels) return "";
+  return labels[language === "ja" ? "ja" : "ko"] || labels.ko || "";
+}
+
 // data/ui-copy.js
 var UI_COPY = Object.freeze({
   ko: Object.freeze({
@@ -724,8 +748,8 @@ var UI_COPY = Object.freeze({
     activityTitle: "청년 활동 기록",
     categoryLabel: "활동 유형",
     all: "전체",
-    future: "청년미래총회",
-    visit: "방문 일대일 근행회",
+    school: "창가청년스쿨",
+    visit: "일대일근행회",
     photoCount: "{count}장의 기록",
     galleryReady: "사진을 눌러 크게 볼 수 있습니다.",
     galleryUnavailable: "사진 목록을 불러오지 못했습니다. 안내 카드를 표시합니다.",
@@ -735,6 +759,7 @@ var UI_COPY = Object.freeze({
     activityRecord: "활동 기록",
     openPhoto: "{caption} 사진 크게 보기",
     missingPhoto: "{caption}. 이미지 파일을 불러올 수 없습니다.",
+    photoMetadataAlt: "{metadata} 활동 사진",
     selectBranch: "{branch} 선택",
     closePhoto: "사진 닫기",
     previousPhoto: "이전 사진",
@@ -772,8 +797,8 @@ var UI_COPY = Object.freeze({
     activityTitle: "青年活動の記録",
     categoryLabel: "活動カテゴリー",
     all: "すべて",
-    future: "青年未来総会",
-    visit: "訪問一対一勤行会",
+    school: "創価青年スクール",
+    visit: "一対一勤行会",
     photoCount: "{count}枚の記録",
     galleryReady: "写真を押すと拡大してご覧いただけます。",
     galleryUnavailable: "写真一覧を読み込めませんでした。案内カードを表示します。",
@@ -783,6 +808,7 @@ var UI_COPY = Object.freeze({
     activityRecord: "活動の記録",
     openPhoto: "{caption}を拡大表示",
     missingPhoto: "{caption}。画像を読み込めませんでした。",
+    photoMetadataAlt: "{metadata}の活動写真",
     selectBranch: "{branch}を選択",
     closePhoto: "写真を閉じる",
     previousPhoto: "前の写真",
@@ -811,7 +837,7 @@ var BRANCH_NAMES_JA = {
   chungbuk: "忠北方面",
   daejeon: "大田方面"
 };
-var CATEGORY_SEQUENCE = ["future", "visit", "future", "visit", "future", "visit"];
+var CATEGORY_SEQUENCE = ["school", "visit", "school", "visit", "school", "visit"];
 var EMPTY_FIXTURE_MANIFEST = Object.freeze({ version: 1, fixture: "empty", photos: [] });
 var fixturePhotos = [];
 Object.keys(BRANCH_NAMES).forEach((branch) => {
@@ -1446,15 +1472,32 @@ var branchName = (branch, short = false) => {
   return currentLanguage === "ja" ? branch["".concat(key, "Ja")] || branch[key] : branch[key];
 };
 var categoryName = (category) => currentLanguage === "ja" ? category.nameJa || category.name : category.name;
+function galleryMetadataLabels(photo) {
+  const zone = localizedMetadataLabel(ZONE_LABELS[photo.zone], currentLanguage) || branchName(BRANCHES[photo.branch], true);
+  const department = localizedMetadataLabel(
+    DEPARTMENT_LABELS[photo.department] || DEPARTMENT_LABELS.youth,
+    currentLanguage
+  );
+  const activity = CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord;
+  return [zone, department, activity].filter(Boolean);
+}
+function galleryPhotoItem(source) {
+  const metadataLabels = galleryMetadataLabels(source);
+  const metadataText = metadataLabels.join(" | ");
+  return {
+    src: source.full || source.src || source.photo,
+    alt: formatCopy(copy().photoMetadataAlt, { metadata: metadataLabels.join(" ") }),
+    caption: metadataText,
+    detail: "",
+    metadataLabels
+  };
+}
 var svgElement = (name, attributes) => {
   const element = document.createElementNS(SVG_NS, name);
   const source = attributes || {};
   Object.keys(source).forEach((key) => element.setAttribute(key, String(source[key])));
   return element;
 };
-function humaniseFilename(filename) {
-  return filename.replace(/\.[^.]+$/, "").replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() || copy().fallbackCaption;
-}
 function renderBranchControls() {
   Object.keys(BRANCHES).forEach((branchKey) => {
     const branch = BRANCHES[branchKey];
@@ -1769,21 +1812,16 @@ function renderGallery() {
     return;
   }
   visiblePhotos.forEach((photo, index) => {
-    const caption = localizedValue(photo, "caption") || humaniseFilename(photo.filename || "");
-    const item = photoItem(
-      photo,
-      caption,
-      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
-    );
+    const item = galleryPhotoItem(photo);
     const card = document.createElement("button");
     card.type = "button";
     card.className = "photo-card ".concat(index % 7 === 0 ? "wide" : "", " ").concat(index % 9 === 5 ? "tall" : "").trim();
     card.dataset.photoIndex = String(index);
-    card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption }));
+    card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption: item.caption }));
     const img = imageWithFallback(photo.thumbnail || photo.src, item.alt, "", null, () => {
       card.classList.add("image-missing");
       card.setAttribute("aria-disabled", "true");
-      card.setAttribute("aria-label", formatCopy(copy().missingPhoto, { caption }));
+      card.setAttribute("aria-label", formatCopy(copy().missingPhoto, { caption: item.caption }));
     });
     if (index < 2) img.loading = "eager";
     const fallback = document.createElement("span");
@@ -1791,12 +1829,13 @@ function renderGallery() {
     fallback.textContent = copy().imagePreparing;
     const meta = document.createElement("span");
     meta.className = "photo-meta";
-    const title = document.createElement("strong");
-    title.textContent = caption;
-    const type = document.createElement("span");
-    type.textContent = item.detail;
-    meta.appendChild(title);
-    meta.appendChild(type);
+    meta.setAttribute("aria-hidden", "true");
+    item.metadataLabels.forEach((label) => {
+      const tag = document.createElement("span");
+      tag.className = "photo-meta-tag";
+      tag.textContent = label;
+      meta.appendChild(tag);
+    });
     card.appendChild(img);
     card.appendChild(fallback);
     card.appendChild(meta);
@@ -2028,11 +2067,7 @@ function bindEvents() {
   photoGrid.addEventListener("click", (event) => {
     const card = event.target.closest(".photo-card:not(.image-missing)");
     if (!card) return;
-    const items = visiblePhotos.map((photo) => photoItem(
-      photo,
-      localizedValue(photo, "caption") || humaniseFilename(photo.filename || ""),
-      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
-    ));
+    const items = visiblePhotos.map(galleryPhotoItem);
     openLightbox(items, Number(card.dataset.photoIndex), card);
   });
   lightboxClose.addEventListener("click", () => dialogController.close());

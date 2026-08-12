@@ -12,6 +12,11 @@ import {
   municipalityNames
 } from "../data/regions.js";
 import { EXHIBITION_CONTENT } from "../data/exhibition-content.js";
+import {
+  DEPARTMENT_LABELS,
+  localizedMetadataLabel,
+  ZONE_LABELS
+} from "../data/gallery-metadata.js";
 import { formatCopy, UI_COPY } from "../data/ui-copy.js";
 import {
   EMPTY_FIXTURE_CONTENT,
@@ -91,21 +96,37 @@ const branchName = (branch, short = false) => {
 };
 const categoryName = (category) => currentLanguage === "ja" ? category.nameJa || category.name : category.name;
 
+function galleryMetadataLabels(photo) {
+  const zone = localizedMetadataLabel(ZONE_LABELS[photo.zone], currentLanguage)
+    || branchName(BRANCHES[photo.branch], true);
+  const department = localizedMetadataLabel(
+    DEPARTMENT_LABELS[photo.department] || DEPARTMENT_LABELS.youth,
+    currentLanguage
+  );
+  const activity = CATEGORIES[photo.category]
+    ? categoryName(CATEGORIES[photo.category])
+    : copy().activityRecord;
+  return [zone, department, activity].filter(Boolean);
+}
+
+function galleryPhotoItem(source) {
+  const metadataLabels = galleryMetadataLabels(source);
+  const metadataText = metadataLabels.join(" | ");
+  return {
+    src: source.full || source.src || source.photo,
+    alt: formatCopy(copy().photoMetadataAlt, { metadata: metadataLabels.join(" ") }),
+    caption: metadataText,
+    detail: "",
+    metadataLabels
+  };
+}
+
 const svgElement = (name, attributes) => {
   const element = document.createElementNS(SVG_NS, name);
   const source = attributes || {};
   Object.keys(source).forEach((key) => element.setAttribute(key, String(source[key])));
   return element;
 };
-
-function humaniseFilename(filename) {
-  return filename
-    .replace(/\.[^.]+$/, "")
-    .replace(/^\d{4}[-_.]?\d{2}[-_.]?\d{2}[-_ ]?/, "")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim() || copy().fallbackCaption;
-}
 
 function renderBranchControls() {
   Object.keys(BRANCHES).forEach((branchKey) => {
@@ -458,21 +479,16 @@ function renderGallery() {
   }
 
   visiblePhotos.forEach((photo, index) => {
-    const caption = localizedValue(photo, "caption") || humaniseFilename(photo.filename || "");
-    const item = photoItem(
-      photo,
-      caption,
-      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
-    );
+    const item = galleryPhotoItem(photo);
     const card = document.createElement("button");
     card.type = "button";
     card.className = `photo-card ${index % 7 === 0 ? "wide" : ""} ${index % 9 === 5 ? "tall" : ""}`.trim();
     card.dataset.photoIndex = String(index);
-    card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption }));
+    card.setAttribute("aria-label", formatCopy(copy().openPhoto, { caption: item.caption }));
     const img = imageWithFallback(photo.thumbnail || photo.src, item.alt, "", null, () => {
       card.classList.add("image-missing");
       card.setAttribute("aria-disabled", "true");
-      card.setAttribute("aria-label", formatCopy(copy().missingPhoto, { caption }));
+      card.setAttribute("aria-label", formatCopy(copy().missingPhoto, { caption: item.caption }));
     });
     if (index < 2) img.loading = "eager";
     const fallback = document.createElement("span");
@@ -480,12 +496,13 @@ function renderGallery() {
     fallback.textContent = copy().imagePreparing;
     const meta = document.createElement("span");
     meta.className = "photo-meta";
-    const title = document.createElement("strong");
-    title.textContent = caption;
-    const type = document.createElement("span");
-    type.textContent = item.detail;
-    meta.appendChild(title);
-    meta.appendChild(type);
+    meta.setAttribute("aria-hidden", "true");
+    item.metadataLabels.forEach((label) => {
+      const tag = document.createElement("span");
+      tag.className = "photo-meta-tag";
+      tag.textContent = label;
+      meta.appendChild(tag);
+    });
     card.appendChild(img);
     card.appendChild(fallback);
     card.appendChild(meta);
@@ -732,11 +749,7 @@ function bindEvents() {
   photoGrid.addEventListener("click", (event) => {
     const card = event.target.closest(".photo-card:not(.image-missing)");
     if (!card) return;
-    const items = visiblePhotos.map((photo) => photoItem(
-      photo,
-      localizedValue(photo, "caption") || humaniseFilename(photo.filename || ""),
-      CATEGORIES[photo.category] ? categoryName(CATEGORIES[photo.category]) : copy().activityRecord
-    ));
+    const items = visiblePhotos.map(galleryPhotoItem);
     openLightbox(items, Number(card.dataset.photoIndex), card);
   });
   lightboxClose.addEventListener("click", () => dialogController.close());

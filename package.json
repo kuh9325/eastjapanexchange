@@ -6,6 +6,7 @@
   "scripts": {
     "map": "node scripts/generate-map-data.mjs",
     "assets": "node scripts/generate-gallery-manifest.mjs",
+    "assets:drive": "node scripts/import-drive-gallery.mjs",
     "dev": "node scripts/generate-map-data.mjs && node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/dev-server.mjs --root dist",
@@ -13,11 +14,13 @@
     "test": "node scripts/verify.mjs"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.9"
   },
   "devDependencies": {
     "esbuild": "0.25.8",
-    "polygon-clipping": "0.15.7"
+    "polygon-clipping": "0.15.7",
+    "sharp": "^0.35.3",
+    "wrangler": "^4.122.0"
   },
   "overrides": {
     "splaytree": "3.1.2"

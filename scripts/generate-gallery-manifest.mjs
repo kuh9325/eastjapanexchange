@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { BRANCH_KEYS, CATEGORY_KEYS } from "../data/regions.js";
+import { DEPARTMENT_LABELS, inferDepartment } from "../data/gallery-metadata.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const argumentsMap = new Map();
@@ -43,26 +44,55 @@ async function readCaptions(directory) {
   }
 }
 
+async function readImageEntries(directory, relativeDirectory = "") {
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  const images = [];
+  for (const entry of entries.sort((a, b) => naturalSort(a.name, b.name))) {
+    const relativePath = path.join(relativeDirectory, entry.name);
+    const absolutePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      images.push(...await readImageEntries(absolutePath, relativePath));
+    } else if (entry.isFile() && imageExtensions.has(path.extname(entry.name).toLowerCase())) {
+      images.push({ name: entry.name, relativePath, directory });
+    }
+  }
+  return images;
+}
+
+const encodedPath = (...segments) => segments
+  .flatMap((segment) => String(segment).split(path.sep))
+  .map((segment) => encodeURIComponent(segment))
+  .join("/");
+
 const photos = [];
 for (const branch of BRANCH_KEYS) {
   for (const category of CATEGORY_KEYS) {
     const directory = path.join(galleryRoot, branch, category);
     await fs.mkdir(directory, { recursive: true });
-    const captions = await readCaptions(directory);
-    const entries = (await fs.readdir(directory, { withFileTypes: true }))
-      .filter((entry) => entry.isFile() && imageExtensions.has(path.extname(entry.name).toLowerCase()))
-      .sort((a, b) => naturalSort(a.name, b.name));
+    const entries = await readImageEntries(directory);
+    const captionsByDirectory = new Map();
 
     for (const entry of entries) {
+      if (!captionsByDirectory.has(entry.directory)) {
+        captionsByDirectory.set(entry.directory, await readCaptions(entry.directory));
+      }
+      const captions = captionsByDirectory.get(entry.directory);
       const fallbackCaption = filenameToCaption(entry.name);
       const configured = captions[entry.name];
       const metadata = configured && typeof configured === "object" ? configured : {};
+      const pathSegments = entry.relativePath.split(path.sep);
+      const inferredDepartment = inferDepartment(entry.name);
+      const department = Object.hasOwn(DEPARTMENT_LABELS, metadata.department)
+        ? metadata.department
+        : inferredDepartment;
       photos.push({
-        id: `${branch}-${category}-${entry.name}`,
+        id: `${branch}-${category}-${pathSegments.join("-")}`,
         branch,
         category,
         filename: entry.name,
-        src: `${sourcePrefix}/${branch}/${category}/${encodeURIComponent(entry.name)}`,
+        zone: pathSegments.length > 1 ? pathSegments[0] : null,
+        department,
+        src: `${sourcePrefix}/${encodedPath(branch, category, entry.relativePath)}`,
         caption: typeof metadata.caption === "string" && metadata.caption.trim() ? metadata.caption.trim() : fallbackCaption,
         alt: typeof metadata.alt === "string" && metadata.alt.trim()
           ? metadata.alt.trim()

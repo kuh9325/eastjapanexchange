@@ -82,24 +82,37 @@ meetingPhoto: {
 ```text
 assets/gallery/
 ├─ chungnam/
-│  ├─ future/  # 청년미래총회
-│  └─ visit/   # 방문 일대일 근행회
-├─ chungbuk/   # 같은 두 폴더
-└─ daejeon/    # 같은 두 폴더
+│  ├─ school/  # 창가청년스쿨
+│  │  ├─ baekje/
+│  │  ├─ seohae/
+│  │  └─ cheonan/
+│  └─ visit/   # 일대일근행회, 권별 하위 폴더 허용
+├─ chungbuk/   # 같은 분류와 권별 하위 폴더
+└─ daejeon/    # 같은 분류와 권별 하위 폴더
 ```
 
-카테고리마다 약 10장의 사진을 넣을 수 있습니다. JPG, JPEG, PNG, WebP, AVIF를 지원합니다. 날짜 접두사와 `_`, `-`를 정리한 파일명이 기본 caption/alt가 됩니다. 폴더별 선택적 `captions.json`으로 덮어쓸 수 있습니다.
+권별 하위 폴더까지 재귀적으로 읽지만 전시 화면의 선택 단위는 방면과 활동 카테고리로 유지합니다. 원본 JPG, JPEG, PNG, HEIF/HEIC를 가져올 수 있으며 프로덕션 전시 사본은 모두 WebP로 정규화합니다. 파일명은 화면에 직접 표시하지 않고 권 폴더, 파일명의 `남/여` 표식, 활동 폴더를 해석해 `권 | 부서 | 활동` 메타데이터로 표시합니다. 부서 표식이 없는 파일은 임의 추정하지 않고 `청년부`로 표시합니다.
+
+한국어·일본어 메타데이터 표기는 [`data/gallery-metadata.js`](data/gallery-metadata.js)에서 한 번에 관리합니다. 예를 들어 `충주권 | 남자부 | 창가청년스쿨`은 일본어 전환 시 `忠州圏 | 男子部 | 創価青年スクール`로 함께 바뀝니다.
+
+Google Drive에서 받은 원본은 프로젝트 밖 임시 폴더에 보관하고, 다음 명령으로 최대 변 2000px·품질 82의 WebP 전시용 사본을 만듭니다. `--inventory`는 Drive 커넥터로 만든 파일 ID·제목·방면·권·카테고리 목록입니다. 사진에서는 PNG보다 WebP가 훨씬 작으며, 필요할 때만 `--format jpeg`로 JPEG 출력을 선택합니다.
+
+```text
+npm run assets:drive -- --source <원본 폴더> --inventory <인벤토리 JSON>
+```
+
+전시 카테고리는 Drive 구조와 동일하게 `창가청년스쿨(school)`과 `일대일근행회(visit)` 두 개를 사용합니다. 권별 폴더는 애셋 트리와 manifest의 `zone` 정보로 보존하지만 화면에서는 방면 단위로 합쳐 표시합니다.
 
 ```json
 {
-  "2026-07-19_청년미래총회.jpg": {
-    "caption": "청년미래총회",
+  "2026-07-19_창가청년스쿨.webp": {
+    "caption": "창가청년스쿨",
     "alt": "무대 앞에서 기념 촬영한 참가자들"
   }
 }
 ```
 
-실제 사진은 긴 변 약 2000px의 WebP 또는 품질 80–88 JPEG를 권장합니다. manifest는 향후 `thumbnail`과 `full` 경로를 구분할 수 있고, 화면 밖 이미지는 lazy loading합니다.
+실제 사진은 긴 변 2000px·품질 82의 WebP로 생성합니다. manifest는 향후 `thumbnail`과 `full` 경로를 구분할 수 있고, 화면 밖 이미지는 lazy loading합니다.
 
 ## 인트로 여정
 
@@ -145,6 +158,18 @@ npm run preview  # dist를 http://localhost:4180에서 확인
 npm run kiosk    # dist를 http://localhost:8081에서 제공
 npm test         # 데이터·레이아웃 계약·fixture·인트로·kiosk·dist 검증
 ```
+
+Cloudflare Workers Builds에서 정적 사이트로 배포할 때는 다음 값을 사용합니다.
+
+```text
+Build command: npm run build
+Deploy command: npx wrangler deploy
+```
+
+[`wrangler.jsonc`](wrangler.jsonc)가 빌드 결과물인 `dist/`를 정적 애셋으로
+배포하도록 지정합니다. 실제 Cloudflare Pages의 Git 연동을 선택한 경우에는
+빌드 명령을 `npm run build`, 출력 디렉터리를 `dist`로 설정하며 별도의 배포
+명령은 입력하지 않습니다.
 
 키오스크 서버 옵션:
 
