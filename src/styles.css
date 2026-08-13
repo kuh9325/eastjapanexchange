@@ -354,6 +354,7 @@ h1 {
   background: #fbfaf6;
 }
 .gallery-intro { min-width: 0; }
+.gallery-intro-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .gallery-kicker { margin: 1px 0 5px; color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: 0.16em; }
 .gallery-sticky-header h2 {
   margin: 0;
@@ -362,6 +363,38 @@ h1 {
   letter-spacing: -0.05em;
   line-height: 1;
 }
+.gallery-intro-toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 850;
+  box-shadow: 0 6px 16px rgba(23, 35, 59, 0.07);
+}
+.gallery-intro-toggle-icon {
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-135deg);
+  transition: transform 0.2s var(--ease);
+}
+.gallery-sticky-header.is-collapsed {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.gallery-sticky-header.is-collapsed .gallery-kicker { display: none; }
+.gallery-sticky-header.is-collapsed .gallery-intro-toggle-icon { transform: rotate(45deg); }
+.gallery-sticky-header.is-collapsed h2 { font-size: clamp(1.8rem, 2.2vw, 3.2rem); }
 .branch-slogan {
   max-width: 32em;
   margin: 14px 0 0;
@@ -670,6 +703,12 @@ h1 {
   .journey-replay { align-self: flex-end; }
   .exhibition-footer { align-items: flex-start; flex-direction: column; }
   .gallery-sticky-header { grid-template-columns: 1fr; padding: 18px 15px; }
+  .gallery-sticky-header.is-collapsed { grid-template-columns: auto minmax(0, 1fr); gap: 8px; padding: 12px 14px; }
+  .gallery-sticky-header.is-collapsed .gallery-intro-heading { gap: 8px; }
+  .gallery-sticky-header.is-collapsed h2 { font-size: 25px; }
+  .gallery-sticky-header.is-collapsed .back-button { min-height: 44px; padding: 0 10px; }
+  .gallery-intro-heading { align-items: flex-start; }
+  .gallery-intro-toggle { min-height: 42px; padding: 0 12px; font-size: 13px; }
   .hall-card { grid-column: 1; max-width: none; }
   .back-button { justify-self: start; }
   .gallery-scroll-content { --gallery-content-gutter: 14px; padding: 4px var(--gallery-content-gutter) 25px; }

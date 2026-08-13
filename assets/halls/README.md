@@ -3,9 +3,9 @@
 각 방면 소개 옆에 표시할 회관 전경 사진을 아래 이름으로 넣습니다.
 
 ```text
-assets/halls/chungnam/exterior.jpg
-assets/halls/chungbuk/exterior.jpg
-assets/halls/daejeon/exterior.jpg
+assets/halls/chungnam/exterior.webp
+assets/halls/chungbuk/exterior.webp
+assets/halls/daejeon/exterior.webp
 ```
 
 가로 사진을 권장하며 화면에서는 16:9 비율로 잘라 표시합니다. 초점 위치와

@@ -107,6 +107,10 @@ try {
   assert.equal(UI_COPY.ko.visit, "일대일근행회");
   assert.equal(UI_COPY.ja.school, "創価青年スクール");
   assert.equal(UI_COPY.ja.visit, "一対一勤行会");
+  assert.equal(UI_COPY.ko.collapseIntroduction, "소개 접기");
+  assert.equal(UI_COPY.ko.expandIntroduction, "소개 펼치기");
+  assert.equal(UI_COPY.ja.collapseIntroduction, "紹介を閉じる");
+  assert.equal(UI_COPY.ja.expandIntroduction, "紹介を開く");
   assert.equal(ZONE_LABELS.chungju.ja, "忠州圏");
   assert.equal(DEPARTMENT_LABELS.men.ja, "男子部");
   assert.equal(DEPARTMENT_LABELS.women.ja, "女子部");
@@ -186,6 +190,9 @@ try {
   assert.doesNotMatch(sourceStyles, /\.activity-toolbar\s*\{[^}]*position:\s*sticky/s, "활동 제목과 카테고리 탭은 사진 화면을 가리지 않도록 스크롤되어야 합니다.");
   assert.match(sourceHtml, /class="activity-toolbar"[\s\S]*class="section-heading"[\s\S]*class="category-tabs"/, "활동 제목과 카테고리 탭은 하나의 일반 툴바로 묶어야 합니다.");
   assert.doesNotMatch(sourceApp, /syncGalleryStickyOffset|--gallery-header-height/, "활동 툴바용 고정 오프셋 로직을 남기면 안 됩니다.");
+  assert.match(sourceHtml, /id="gallery-intro-toggle"[^>]*aria-expanded="true"[^>]*aria-controls="branch-introduction-details hall-card"/, "방면 소개 접기 버튼은 소개문과 회관 사진을 함께 제어해야 합니다.");
+  assert.match(sourceApp, /function setIntroductionCollapsed\(collapsed\)[\s\S]*introductionDetails\.hidden = isIntroductionCollapsed[\s\S]*hallCard\.hidden = isIntroductionCollapsed/, "방면 소개를 접으면 소개문과 회관 사진을 모두 숨겨야 합니다.");
+  assert.match(sourceStyles, /\.gallery-sticky-header\.is-collapsed\s*\{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\)/s, "접힌 방면 소개는 PC와 모바일에서 낮은 높이를 사용해야 합니다.");
   assert.match(sourceStyles, /\.exhibition\.has-selection \.stage\s*\{[^}]*grid-template-columns:\s*minmax\(420px,\s*30fr\)\s*minmax\(0,\s*70fr\)/s, "방면 선택 후 지도와 사진 영역은 3:7 비율이어야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*min-width:\s*420px/s, "대형 화면의 축소된 지도 패널은 최소 420px을 유지해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*position:\s*sticky[^}]*height:\s*100%/s, "가로 화면의 왼쪽 지도 패널은 고정되어야 합니다.");
@@ -256,6 +263,8 @@ try {
     assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].hallPhoto, null);
     assert.equal(EMPTY_FIXTURE_CONTENT[branchKey].meetingPhoto, null);
     assert.ok(EXHIBITION_CONTENT[branchKey].hallPhoto, "프로덕션 회관 전경 사진 슬롯이 있어야 합니다.");
+    assert.match(EXHIBITION_CONTENT[branchKey].hallPhoto.photo, /\/exterior\.webp$/, "프로덕션 회관 전경은 WebP 애셋을 사용해야 합니다.");
+    await fs.access(path.join(root, EXHIBITION_CONTENT[branchKey].hallPhoto.photo.replace(/^\.\//, "")));
     assert.ok(EXHIBITION_CONTENT[branchKey].slogan, "프로덕션 한국어 슬로건이 있어야 합니다.");
     assert.ok(EXHIBITION_CONTENT[branchKey].sloganJa, "프로덕션 일본어 슬로건이 있어야 합니다.");
     assert.ok(EXHIBITION_CONTENT[branchKey].introductionJa, "프로덕션 일본어 소개문이 있어야 합니다.");

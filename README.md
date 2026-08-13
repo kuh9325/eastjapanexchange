@@ -16,6 +16,7 @@ CDN, 외부 폰트, 온라인 지도 타일, 외부 API를 사용하지 않습�
 - 시군명, 행정구역 목록, 시군 tooltip과 `city-label`은 일반 화면에 만들지 않습니다.
 - `?debug=1`일 때만 내부 지도 분류를 진단 패널에서 확인할 수 있습니다.
 - 오른쪽 콘텐츠는 방면명·소개·방면회관 전경 → 방면운영회의 → 탭 → 사진 순서이며, 데이터가 없는 섹션은 공간까지 숨깁니다.
+- 방면 소개는 PC와 모바일에서 접고 펼칠 수 있으며, 접으면 방면명과 전체 지도 버튼만 남겨 사진 영역을 넓힙니다.
 
 `100vh`를 기본으로 사용하고 지원 브라우저에서 `100dvh`를 추가합니다. `backdrop-filter`, `dialog`, `inert`는 기능 감지와 불투명 배경·div형 dialog·tabindex/ARIA 대체 동작을 함께 제공합니다.
 
@@ -48,9 +49,9 @@ CDN, 외부 폰트, 온라인 지도 타일, 외부 API를 사용하지 않습�
 방면 소개 옆 회관 전경 사진은 아래 경로가 기본 설정되어 있습니다.
 
 ```text
-assets/halls/chungnam/exterior.jpg
-assets/halls/chungbuk/exterior.jpg
-assets/halls/daejeon/exterior.jpg
+assets/halls/chungnam/exterior.webp
+assets/halls/chungbuk/exterior.webp
+assets/halls/daejeon/exterior.webp
 ```
 
 사진은 16:9 비율로 표시됩니다. 초점 위치 조정은 각 `hallPhoto`의 `objectPosition` 값을 `"50% 42%"`처럼 바꿉니다. 파일이 없으면 깨진 아이콘 대신 자리표시자를 표시합니다.

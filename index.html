@@ -104,13 +104,21 @@
         </section>
 
         <section class="gallery-panel" aria-label="방면 활동 콘텐츠" aria-hidden="true">
-          <header class="gallery-sticky-header">
+          <header class="gallery-sticky-header" id="branch-introduction">
             <button class="back-button" type="button" aria-label="전체 지도로 돌아가기"><span aria-hidden="true">←</span> <span id="back-button-label">전체 지도</span></button>
             <div class="gallery-intro">
               <p class="gallery-kicker" id="gallery-kicker">YOUTH ACTIVITIES</p>
-              <h2 id="gallery-title">방면을 선택해 주세요</h2>
-              <p id="gallery-description"></p>
-              <p class="branch-slogan" id="branch-slogan" hidden></p>
+              <div class="gallery-intro-heading">
+                <h2 id="gallery-title">방면을 선택해 주세요</h2>
+                <button class="gallery-intro-toggle" id="gallery-intro-toggle" type="button" aria-expanded="true" aria-controls="branch-introduction-details hall-card">
+                  <span id="gallery-intro-toggle-label">소개 접기</span>
+                  <span class="gallery-intro-toggle-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div id="branch-introduction-details">
+                <p id="gallery-description"></p>
+                <p class="branch-slogan" id="branch-slogan" hidden></p>
+              </div>
             </div>
             <button class="hall-card" id="hall-card" type="button" aria-label="방면회관 전경 사진 크게 보기" aria-disabled="true">
               <span class="hall-photo-frame" id="hall-photo-frame"></span>

@@ -5,7 +5,7 @@
  */
 
 const hallPhoto = (branch, name, nameJa) => ({
-  photo: `./assets/halls/${branch}/exterior.jpg`,
+  photo: `./assets/halls/${branch}/exterior.webp`,
   alt: `${name} 회관 전경`,
   caption: `${name} 회관 전경`,
   altJa: `${nameJa}会館の外観`,

@@ -657,7 +657,7 @@ function municipalityNames(branchKey) {
 
 // data/exhibition-content.js
 var hallPhoto = (branch, name, nameJa) => ({
-  photo: "./assets/halls/".concat(branch, "/exterior.jpg"),
+  photo: "./assets/halls/".concat(branch, "/exterior.webp"),
   alt: "".concat(name, " 회관 전경"),
   caption: "".concat(name, " 회관 전경"),
   altJa: "".concat(nameJa, "会館の外観"),
@@ -741,6 +741,8 @@ var UI_COPY = Object.freeze({
     backLabel: "전체 지도로 돌아가기",
     back: "전체 지도",
     galleryPrompt: "방면을 선택해 주세요",
+    collapseIntroduction: "소개 접기",
+    expandIntroduction: "소개 펼치기",
     hallOpen: "방면회관 전경 사진 크게 보기",
     hallCaption: "방면회관 전경",
     hallPlaceholder: "회관 전경 사진 준비 중",
@@ -790,6 +792,8 @@ var UI_COPY = Object.freeze({
     backLabel: "全体地図に戻る",
     back: "全体地図",
     galleryPrompt: "方面を選択してください",
+    collapseIntroduction: "紹介を閉じる",
+    expandIntroduction: "紹介を開く",
     hallOpen: "方面会館の外観写真を拡大表示",
     hallCaption: "方面会館の外観",
     hallPlaceholder: "会館の外観写真を準備中です",
@@ -1429,10 +1433,14 @@ var mapLandmarkLayer = document.querySelector("#map-landmark-layer");
 var introKoreaLayer = document.querySelector("#intro-korea-layer");
 var mapLegend = document.querySelector("#map-legend");
 var galleryPanel = document.querySelector(".gallery-panel");
+var galleryHeader = document.querySelector(".gallery-sticky-header");
 var galleryTitle = document.querySelector("#gallery-title");
 var galleryKicker = document.querySelector("#gallery-kicker");
 var galleryDescription = document.querySelector("#gallery-description");
 var branchSlogan = document.querySelector("#branch-slogan");
+var introductionDetails = document.querySelector("#branch-introduction-details");
+var introductionToggle = document.querySelector("#gallery-intro-toggle");
+var introductionToggleLabel = document.querySelector("#gallery-intro-toggle-label");
 var hallCard = document.querySelector("#hall-card");
 var hallPhotoFrame = document.querySelector("#hall-photo-frame");
 var hallCaption = document.querySelector("#hall-caption");
@@ -1458,6 +1466,7 @@ var manifestAvailable = true;
 var selectedBranch = null;
 var selectedCategory = "all";
 var visiblePhotos = [];
+var isIntroductionCollapsed = false;
 var lightboxItems = [];
 var lightboxIndex = 0;
 var lightboxOpener = null;
@@ -1720,8 +1729,10 @@ function renderHall(branchKey) {
   hallCard.classList.remove("has-image");
   hallCard.setAttribute("aria-disabled", "true");
   hallCard.onclick = null;
-  hallCard.hidden = !hall || !hall.src && !hall.photo;
-  if (hallCard.hidden) return;
+  const hasHall = Boolean(hall && (hall.src || hall.photo));
+  hallCard.dataset.available = String(hasHall);
+  hallCard.hidden = isIntroductionCollapsed || !hasHall;
+  if (!hasHall) return;
   const branch = BRANCHES[branchKey];
   const item = photoItem(
     hall,
@@ -1743,6 +1754,19 @@ function renderHall(branchKey) {
   hallCard.onclick = () => {
     if (hallCard.classList.contains("has-image")) openLightbox([item], 0, hallCard);
   };
+}
+function updateIntroductionToggle() {
+  const label = isIntroductionCollapsed ? copy().expandIntroduction : copy().collapseIntroduction;
+  introductionToggleLabel.textContent = label;
+  introductionToggle.setAttribute("aria-label", label);
+  introductionToggle.setAttribute("aria-expanded", String(!isIntroductionCollapsed));
+}
+function setIntroductionCollapsed(collapsed) {
+  isIntroductionCollapsed = Boolean(collapsed);
+  galleryHeader.classList.toggle("is-collapsed", isIntroductionCollapsed);
+  introductionDetails.hidden = isIntroductionCollapsed;
+  hallCard.hidden = isIntroductionCollapsed || hallCard.dataset.available !== "true";
+  updateIntroductionToggle();
 }
 function renderMeeting(branchKey) {
   const meeting = content[branchKey] && content[branchKey].meetingPhoto;
@@ -1941,6 +1965,7 @@ function applyLanguage(language) {
   galleryPanel.setAttribute("aria-label", ui.galleryPanelLabel);
   backButton.setAttribute("aria-label", ui.backLabel);
   document.querySelector("#back-button-label").textContent = ui.back;
+  updateIntroductionToggle();
   document.querySelector("#meeting-section-title").textContent = ui.meetingTitle;
   document.querySelector("#activity-section-title").textContent = ui.activityTitle;
   document.querySelector(".category-tabs").setAttribute("aria-label", ui.categoryLabel);
@@ -2064,6 +2089,9 @@ function bindEvents() {
     });
   });
   backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));
+  introductionToggle.addEventListener("click", () => {
+    setIntroductionCollapsed(!isIntroductionCollapsed);
+  });
   photoGrid.addEventListener("click", (event) => {
     const card = event.target.closest(".photo-card:not(.image-missing)");
     if (!card) return;
