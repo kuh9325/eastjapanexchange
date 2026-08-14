@@ -188,6 +188,9 @@ try {
   assert.match(sourceStyles, /\.exhibition\s*\{[^}]*height:\s*100vh/s, "100vh 기본값이 있어야 합니다.");
   assert.match(sourceStyles, /@supports\s*\(height:\s*100dvh\)/, "지원 브라우저용 100dvh 향상이 있어야 합니다.");
   assert.match(sourceStyles, /\.gallery-panel\s*\{[^}]*overflow-y:\s*auto[^}]*overscroll-behavior:\s*contain/s, "오른쪽 패널만 스크롤되고 overscroll을 가둬야 합니다.");
+  assert.match(sourceStyles, /\.gallery-panel\s*\{[^}]*touch-action:\s*pan-y/s, "오른쪽 패널은 실제 터치의 세로 스크롤을 허용해야 합니다.");
+  assert.match(sourceApp, /function bindGalleryPointerDragScroll\(\)[\s\S]*event\.pointerType === ["']touch["'][\s\S]*galleryPanel\.scrollTop = galleryPointerDrag\.scrollTop - deltaY/, "마우스로 전달되는 전자칠판 터치 드래그도 세로 스크롤로 변환해야 합니다.");
+  assert.match(sourceApp, /galleryDragClickBlockUntil = Date\.now\(\) \+ 350[\s\S]*event\.stopPropagation\(\)/, "드래그 직후 사진이 실수로 확대되지 않아야 합니다.");
   assert.doesNotMatch(sourceStyles, /\.activity-toolbar\s*\{[^}]*position:\s*sticky/s, "활동 제목과 카테고리 탭은 사진 화면을 가리지 않도록 스크롤되어야 합니다.");
   assert.match(sourceHtml, /class="activity-toolbar"[\s\S]*class="section-heading"[\s\S]*class="category-tabs"/, "활동 제목과 카테고리 탭은 하나의 일반 툴바로 묶어야 합니다.");
   assert.doesNotMatch(sourceApp, /syncGalleryStickyOffset|--gallery-header-height/, "활동 툴바용 고정 오프셋 로직을 남기면 안 됩니다.");

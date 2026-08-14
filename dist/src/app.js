@@ -1477,6 +1477,9 @@ var isIntroductionCollapsed = false;
 var lightboxItems = [];
 var lightboxIndex = 0;
 var lightboxOpener = null;
+var galleryPointerDrag = null;
+var galleryDragClickBlockUntil = 0;
+var GALLERY_DRAG_THRESHOLD = 8;
 var copy = () => UI_COPY[currentLanguage];
 var localizedValue = (source, key) => {
   if (!source) return "";
@@ -2056,7 +2059,57 @@ function moveLightbox(direction) {
   if (lightboxItems.length < 2) return;
   updateLightbox((lightboxIndex + direction + lightboxItems.length) % lightboxItems.length);
 }
+function finishGalleryPointerDrag(event) {
+  var _a;
+  if (!galleryPointerDrag || event && event.pointerId !== galleryPointerDrag.pointerId) return;
+  if (galleryPointerDrag.moved) galleryDragClickBlockUntil = Date.now() + 350;
+  if (galleryPointerDrag.captured && ((_a = galleryPanel.hasPointerCapture) == null ? void 0 : _a.call(galleryPanel, galleryPointerDrag.pointerId))) {
+    galleryPanel.releasePointerCapture(galleryPointerDrag.pointerId);
+  }
+  galleryPointerDrag = null;
+  galleryPanel.classList.remove("is-pointer-dragging");
+}
+function bindGalleryPointerDragScroll() {
+  galleryPanel.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary || event.button !== 0 || event.pointerType === "touch") return;
+    if (!event.target.closest(".gallery-scroll-content")) return;
+    if (event.target.closest(".category-tabs, a, input, select, textarea")) return;
+    galleryPointerDrag = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      scrollTop: galleryPanel.scrollTop,
+      moved: false,
+      captured: false
+    };
+  });
+  galleryPanel.addEventListener("pointermove", (event) => {
+    if (!galleryPointerDrag || event.pointerId !== galleryPointerDrag.pointerId) return;
+    const deltaY = event.clientY - galleryPointerDrag.startY;
+    if (!galleryPointerDrag.moved && Math.abs(deltaY) < GALLERY_DRAG_THRESHOLD) return;
+    if (!galleryPointerDrag.moved) {
+      galleryPointerDrag.moved = true;
+      galleryPanel.classList.add("is-pointer-dragging");
+      try {
+        galleryPanel.setPointerCapture(event.pointerId);
+        galleryPointerDrag.captured = true;
+      } catch (error) {
+        setRuntimeStatus("lastError", "pointer capture fallback: ".concat(error.message));
+      }
+    }
+    event.preventDefault();
+    galleryPanel.scrollTop = galleryPointerDrag.scrollTop - deltaY;
+  }, { passive: false });
+  galleryPanel.addEventListener("click", (event) => {
+    if (Date.now() > galleryDragClickBlockUntil) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  window.addEventListener("pointerup", finishGalleryPointerDrag);
+  window.addEventListener("pointercancel", finishGalleryPointerDrag);
+  window.addEventListener("blur", () => finishGalleryPointerDrag());
+}
 function bindEvents() {
+  bindGalleryPointerDragScroll();
   languageButtons.forEach((button, index) => {
     button.addEventListener("click", () => applyLanguage(button.dataset.language));
     button.addEventListener("keydown", (event) => {

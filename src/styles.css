@@ -329,9 +329,15 @@ h1 {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   scrollbar-gutter: stable;
   transform: translateX(48px);
   transition: opacity 0.35s ease 0.15s, transform 0.65s var(--ease), visibility 0s linear 0.7s;
+}
+.gallery-panel.is-pointer-dragging,
+.gallery-panel.is-pointer-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
 }
 .exhibition.has-selection .gallery-panel {
   width: auto;
@@ -446,7 +452,7 @@ h1 {
 .exhibition[data-branch="chungbuk"] { --branch-accent: var(--teal); --branch-pale: var(--teal-pale); }
 .exhibition[data-branch="daejeon"] { --branch-accent: var(--cobalt); --branch-pale: var(--cobalt-pale); }
 
-.gallery-scroll-content { --gallery-content-gutter: 30px; padding: 8px var(--gallery-content-gutter) 36px; }
+.gallery-scroll-content { --gallery-content-gutter: 30px; padding: 8px var(--gallery-content-gutter) 36px; touch-action: pan-y; }
 .content-section { padding: 28px 0 6px; }
 .content-section + .content-section { border-top: 1px solid var(--line); margin-top: 22px; }
 .section-heading { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
@@ -505,6 +511,7 @@ h1 {
   background: #e8e4db;
   box-shadow: 0 11px 25px rgba(23, 35, 59, 0.1);
   animation: reveal 0.52s var(--ease) var(--delay, 0ms) both;
+  touch-action: pan-y;
 }
 .photo-card.wide { grid-column: span 8; aspect-ratio: 1.75; }
 .photo-card.tall { grid-row: span 2; aspect-ratio: 0.82; }
