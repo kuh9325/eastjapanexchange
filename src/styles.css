@@ -339,6 +339,10 @@ h1 {
   cursor: grabbing !important;
   user-select: none !important;
 }
+.gallery-panel img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
 .exhibition.has-selection .gallery-panel {
   width: auto;
   opacity: 1;

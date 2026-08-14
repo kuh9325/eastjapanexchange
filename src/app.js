@@ -362,6 +362,7 @@ function imageWithFallback(source, alt, className, onLoad, onError) {
   img.className = className || "";
   img.src = source;
   img.alt = alt;
+  img.draggable = false;
   img.loading = "lazy";
   img.decoding = "async";
   img.addEventListener("load", () => {
@@ -745,6 +746,10 @@ function finishGalleryPointerDrag(event) {
 }
 
 function bindGalleryPointerDragScroll() {
+  galleryPanel.addEventListener("dragstart", (event) => {
+    if (event.target.closest("img")) event.preventDefault();
+  });
+
   galleryPanel.addEventListener("pointerdown", (event) => {
     if (!event.isPrimary || event.button !== 0 || event.pointerType === "touch") return;
     if (!event.target.closest(".gallery-scroll-content")) return;
