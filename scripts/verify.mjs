@@ -177,6 +177,7 @@ try {
   const sourceApp = await fs.readFile(path.join(root, "src", "app.js"), "utf8");
   const sourceIntro = await fs.readFile(path.join(root, "src", "intro.js"), "utf8");
   const sourceBuild = await fs.readFile(path.join(root, "scripts", "build.mjs"), "utf8");
+  const sourceIntroMap = await fs.readFile(path.join(root, "assets", "intro", "korea.svg"), "utf8");
   assert.doesNotMatch(sourceStyles, /\.branch-region:hover[^{]*\{[^}]*transform\s*:/s, "hover 상태에서 방면을 확대하면 안 됩니다.");
   assert.doesNotMatch(sourceStyles, /\.branch-region[^}]*transform-box:\s*fill-box/s, "iOS Safari에서 SVG fill-box 기준 확대를 사용하면 방면이 오프셋될 수 있습니다.");
   assert.match(sourceApp, /const SELECTED_BRANCH_SCALE = 1\.035;/, "선택된 방면만 3.5% 확대해야 합니다.");
@@ -209,13 +210,18 @@ try {
   assert.match(sourceApp, /class:\s*["']branch-hit-areas["'][\s\S]*?["']clip-path["']:\s*`url\(#\$\{clipId\}\)`/, "터치 hit-area도 방면 색면 안으로 클리핑해야 합니다.");
   assert.doesNotMatch(sourceApp, /class:\s*["']branch-outlines["'][\s\S]*?["']clip-path["']:/, "최종 색면에서 생성한 outline을 다시 clip하여 경계를 끊으면 안 됩니다.");
   assert.match(sourceStyles, /prefers-reduced-motion:\s*reduce/, "reduced motion 스타일이 있어야 합니다.");
+  assert.match(sourceHtml, /<div class="lightbox"[^>]*role="dialog"[^>]*aria-modal="true"/, "사진 확대는 Android에서 안정적인 고정 오버레이를 사용해야 합니다.");
+  assert.doesNotMatch(sourceHtml, /<dialog class="lightbox"/, "사진 확대에 브라우저별 native dialog 구현을 사용하면 안 됩니다.");
+  assert.match(sourceStyles, /\.lightbox\s*\{[^}]*position:\s*fixed[^}]*top:\s*0[^}]*bottom:\s*0[^}]*height:\s*auto/s, "사진 확대 배경은 동적 viewport 단위 없이 화면 전체를 덮어야 합니다.");
+  assert.doesNotMatch(sourceStyles, /\.lightbox[^}]*dvh/s, "사진 확대 높이는 Android 동적 주소창의 dvh 계산에 의존하면 안 됩니다.");
   assert.doesNotMatch(sourceStyles, /color-mix\(/, "color-mix에 의존하지 않아야 합니다.");
   assert.doesNotMatch(sourceStyles, /offset-path|motion-path/, "CSS motion path에 의존하지 않아야 합니다.");
   assert.doesNotMatch(sourceHtml, /city-label|municipality-list|지도 표시 행정구역/, "일반 화면에 행정구역 UI를 만들면 안 됩니다.");
   assert.doesNotMatch(sourceApp, /class:\s*["']city-label|pathTitle|municipality-list/, "일반 지도에 시군 이름/툴팁을 렌더링하면 안 됩니다.");
   assert.match(sourceApp, /data-debug-city/, "행정구역 식별자는 디버그 모드에서만 제공해야 합니다.");
   assert.match(sourceApp, /MAP_LANDMARKS\.forEach/, "독도 등 원본 보완 표식을 지도에 렌더링해야 합니다.");
-  assert.match(sourceApp, /appendMapLandmarks\(mapLandmarkLayer\)[\s\S]*appendMapLandmarks\(introKoreaLayer\)/, "독도 위치점은 본 화면과 인트로 대한민국 지도에 모두 표시해야 합니다.");
+  assert.match(sourceHtml, /id="intro-korea-layer"[^>]*href="\.\/assets\/intro\/korea\.svg"/, "인트로 대한민국 지도는 한 번 래스터화할 수 있는 외부 SVG 이미지여야 합니다.");
+  assert.match(sourceIntroMap, /<circle[^>]*r="1\.6"/, "인트로 대한민국 지도에도 독도 위치점을 표시해야 합니다.");
   assert.match(sourceHtml, /id="map-landmark-layer"/, "지도에 원본 보완 표식 레이어가 있어야 합니다.");
   assert.match(sourceApp, /class:\s*"map-landmark-dot",\s*r:\s*1\.6/, "독도는 강조 장식 없이 작은 점으로 표시해야 합니다.");
   assert.doesNotMatch(sourceStyles, /map-landmark-ring|\.map-landmark text/, "독도 위치점에 강조 링이나 지도 라벨을 추가하면 안 됩니다.");
@@ -225,12 +231,15 @@ try {
   assert.match(sourceApp, /function renderHall\(branchKey\)/, "방면별 회관 전경 사진을 렌더링해야 합니다.");
   assert.match(sourceIntro, /getTotalLength\(\)/);
   assert.match(sourceIntro, /getPointAtLength/);
+  assert.doesNotMatch(sourceIntro, /const pointOnPath[\s\S]*?getTotalLength\(\)/, "인트로 프레임마다 SVG 경로 길이를 다시 계산하면 안 됩니다.");
   assert.match(sourceIntro, /cancelAnimationFrame/);
   assert.match(sourceIntro, /jincheon:\s*Object\.freeze\(\{ revealAt:\s*9500, move:\s*Object\.freeze\(\[10000, 11800\]\)/, "진천 핀이 먼저 나타난 뒤 인천에서 진천으로 이동해야 합니다.");
   assert.match(sourceIntro, /daejeon:\s*Object\.freeze\(\{ revealAt:\s*11800, move:\s*Object\.freeze\(\[12300, 14000\]\)/, "대전 핀이 먼저 나타난 뒤 대전 이동을 시작해야 합니다.");
   assert.match(sourceIntro, /const domesticTravelPoint[\s\S]*groundSegments\.jincheon[\s\S]*groundSegments\.daejeon/, "국내 이동은 인천→진천과 진천→대전 두 구간으로 분리해야 합니다.");
   assert.doesNotMatch(sourceIntro, /guro|show-guro|韓国SGI本部|ソウル九老/, "인트로 코드에서 구로 본부 경유를 완전히 제거해야 합니다.");
-  assert.match(sourceIntro, /groundPath\.setAttribute\("d", domesticRouteD\(elapsed\)\)/, "초록 점선은 이동점이 이동한 구간까지만 이어져야 합니다.");
+  assert.match(sourceIntro, /groundPath\.style\.strokeDashoffset = String\(groundPathLength \* \(1 - domesticRouteProgress\(elapsed\)\)\)/, "초록 점선은 경로를 재생성하지 않고 dash offset으로 이동 구간까지만 표시해야 합니다.");
+  assert.doesNotMatch(sourceIntro, /domesticRouteD/, "인트로 프레임마다 국내 이동 SVG path를 재작성하면 안 됩니다.");
+  assert.match(sourceIntro, /1000 \/ 30/, "Android·4K 환경은 안정적인 30fps 렌더링 상한을 사용해야 합니다.");
   assert.match(sourceHtml, /id="intro-ground-to-jincheon"[\s\S]*id="intro-ground-to-daejeon"/, "국내 이동용 두 SVG path가 있어야 합니다.");
   assert.doesNotMatch(sourceHtml, /intro-ground-to-guro|intro-point-guro|韓国SGI本部|ソウル九老/, "인트로 마크업에서 구로 본부 핀과 선분을 제거해야 합니다.");
   assert.match(sourceHtml, /id="intro-point-jincheon" class="intro-domestic-point"/);
@@ -286,8 +295,12 @@ try {
   const productionManifest = JSON.parse(sourceManifestBeforeBuild);
   assert.ok(productionManifest.photos.length > 0, "프로덕션 사진 manifest가 비어 있으면 안 됩니다.");
   assert.ok(productionManifest.photos.every(({ src }) => src.endsWith(".webp")), "전시용 사진은 모두 WebP여야 합니다.");
+  assert.ok(productionManifest.photos.every(({ thumbnail }) => thumbnail && thumbnail.endsWith(".webp")), "모든 전시 사진은 별도 WebP 썸네일을 사용해야 합니다.");
   assert.ok(productionManifest.photos.every(({ zone }) => Object.hasOwn(ZONE_LABELS, zone)), "모든 전시 사진은 알려진 권 폴더에 속해야 합니다.");
   assert.ok(productionManifest.photos.every(({ department }) => Object.hasOwn(DEPARTMENT_LABELS, department)), "모든 전시 사진은 부서 메타데이터가 있어야 합니다.");
+  for (const photo of productionManifest.photos) {
+    await fs.access(path.join(root, decodeURIComponent(photo.thumbnail.replace(/^\.\//, ""))));
+  }
   await exec(process.execPath, [path.join(root, "scripts", "build.mjs")]);
   const sourceManifestAfterBuild = await fs.readFile(path.join(root, "assets", "gallery-manifest.json"), "utf8");
   assert.equal(sourceManifestAfterBuild, sourceManifestBeforeBuild, "사진 목록이 같으면 manifest 생성 시각과 내용이 결정적으로 유지되어야 합니다.");
@@ -302,6 +315,8 @@ try {
   await fs.access(path.join(root, "dist", ".nojekyll"));
   await fs.access(path.join(root, "dist", "assets", "gallery-manifest.json"));
   await fs.access(path.join(root, "dist", "assets", "intro", "japan.svg"));
+  await fs.access(path.join(root, "dist", "assets", "intro", "korea.svg"));
+  await fs.access(path.join(root, "dist", decodeURIComponent(productionManifest.photos[0].thumbnail.replace(/^\.\//, ""))));
   await fs.access(path.join(root, "dist", "service-worker.js"));
   await fs.access(path.join(root, "dist", "fixtures", "full", "meeting", "group.svg"));
   await assert.rejects(fs.access(path.join(root, "dist", "data", "vendor")));

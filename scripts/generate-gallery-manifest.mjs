@@ -11,8 +11,10 @@ for (let index = 2; index < process.argv.length; index += 2) {
 }
 
 const galleryRoot = path.resolve(argumentsMap.get("--gallery-root") || path.join(root, "assets", "gallery"));
+const thumbnailRoot = path.resolve(argumentsMap.get("--thumbnail-root") || path.join(root, "assets", "gallery-thumbnails"));
 const outputPath = path.resolve(argumentsMap.get("--output") || path.join(root, "assets", "gallery-manifest.json"));
 const sourcePrefix = argumentsMap.get("--src-prefix") || "./assets/gallery";
+const thumbnailPrefix = argumentsMap.get("--thumbnail-prefix") || "./assets/gallery-thumbnails";
 const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
 
 function naturalSort(a, b) {
@@ -85,7 +87,14 @@ for (const branch of BRANCH_KEYS) {
       const department = Object.hasOwn(DEPARTMENT_LABELS, metadata.department)
         ? metadata.department
         : inferredDepartment;
-      photos.push({
+      const thumbnailRelativePath = entry.relativePath.replace(/\.[^.]+$/, ".webp");
+      const thumbnailPath = path.join(thumbnailRoot, branch, category, thumbnailRelativePath);
+      let thumbnail = null;
+      try {
+        const stat = await fs.stat(thumbnailPath);
+        if (stat.size > 0) thumbnail = `${thumbnailPrefix}/${encodedPath(branch, category, thumbnailRelativePath)}`;
+      } catch {}
+      const photo = {
         id: `${branch}-${category}-${pathSegments.join("-")}`,
         branch,
         category,
@@ -97,7 +106,9 @@ for (const branch of BRANCH_KEYS) {
         alt: typeof metadata.alt === "string" && metadata.alt.trim()
           ? metadata.alt.trim()
           : (typeof metadata.caption === "string" && metadata.caption.trim() ? metadata.caption.trim() : fallbackCaption)
-      });
+      };
+      if (thumbnail) photo.thumbnail = thumbnail;
+      photos.push(photo);
     }
   }
 }

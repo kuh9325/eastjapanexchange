@@ -1,13 +1,14 @@
 const CACHE_PREFIX = "eastjapanexchange-";
-const CACHE_NAME = `${CACHE_PREFIX}a32a40cde83e`;
+const CACHE_NAME = `${CACHE_PREFIX}d463dea55a32`;
 const PRECACHE = [
   "./index.html",
-  "./src/styles.css?v=a32a40cde83e",
-  "./src/app.js?v=a32a40cde83e",
+  "./src/styles.css?v=d463dea55a32",
+  "./src/app.js?v=d463dea55a32",
   "./data/regions.js",
   "./assets/gallery-manifest.json",
   "./assets/intro/SOURCE.md",
   "./assets/intro/japan.svg",
+  "./assets/intro/korea.svg",
   "./fixtures/full/gallery/activity-1.svg",
   "./fixtures/full/gallery/activity-2.svg",
   "./fixtures/full/gallery/activity-3.svg",

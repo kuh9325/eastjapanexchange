@@ -47,7 +47,6 @@ const koreaMap = document.querySelector(".korea-map");
 const countryContextLayer = document.querySelector("#country-context-layer");
 const branchMapLayer = document.querySelector("#branch-map-layer");
 const mapLandmarkLayer = document.querySelector("#map-landmark-layer");
-const introKoreaLayer = document.querySelector("#intro-korea-layer");
 const mapLegend = document.querySelector("#map-legend");
 const galleryPanel = document.querySelector(".gallery-panel");
 const galleryHeader = document.querySelector(".gallery-sticky-header");
@@ -175,10 +174,8 @@ function appendCountryContext(layer, includeMetadata) {
 function renderCountryContext() {
   setMapViewport(false);
   appendCountryContext(countryContextLayer, true);
-  appendCountryContext(introKoreaLayer, false);
   replaceChildren(mapLandmarkLayer, []);
   appendMapLandmarks(mapLandmarkLayer);
-  appendMapLandmarks(introKoreaLayer);
   mapAttribution.textContent = copy().mapAttribution || MAP_ATTRIBUTION;
 }
 

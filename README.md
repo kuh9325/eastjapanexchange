@@ -18,7 +18,7 @@ CDN, 외부 폰트, 온라인 지도 타일, 외부 API를 사용하지 않습�
 - 오른쪽 콘텐츠는 방면명·소개·방면회관 전경 → 방면운영회의 → 탭 → 사진 순서이며, 데이터가 없는 섹션은 공간까지 숨깁니다.
 - 방면 소개는 PC와 모바일에서 접고 펼칠 수 있으며, 접으면 방면명과 전체 지도 버튼만 남겨 사진 영역을 넓힙니다.
 
-`100vh`를 기본으로 사용하고 지원 브라우저에서 `100dvh`를 추가합니다. `backdrop-filter`, `dialog`, `inert`는 기능 감지와 불투명 배경·div형 dialog·tabindex/ARIA 대체 동작을 함께 제공합니다.
+`100vh`를 기본으로 사용하고 지원 브라우저에서 `100dvh`를 추가합니다. 사진 확대는 Android의 native dialog·동적 viewport 구현 차이를 피하도록 화면 네 변에 고정된 ARIA dialog 오버레이를 사용합니다. `backdrop-filter`와 `inert`는 기능 감지와 불투명 배경·tabindex/ARIA 대체 동작을 함께 제공합니다.
 
 ## 방면 데이터와 GIS 지도
 
@@ -96,7 +96,7 @@ assets/gallery/
 
 한국어·일본어 메타데이터 표기는 [`data/gallery-metadata.js`](data/gallery-metadata.js)에서 한 번에 관리합니다. 예를 들어 `충주권 | 남자부 | 창가청년스쿨`은 일본어 전환 시 `忠州圏 | 男子部 | 創価青年スクール`로 함께 바뀝니다.
 
-Google Drive에서 받은 원본은 프로젝트 밖 임시 폴더에 보관하고, 다음 명령으로 최대 변 2000px·품질 82의 WebP 전시용 사본을 만듭니다. `--inventory`는 Drive 커넥터로 만든 파일 ID·제목·방면·권·카테고리 목록입니다. 사진에서는 PNG보다 WebP가 훨씬 작으며, 필요할 때만 `--format jpeg`로 JPEG 출력을 선택합니다.
+Google Drive에서 받은 원본은 프로젝트 밖 임시 폴더에 보관하고, 다음 명령으로 최대 변 2000px·품질 82의 WebP 확대용 사본과 최대 변 720px·품질 72의 WebP 썸네일을 함께 만듭니다. `--inventory`는 Drive 커넥터로 만든 파일 ID·제목·방면·권·카테고리 목록입니다. 사진에서는 PNG보다 WebP가 훨씬 작으며, 필요할 때만 `--format jpeg`로 확대용 JPEG 출력을 선택합니다.
 
 ```text
 npm run assets:drive -- --source <원본 폴더> --inventory <인벤토리 JSON>
@@ -113,7 +113,7 @@ npm run assets:drive -- --source <원본 폴더> --inventory <인벤토리 JSON>
 }
 ```
 
-실제 사진은 긴 변 2000px·품질 82의 WebP로 생성합니다. manifest는 향후 `thumbnail`과 `full` 경로를 구분할 수 있고, 화면 밖 이미지는 lazy loading합니다.
+manifest의 `src`는 확대용 사진, `thumbnail`은 목록용 사진을 가리킵니다. 기존 사진에 썸네일이 없으면 `npm run thumbnails` 또는 build 과정에서 자동 생성하고, 화면 밖 이미지는 lazy loading과 `content-visibility`로 렌더링 부담을 줄입니다.
 
 ## 인트로 여정
 
@@ -121,7 +121,7 @@ npm run assets:drive -- --source <원본 폴더> --inventory <인벤토리 JSON>
 
 인트로 지점은 화면 크기에 따른 픽셀 위치가 아니라 [`data/intro-route.js`](data/intro-route.js)의 로컬 지도 좌표로 관리합니다. 대한민국 지점은 `regions.js`와 같은 780×760 좌표계에 둔 뒤 인트로 장면으로 변환하므로 모바일에서도 전도와 동쪽으로 어긋나지 않습니다. 시설 주소나 지도 애셋을 바꿀 때는 이 파일의 `mapPoint`만 갱신합니다.
 
-비행기와 이동 점은 CSS motion path 대신 SVG `getTotalLength()`, `getPointAtLength()`, `requestAnimationFrame()`으로 이동합니다. 건너뛰기·페이지 이탈·완료 때 frame과 timer를 정리합니다. `prefers-reduced-motion`에서는 지점 이름만 짧게 순차 표시합니다. 자세한 15초 구성은 [`docs/intro-motion-spec.md`](docs/intro-motion-spec.md)에 있습니다.
+비행기와 이동 점은 CSS motion path 대신 SVG `getTotalLength()`, `getPointAtLength()`, `requestAnimationFrame()`으로 이동합니다. 경로 길이는 시작할 때 한 번만 계산하고 이동선은 `stroke-dashoffset`으로 표시합니다. 대한민국 지도는 외부 SVG 이미지로 한 번 래스터화할 수 있게 분리하며 Android·4K 화면에서는 30fps로 제한합니다. 건너뛰기·페이지 이탈·완료 때 frame과 timer를 정리합니다. `prefers-reduced-motion`에서는 지점 이름만 짧게 순차 표시합니다. 자세한 15초 구성은 [`docs/intro-motion-spec.md`](docs/intro-motion-spec.md)에 있습니다.
 
 개발 검토용 인트로 반복 모드:
 
@@ -154,6 +154,7 @@ Node.js 18 이상이 필요합니다.
 npm install
 npm run dev      # 지도 + manifest 생성 후 http://localhost:4180
 npm run assets   # gallery-manifest.json 생성
+npm run thumbnails # 목록용 720px WebP 썸네일 생성
 npm run build    # 지도 + manifest + 호환 번들 + service worker + dist 생성
 npm run preview  # dist를 http://localhost:4180에서 확인
 npm run kiosk    # dist를 http://localhost:8081에서 제공
@@ -199,12 +200,12 @@ npm run kiosk -- --host 0.0.0.0 --port 8081
 - esbuild가 브라우저 코드를 Chrome 69, Safari 12, Edge 79 수준의 단일 ES module로 번들합니다.
 - `color-mix()`와 CSS motion path를 사용하지 않습니다.
 - `100vh` 뒤에 기능 감지된 `100dvh`를 둡니다.
-- `dialog.showModal()` 실패 시 fixed div 방식, `inert` 미지원 시 ARIA·pointer-events·tabindex 방식으로 대체합니다.
+- 사진 확대는 native `dialog.showModal()`을 사용하지 않고 fixed ARIA dialog로 일관되게 표시합니다.
 - `backdrop-filter` 미지원 환경은 먼저 선언한 불투명 패널을 사용합니다.
 - 인트로 이동 API나 rAF가 없으면 정적 축소 여정으로 자동 전환합니다.
 - 한 이미지나 manifest 로딩 실패는 전체 앱을 중단시키지 않습니다.
 
-Android 11 Opera에서 터치, 내부 패널 관성 스크롤, dialog, 재생 완료 후 frame 정리를 최종 현장 점검해야 합니다. 구형 Chrome에서는 ES module 자체 지원 여부, SVG path 길이 API, fixed/overflow 조합을 `?debug=1`로 확인합니다. Chrome이 ES module을 지원하지 않을 정도로 오래된 경우 Opera를 사용합니다.
+Android 11 Opera에서 터치, 내부 패널 관성 스크롤, 사진 확대 오버레이, 재생 완료 후 frame 정리를 최종 현장 점검해야 합니다. 구형 Chrome에서는 ES module 자체 지원 여부, SVG path 길이 API, fixed/overflow 조합을 `?debug=1`로 확인합니다. Chrome이 ES module을 지원하지 않을 정도로 오래된 경우 Opera를 사용합니다.
 
 ## GitHub Pages
 

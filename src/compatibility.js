@@ -129,7 +129,7 @@ export function updateDebugPanel() {
     ["userAgent", navigator.userAgent],
     ["viewport", `${window.innerWidth} × ${window.innerHeight}`],
     ["devicePixelRatio", String(window.devicePixelRatio || 1)],
-    ["dialog", typeof window.HTMLDialogElement !== "undefined" ? "지원" : "fallback"],
+    ["사진 확대", document.querySelector("#lightbox[role='dialog']") ? "고정 오버레이" : "dialog"],
     ["inert", "inert" in HTMLElement.prototype ? "지원" : "fallback"],
     ["backdrop-filter", supportsBackdrop ? "지원" : "fallback"],
     ["requestAnimationFrame", runtimeStatus.animationFrame],

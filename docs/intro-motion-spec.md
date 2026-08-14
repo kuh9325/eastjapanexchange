@@ -36,4 +36,4 @@
 
 ## 성능 기준
 
-transform, opacity, SVG attribute 갱신만 매 frame 수행한다. `setRuntimeStatus`와 접근성 단계명은 단계가 바뀔 때만 갱신하고, 무거운 blur/filter나 CSS motion path를 사용하지 않는다. 목표는 STS-75IR11 Opera에서 30fps 이상이며 가능한 경우 60fps이다.
+경로 길이는 재생 전에 한 번만 계산하고 매 frame에는 transform, opacity, `stroke-dashoffset`만 갱신한다. 대한민국 지도는 외부 SVG `<image>`로 분리해 브라우저가 한 장의 레이어로 래스터화할 수 있게 한다. `setRuntimeStatus`와 접근성 단계명은 단계가 바뀔 때만 갱신하고, 무거운 blur/filter나 CSS motion path를 사용하지 않는다. Android 또는 4K 출력은 안정적인 30fps로 제한하고 그 외 환경은 가능한 경우 60fps로 재생한다.

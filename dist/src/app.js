@@ -1021,7 +1021,7 @@ function updateDebugPanel() {
     ["userAgent", navigator.userAgent],
     ["viewport", "".concat(window.innerWidth, " × ").concat(window.innerHeight)],
     ["devicePixelRatio", String(window.devicePixelRatio || 1)],
-    ["dialog", typeof window.HTMLDialogElement !== "undefined" ? "지원" : "fallback"],
+    ["사진 확대", document.querySelector("#lightbox[role='dialog']") ? "고정 오버레이" : "dialog"],
     ["inert", "inert" in HTMLElement.prototype ? "지원" : "fallback"],
     ["backdrop-filter", supportsBackdrop ? "지원" : "fallback"],
     ["requestAnimationFrame", runtimeStatus.animationFrame],
@@ -1166,10 +1166,21 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   let paused = false;
   let speed = 1;
   let lastStage = "";
+  let lastRenderedAt = 0;
   flightPath.setAttribute("d", "M".concat(point(CTS), " C755 58 485 178 ").concat(point(ICN)));
   groundPath.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon), " C268 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
   groundSegments.jincheon.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon)));
   groundSegments.daejeon.setAttribute("d", "M".concat(point(INTRO_ROUTE.jincheon), " C267 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
+  const flightPathLength = supportsMotion ? flightPath.getTotalLength() : 0;
+  const groundPathLength = supportsMotion ? groundPath.getTotalLength() : 0;
+  const groundSegmentLengths = {
+    jincheon: supportsMotion ? groundSegments.jincheon.getTotalLength() : 0,
+    daejeon: supportsMotion ? groundSegments.daejeon.getTotalLength() : 0
+  };
+  const domesticPathLength = groundSegmentLengths.jincheon + groundSegmentLengths.daejeon;
+  const targetFrameInterval = /Android/i.test(navigator.userAgent) || Math.max(window.screen.width, window.screen.height) * (window.devicePixelRatio || 1) >= 3e3 ? 1e3 / 30 : 0;
+  groundPath.style.strokeDasharray = String(groundPathLength);
+  groundPath.style.strokeDashoffset = String(groundPathLength);
   for (const [key, location2] of Object.entries(INTRO_ROUTE)) {
     const marker = document.querySelector("#intro-point-".concat(key));
     if (marker) marker.setAttribute("transform", "translate(".concat(point(location2), ")"));
@@ -1189,6 +1200,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     paused = false;
     pausedAt = 0;
     pauseStarted = 0;
+    lastRenderedAt = 0;
     startButton.disabled = false;
     pauseButton.textContent = "一時停止";
     root.classList.remove("is-running", "is-complete", "show-flight", "show-ground", "show-jincheon", "show-daejeon", "reduced-sequence");
@@ -1200,6 +1212,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     koreaLayer.style.opacity = "0";
     plane.setAttribute("transform", "translate(".concat(point(CTS), ")"));
     travelDot.setAttribute("transform", "translate(".concat(point(ICN), ")"));
+    groundPath.style.strokeDashoffset = String(groundPathLength);
     welcome.hidden = false;
     stageLabel.textContent = "新千歳空港からの出発をお待ちください";
     setRuntimeStatus("intro", "出発待機");
@@ -1223,8 +1236,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     }, 650);
     timeoutIds.push(timeout);
   };
-  const pointOnPath = (path, fraction) => {
-    const length = path.getTotalLength();
+  const pointOnPath = (path, length, fraction) => {
     return path.getPointAtLength(length * clamp(fraction, 0, 1));
   };
   const movementProgress = (elapsed, stop) => {
@@ -1232,28 +1244,17 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     if (elapsed >= stop.move[1]) return 1;
     return ease(progressBetween(elapsed, stop.move));
   };
-  const domesticRouteD = (elapsed) => {
-    const points = [{ x: ICN.scenePoint[0], y: ICN.scenePoint[1] }];
-    for (const key of ["jincheon", "daejeon"]) {
-      const progress = movementProgress(elapsed, DOMESTIC_STOPS[key]);
-      if (progress <= 0) break;
-      const path = groundSegments[key];
-      const length = path.getTotalLength();
-      const samples = Math.max(2, Math.ceil(22 * progress));
-      for (let index = 1; index <= samples; index += 1) {
-        points.push(path.getPointAtLength(length * progress * index / samples));
-      }
-      if (progress < 1) break;
-    }
-    return points.map((routePoint, index) => "".concat(index ? "L" : "M").concat(routePoint.x.toFixed(2), " ").concat(routePoint.y.toFixed(2))).join(" ");
+  const domesticRouteProgress = (elapsed) => {
+    const revealedLength = groundSegmentLengths.jincheon * movementProgress(elapsed, DOMESTIC_STOPS.jincheon) + groundSegmentLengths.daejeon * movementProgress(elapsed, DOMESTIC_STOPS.daejeon);
+    return domesticPathLength ? clamp(revealedLength / domesticPathLength, 0, 1) : 1;
   };
   const domesticTravelPoint = (elapsed) => {
     if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
     if (elapsed < DOMESTIC_STOPS.jincheon.move[1]) {
-      return pointOnPath(groundSegments.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
+      return pointOnPath(groundSegments.jincheon, groundSegmentLengths.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
     }
     if (elapsed < DOMESTIC_STOPS.daejeon.move[0]) return { x: INTRO_ROUTE.jincheon.scenePoint[0], y: INTRO_ROUTE.jincheon.scenePoint[1] };
-    return pointOnPath(groundSegments.daejeon, ease(progressBetween(elapsed, DOMESTIC_STOPS.daejeon.move)));
+    return pointOnPath(groundSegments.daejeon, groundSegmentLengths.daejeon, ease(progressBetween(elapsed, DOMESTIC_STOPS.daejeon.move)));
   };
   const updateStage = (elapsed) => {
     if (elapsed < INTRO_TIMELINE.zoomOut[0]) return "新千歳空港を出発";
@@ -1282,8 +1283,8 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     if (elapsed >= INTRO_TIMELINE.flight[0] && elapsed <= INTRO_TIMELINE.flight[1]) {
       root.classList.add("show-flight");
       const flightProgress = ease(progressBetween(elapsed, INTRO_TIMELINE.flight));
-      const point2 = pointOnPath(flightPath, flightProgress);
-      const next = pointOnPath(flightPath, Math.min(1, flightProgress + 6e-3));
+      const point2 = pointOnPath(flightPath, flightPathLength, flightProgress);
+      const next = pointOnPath(flightPath, flightPathLength, Math.min(1, flightProgress + 6e-3));
       const angle = Math.atan2(next.y - point2.y, next.x - point2.x) * 180 / Math.PI;
       plane.setAttribute("transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ") rotate(").concat(angle.toFixed(2), ")"));
     } else if (elapsed > INTRO_TIMELINE.flight[1]) {
@@ -1292,7 +1293,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     if (elapsed >= INTRO_TIMELINE.ground[0]) {
       root.classList.add("show-ground");
       const point2 = domesticTravelPoint(elapsed);
-      groundPath.setAttribute("d", domesticRouteD(elapsed));
+      groundPath.style.strokeDashoffset = String(groundPathLength * (1 - domesticRouteProgress(elapsed)));
       travelDot.setAttribute("transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ")"));
     }
     root.classList.toggle("show-jincheon", elapsed >= DOMESTIC_STOPS.jincheon.revealAt);
@@ -1307,6 +1308,11 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   const tick = (timestamp) => {
     if (!running || paused) return;
     if (!startedAt) startedAt = timestamp;
+    if (targetFrameInterval && lastRenderedAt && timestamp - lastRenderedAt < targetFrameInterval) {
+      frameId = window.requestAnimationFrame(tick);
+      return;
+    }
+    lastRenderedAt = timestamp;
     const elapsed = (timestamp - startedAt - pausedAt) * speed;
     try {
       renderFrame(elapsed);
@@ -1325,6 +1331,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   };
   const runReducedSequence = () => {
     root.classList.add("reduced-sequence", "show-ground");
+    groundPath.style.strokeDashoffset = "0";
     const steps = [
       ["新千歳空港を出発", 0],
       ["仁川国際空港に到着", 350],
@@ -1354,6 +1361,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     paused = false;
     startedAt = 0;
     pausedAt = 0;
+    lastRenderedAt = 0;
     startButton.disabled = true;
     welcome.hidden = true;
     root.classList.add("is-running");
@@ -1430,7 +1438,6 @@ var koreaMap = document.querySelector(".korea-map");
 var countryContextLayer = document.querySelector("#country-context-layer");
 var branchMapLayer = document.querySelector("#branch-map-layer");
 var mapLandmarkLayer = document.querySelector("#map-landmark-layer");
-var introKoreaLayer = document.querySelector("#intro-korea-layer");
 var mapLegend = document.querySelector("#map-legend");
 var galleryPanel = document.querySelector(".gallery-panel");
 var galleryHeader = document.querySelector(".gallery-sticky-header");
@@ -1545,10 +1552,8 @@ function appendCountryContext(layer, includeMetadata) {
 function renderCountryContext() {
   setMapViewport(false);
   appendCountryContext(countryContextLayer, true);
-  appendCountryContext(introKoreaLayer, false);
   replaceChildren(mapLandmarkLayer, []);
   appendMapLandmarks(mapLandmarkLayer);
-  appendMapLandmarks(introKoreaLayer);
   mapAttribution.textContent = copy().mapAttribution || MAP_ATTRIBUTION;
 }
 function appendMapLandmarks(layer) {

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f1e8" />
     <meta name="description" id="meta-description" content="충남·충북·대전방면 청년 활동 오프라인 전시" />
     <title>마음과 마음을 잇는 청년의 발자취</title>
-    <link rel="stylesheet" href="./src/styles.css?v=a32a40cde83e" />
+    <link rel="stylesheet" href="./src/styles.css?v=d463dea55a32" />
   </head>
   <body>
     <a class="skip-link" id="skip-link" href="#branch-switcher">방면 선택으로 건너뛰기</a>
@@ -20,7 +20,7 @@
         <title id="intro-map-title">新千歳空港から大田までの交流の旅</title>
         <desc id="intro-map-desc">北海道の新千歳空港から仁川国際空港へ飛び、韓国SGI鎮川研修院を経て韓国SGI大田文化会館へ移動します。</desc>
         <g id="intro-world">
-          <g id="intro-korea-layer" class="intro-korea-layer" transform="translate(100 185) scale(.52)" aria-hidden="true"></g>
+          <image id="intro-korea-layer" class="intro-korea-layer" href="./assets/intro/korea.svg" x="100" y="185" width="405.6" height="395.2" aria-hidden="true" />
           <image class="intro-japan-layer" href="./assets/intro/japan.svg" x="470" y="30" width="690" height="414" aria-hidden="true" />
           <path id="intro-flight-path" class="intro-flight-path" d="M910.79 102.22 C755 58 485 178 211.38 281.51" />
           <path id="intro-ground-path" class="intro-ground-path" d="M211.38 281.51 C226 292 249 310 265.7 321.45 C268 333 265 346 262.97 352.96" />
@@ -152,7 +152,7 @@
       </section>
     </main>
 
-    <dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-caption" hidden>
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-caption" hidden>
       <button class="lightbox-close" type="button" aria-label="사진 닫기">×</button>
       <button class="lightbox-nav previous" type="button" aria-label="이전 사진">‹</button>
       <figure>
@@ -161,9 +161,9 @@
         <figcaption id="lightbox-caption"></figcaption>
       </figure>
       <button class="lightbox-nav next" type="button" aria-label="다음 사진">›</button>
-    </dialog>
+    </div>
 
     <aside class="debug-panel" id="debug-panel" aria-label="브라우저 디버그 정보" hidden></aside>
-    <script type="module" src="./src/app.js?v=a32a40cde83e"></script>
+    <script type="module" src="./src/app.js?v=d463dea55a32"></script>
   </body>
 </html>

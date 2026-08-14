@@ -22,6 +22,8 @@ async function listFiles(directory, prefix = "") {
 }
 
 await exec(process.execPath, [path.join(root, "scripts", "generate-map-data.mjs")]);
+await exec(process.execPath, [path.join(root, "scripts", "generate-intro-map.mjs")]);
+await exec(process.execPath, [path.join(root, "scripts", "generate-gallery-thumbnails.mjs")]);
 await exec(process.execPath, [path.join(root, "scripts", "generate-gallery-manifest.mjs")]);
 await fs.rm(dist, { recursive: true, force: true });
 await fs.mkdir(path.join(dist, "src"), { recursive: true });

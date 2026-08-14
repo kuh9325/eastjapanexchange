@@ -509,6 +509,9 @@ h1 {
 .photo-card.wide { grid-column: span 8; aspect-ratio: 1.75; }
 .photo-card.tall { grid-row: span 2; aspect-ratio: 0.82; }
 .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@supports (content-visibility: auto) {
+  .photo-card { content-visibility: auto; contain-intrinsic-size: 320px 270px; }
+}
 .photo-card::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: linear-gradient(transparent, rgba(8, 16, 34, 0.84)); pointer-events: none; }
 .photo-meta {
   position: absolute;
@@ -574,23 +577,41 @@ h1 {
 .lightbox {
   position: fixed;
   z-index: 400;
-  width: 94vw;
-  max-width: 1500px;
-  height: 92vh;
-  max-height: 1000px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
   border: 0;
   padding: 0;
-  border-radius: 26px;
-  background: #0d1424;
+  border-radius: 0;
+  background: rgba(4, 9, 18, 0.94);
   color: white;
   overflow: hidden;
 }
-@supports (height: 92dvh) { .lightbox { height: 92dvh; } }
-.lightbox::backdrop { background: rgba(4, 9, 18, 0.82); }
-.lightbox[open] { display: grid; place-items: center; }
-.lightbox.fallback-open { top: 4vh; left: 3vw; right: 3vw; bottom: 4vh; margin: auto; box-shadow: 0 0 0 100vmax rgba(4, 9, 18, 0.82); }
-.lightbox figure { position: relative; margin: 0; width: 100%; height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; }
-.lightbox img { max-width: 100%; max-height: calc(92vh - 82px); width: 100%; height: 100%; object-fit: contain; }
+.lightbox[open], .lightbox.fallback-open { display: block; }
+.lightbox figure {
+  position: absolute;
+  top: 4%;
+  right: 3%;
+  bottom: 4%;
+  left: 3%;
+  width: auto;
+  max-width: 1500px;
+  height: auto;
+  max-height: 1000px;
+  margin: auto;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
+  border-radius: 26px;
+  background: #0d1424;
+  overflow: hidden;
+}
+.lightbox img { min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; display: block; }
 .lightbox-error { align-self: center; margin: 0; padding: 22px; color: #fff; font-size: 20px; font-weight: 850; text-align: center; }
 .lightbox figcaption { width: 100%; min-height: 82px; padding: 18px 90px; display: grid; place-items: center; text-align: center; background: rgba(0, 0, 0, 0.3); font-size: 17px; font-weight: 850; }
 .lightbox-close, .lightbox-nav { position: absolute; z-index: 5; min-width: 64px; min-height: 64px; border: 0; color: white; background: rgba(255, 255, 255, 0.18); }
@@ -620,7 +641,7 @@ h1 {
 .intro-skip { min-width: 132px; padding: 0 24px; background: rgba(255, 255, 255, 0.9); color: var(--ink); }
 .intro-map { width: 100%; height: 100%; display: block; }
 #intro-world { transform-box: view-box; transform-origin: 0 0; }
-.intro-japan-layer, .intro-korea-layer { transition: opacity 0.35s ease; }
+.intro-japan-layer, .intro-korea-layer { transition: opacity 0.35s ease; will-change: opacity; }
 .intro-korea-layer { opacity: 0; }
 .intro-flight-path, .intro-ground-path { fill: none; stroke-linecap: round; }
 .intro-travel-segment { fill: none; stroke: none; pointer-events: none; }
@@ -633,9 +654,10 @@ h1 {
   fill: currentColor;
   background: transparent;
   opacity: 0;
+  will-change: transform;
 }
 .intro-plane path { fill: currentColor; stroke: none; }
-.intro-travel-dot { fill: var(--teal); opacity: 0; }
+.intro-travel-dot { fill: var(--teal); opacity: 0; will-change: transform; }
 .intro-travel-dot circle + circle { fill: none; stroke: var(--teal); stroke-width: 4; opacity: 0.38; }
 .intro-screen.show-flight .intro-plane { opacity: 1; }
 .intro-screen.is-running .intro-flight-path,
