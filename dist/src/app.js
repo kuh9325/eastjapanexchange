@@ -114,7 +114,6 @@ var BRANCHES = Object.freeze({
     "shortName": "충남",
     "nameJa": "忠南方面",
     "shortNameJa": "忠南",
-    "english": "CHUNGNAM AREA",
     "color": "coral",
     "zones": [
       "백제권",
@@ -314,7 +313,6 @@ var BRANCHES = Object.freeze({
     "shortName": "충북",
     "nameJa": "忠北方面",
     "shortNameJa": "忠北",
-    "english": "CHUNGBUK AREA",
     "color": "teal",
     "zones": [
       "동청주권",
@@ -501,7 +499,6 @@ var BRANCHES = Object.freeze({
     "shortName": "대전",
     "nameJa": "大田方面",
     "shortNameJa": "大田",
-    "english": "DAEJEON AREA",
     "color": "cobalt",
     "zones": [
       "남대전권",
@@ -736,7 +733,7 @@ var UI_COPY = Object.freeze({
     replay: "여정 다시 보기",
     footer: "충남 · 충북 · 대전 청년부",
     mapInfo: "지도 정보",
-    mapAttribution: "통계청 SGIS 2020 행정구역 경계 기반, 전시용 단순화",
+    mapAttribution: "통계청 2020 행정구역 경계 기반, 전시용 단순화",
     galleryPanelLabel: "방면 활동 콘텐츠",
     backLabel: "전체 지도로 돌아가기",
     back: "전체 지도",
@@ -787,7 +784,7 @@ var UI_COPY = Object.freeze({
     replay: "旅をもう一度見る",
     footer: "忠南・忠北・大田 青年部",
     mapInfo: "地図情報",
-    mapAttribution: "韓国統計庁SGISの2020年行政区域境界を基にした展示用簡略図",
+    mapAttribution: "韓国統計庁の2020年行政区域境界を基にした展示用簡略図",
     galleryPanelLabel: "方面別の青年活動",
     backLabel: "全体地図に戻る",
     back: "全体地図",
@@ -1072,7 +1069,7 @@ var japanToScene = ([x, y]) => Object.freeze([
 ]);
 var INTRO_ROUTE = Object.freeze({
   cts: Object.freeze({
-    label: "新千歳空港 · CTS",
+    label: "新千歳空港",
     latitude: 42.7752,
     longitude: 141.6923,
     mapPoint: Object.freeze([574.95, 94.2]),
@@ -1185,7 +1182,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     const marker = document.querySelector("#intro-point-".concat(key));
     if (marker) marker.setAttribute("transform", "translate(".concat(point(location2), ")"));
   }
-  routeLabel.textContent = "CTS → ICN · 約 ".concat(CTS_ICN_DISTANCE.toLocaleString("ja-JP"), " km");
+  routeLabel.textContent = "新千歳空港 → 仁川国際空港 · 約".concat(CTS_ICN_DISTANCE.toLocaleString("ja-JP"), "キロメートル");
   controls.hidden = !previewMode2;
   root.classList.toggle("preview-mode", previewMode2);
   const clearAsync = () => {
@@ -1259,7 +1256,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   const updateStage = (elapsed) => {
     if (elapsed < INTRO_TIMELINE.zoomOut[0]) return "新千歳空港を出発";
     if (elapsed < INTRO_TIMELINE.flight[0]) return "韓国へ向けてズームアウト";
-    if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "CTS → ICN 飛行中";
+    if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "新千歳空港から仁川国際空港へ飛行中";
     if (elapsed < INTRO_TIMELINE.ground[0]) return "仁川国際空港に到着";
     if (elapsed < 11800) return "仁川国際空港 → 鎮川研修院";
     if (elapsed < INTRO_TIMELINE.arrival[0]) return "鎮川研修院 → 大田文化会館";
@@ -1442,7 +1439,6 @@ var mapLegend = document.querySelector("#map-legend");
 var galleryPanel = document.querySelector(".gallery-panel");
 var galleryHeader = document.querySelector(".gallery-sticky-header");
 var galleryTitle = document.querySelector("#gallery-title");
-var galleryKicker = document.querySelector("#gallery-kicker");
 var galleryDescription = document.querySelector("#gallery-description");
 var branchSlogan = document.querySelector("#branch-slogan");
 var introductionDetails = document.querySelector("#branch-introduction-details");
@@ -1908,7 +1904,6 @@ function selectBranch(branchKey, options) {
   if (selectedMapRegion) branchMapLayer.appendChild(selectedMapRegion);
   const branch = BRANCHES[branchKey];
   const branchContent = content[branchKey] || {};
-  galleryKicker.textContent = branch.english;
   galleryTitle.textContent = branchName(branch);
   const slogan = localizedValue(branchContent, "slogan");
   const introduction = localizedValue(branchContent, "introduction");

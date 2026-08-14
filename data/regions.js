@@ -118,7 +118,6 @@ export const BRANCHES = Object.freeze({
     "shortName": "충남",
     "nameJa": "忠南方面",
     "shortNameJa": "忠南",
-    "english": "CHUNGNAM AREA",
     "color": "coral",
     "zones": [
       "백제권",
@@ -318,7 +317,6 @@ export const BRANCHES = Object.freeze({
     "shortName": "충북",
     "nameJa": "忠北方面",
     "shortNameJa": "忠北",
-    "english": "CHUNGBUK AREA",
     "color": "teal",
     "zones": [
       "동청주권",
@@ -505,7 +503,6 @@ export const BRANCHES = Object.freeze({
     "shortName": "대전",
     "nameJa": "大田方面",
     "shortNameJa": "大田",
-    "english": "DAEJEON AREA",
     "color": "cobalt",
     "zones": [
       "남대전권",

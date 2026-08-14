@@ -51,7 +51,6 @@ const mapLegend = document.querySelector("#map-legend");
 const galleryPanel = document.querySelector(".gallery-panel");
 const galleryHeader = document.querySelector(".gallery-sticky-header");
 const galleryTitle = document.querySelector("#gallery-title");
-const galleryKicker = document.querySelector("#gallery-kicker");
 const galleryDescription = document.querySelector("#gallery-description");
 const branchSlogan = document.querySelector("#branch-slogan");
 const introductionDetails = document.querySelector("#branch-introduction-details");
@@ -571,7 +570,6 @@ function selectBranch(branchKey, options) {
 
   const branch = BRANCHES[branchKey];
   const branchContent = content[branchKey] || {};
-  galleryKicker.textContent = branch.english;
   galleryTitle.textContent = branchName(branch);
   const slogan = localizedValue(branchContent, "slogan");
   const introduction = localizedValue(branchContent, "introduction");

@@ -126,14 +126,6 @@ button { cursor: pointer; }
   color: #fff;
   box-shadow: 0 5px 14px rgba(49, 95, 196, 0.2);
 }
-.eyebrow {
-  margin: 0 0 4px;
-  color: var(--cobalt);
-  font-size: 12px;
-  font-size: clamp(0.68rem, 0.7vw, 0.9rem);
-  font-weight: 900;
-  letter-spacing: 0.2em;
-}
 h1 {
   margin: 0;
   font-size: 42px;
@@ -365,7 +357,6 @@ h1 {
 }
 .gallery-intro { min-width: 0; }
 .gallery-intro-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.gallery-kicker { margin: 1px 0 5px; color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: 0.16em; }
 .gallery-sticky-header h2 {
   margin: 0;
   font-size: 42px;
@@ -402,7 +393,6 @@ h1 {
   padding-top: 14px;
   padding-bottom: 14px;
 }
-.gallery-sticky-header.is-collapsed .gallery-kicker { display: none; }
 .gallery-sticky-header.is-collapsed .gallery-intro-toggle-icon { transform: rotate(45deg); }
 .gallery-sticky-header.is-collapsed h2 { font-size: clamp(1.8rem, 2.2vw, 3.2rem); }
 .branch-slogan {
@@ -460,7 +450,6 @@ h1 {
 .content-section { padding: 28px 0 6px; }
 .content-section + .content-section { border-top: 1px solid var(--line); margin-top: 22px; }
 .section-heading { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
-.section-heading span { color: var(--branch-accent); font-size: 11px; font-weight: 900; letter-spacing: 0.15em; }
 .section-heading h3 { margin: 0; font-size: 26px; letter-spacing: -0.03em; }
 .activity-section { padding-top: 0; }
 .activity-toolbar {

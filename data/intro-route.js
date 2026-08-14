@@ -18,7 +18,7 @@ const japanToScene = ([x, y]) => Object.freeze([
  */
 export const INTRO_ROUTE = Object.freeze({
   cts: Object.freeze({
-    label: "新千歳空港 · CTS",
+    label: "新千歳空港",
     latitude: 42.7752,
     longitude: 141.6923,
     mapPoint: Object.freeze([574.95, 94.2]),

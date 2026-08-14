@@ -256,7 +256,12 @@ try {
   assert.match(sourceBuild, /createHash\("sha256"\)\s*\.update\(html\)/s, "HTML 변경도 오프라인 캐시 버전을 갱신해야 합니다.");
   assert.equal(INTRO_ROUTE.cts.latitude, 42.7752);
   assert.equal(INTRO_ROUTE.icn.latitude, 37.4602);
-  assert.match(sourceHtml, /CTS → ICN/);
+  assert.match(sourceHtml, /新千歳空港 → 仁川国際空港/);
+  assert.doesNotMatch(sourceHtml, /KOREA × JAPAN YOUTH EXCHANGE|YOUTH ACTIVITIES|TOGETHER|>ACTIVITIES</, "방문객 화면에 장식용 영문 문구가 남으면 안 됩니다.");
+  assert.doesNotMatch(sourceHtml, /Natural Earth|CTS → ICN|\bSGIS\b/, "인트로와 지도 출처에 영문 명칭·공항 코드가 노출되면 안 됩니다.");
+  assert.doesNotMatch(sourceIntro, /CTS → ICN|\skm`/, "인트로의 동적 안내 문구는 일본어 전체 지명과 단위를 사용해야 합니다.");
+  assert.doesNotMatch(sourceApp, /galleryKicker|branch\.english/, "방면 소개에 영문 소제목을 다시 표시하면 안 됩니다.");
+  assert.ok(BRANCH_KEYS.every((key) => !("english" in BRANCHES[key])), "생성된 방면 데이터에 화면용 영문 이름을 남기면 안 됩니다.");
   assert.match(sourceHtml, /data-intro-skip/);
   assert.match(sourceHtml, /id="intro-replay"/);
   assert.deepEqual(INTRO_ROUTE.cts.scenePoint, [910.8, 102.22], "CTS는 일본 SVG의 신치토세공항 위치를 사용해야 합니다.");
