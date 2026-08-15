@@ -196,6 +196,14 @@ try {
   assert.match(sourceStyles, /\.gallery-panel img\s*\{[^}]*-webkit-user-drag:\s*none[^}]*user-select:\s*none/s, "WebKit 계열에서도 갤러리 이미지 끌기와 선택을 막아야 합니다.");
   assert.doesNotMatch(sourceStyles, /\.activity-toolbar\s*\{[^}]*position:\s*sticky/s, "활동 제목과 카테고리 탭은 사진 화면을 가리지 않도록 스크롤되어야 합니다.");
   assert.match(sourceHtml, /class="activity-toolbar"[\s\S]*class="section-heading"[\s\S]*class="category-tabs"/, "활동 제목과 카테고리 탭은 하나의 일반 툴바로 묶어야 합니다.");
+  assert.match(sourceHtml, /class="gallery-sort-controls"[^>]*role="group"[^>]*[\s\S]*data-gallery-sort="random"[^>]*aria-pressed="false"[\s\S]*data-gallery-sort="name"[^>]*aria-pressed="true"/, "사진 배열은 랜덤과 이름순 버튼을 제공하고 이름순을 기본값으로 사용해야 합니다.");
+  assert.match(sourceApp, /function reshufflePhotoRanks\(\)[\s\S]*Math\.floor\(Math\.random\(\) \* \(index \+ 1\)\)/, "랜덤 배열은 편향이 적은 Fisher-Yates 셔플을 사용해야 합니다.");
+  assert.match(sourceApp, /function orderGalleryPhotos\(photos\)[\s\S]*localeCompare\([\s\S]*numeric:\s*true/, "이름순은 파일명을 숫자 인식 오름차순으로 정렬해야 합니다.");
+  assert.match(sourceApp, /reshuffle:\s*sort === "random" && gallerySort === "random"/, "선택된 랜덤 버튼을 다시 누르면 사진을 재배열해야 합니다.");
+  assert.equal(UI_COPY.ko.randomOrder, "랜덤");
+  assert.equal(UI_COPY.ko.nameOrder, "이름순");
+  assert.equal(UI_COPY.ja.randomOrder, "ランダム");
+  assert.equal(UI_COPY.ja.nameOrder, "名前順");
   assert.doesNotMatch(sourceApp, /syncGalleryStickyOffset|--gallery-header-height/, "활동 툴바용 고정 오프셋 로직을 남기면 안 됩니다.");
   assert.match(sourceHtml, /id="gallery-intro-toggle"[^>]*aria-expanded="true"[^>]*aria-controls="branch-introduction-details hall-card"/, "방면 소개 접기 버튼은 소개문과 회관 사진을 함께 제어해야 합니다.");
   assert.match(sourceApp, /function setIntroductionCollapsed\(collapsed\)[\s\S]*introductionDetails\.hidden = isIntroductionCollapsed[\s\S]*hallCard\.hidden = isIntroductionCollapsed/, "방면 소개를 접으면 소개문과 회관 사진을 모두 숨겨야 합니다.");
@@ -256,10 +264,10 @@ try {
   assert.match(sourceBuild, /createHash\("sha256"\)\s*\.update\(html\)/s, "HTML 변경도 오프라인 캐시 버전을 갱신해야 합니다.");
   assert.equal(INTRO_ROUTE.cts.latitude, 42.7752);
   assert.equal(INTRO_ROUTE.icn.latitude, 37.4602);
-  assert.match(sourceHtml, /新千歳空港 → 仁川国際空港/);
+  assert.match(sourceHtml, /CTS → ICN/);
   assert.doesNotMatch(sourceHtml, /KOREA × JAPAN YOUTH EXCHANGE|YOUTH ACTIVITIES|TOGETHER|>ACTIVITIES</, "방문객 화면에 장식용 영문 문구가 남으면 안 됩니다.");
-  assert.doesNotMatch(sourceHtml, /Natural Earth|CTS → ICN|\bSGIS\b/, "인트로와 지도 출처에 영문 명칭·공항 코드가 노출되면 안 됩니다.");
-  assert.doesNotMatch(sourceIntro, /CTS → ICN|\skm`/, "인트로의 동적 안내 문구는 일본어 전체 지명과 단위를 사용해야 합니다.");
+  assert.doesNotMatch(sourceHtml, /Natural Earth|\bSGIS\b/, "인트로와 지도 출처에 불필요한 영문 명칭이 노출되면 안 됩니다.");
+  assert.match(sourceIntro, /CTS → ICN · 約 \$\{CTS_ICN_DISTANCE\.toLocaleString\("ja-JP"\)\} km/, "인트로에는 공항 코드와 km 거리 표기를 유지해야 합니다.");
   assert.doesNotMatch(sourceApp, /galleryKicker|branch\.english/, "방면 소개에 영문 소제목을 다시 표시하면 안 됩니다.");
   assert.ok(BRANCH_KEYS.every((key) => !("english" in BRANCHES[key])), "생성된 방면 데이터에 화면용 영문 이름을 남기면 안 됩니다.");
   assert.match(sourceHtml, /data-intro-skip/);

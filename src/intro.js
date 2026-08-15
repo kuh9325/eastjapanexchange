@@ -97,7 +97,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
     const marker = document.querySelector(`#intro-point-${key}`);
     if (marker) marker.setAttribute("transform", `translate(${point(location)})`);
   }
-  routeLabel.textContent = `新千歳空港 → 仁川国際空港 · 約${CTS_ICN_DISTANCE.toLocaleString("ja-JP")}キロメートル`;
+  routeLabel.textContent = `CTS → ICN · 約 ${CTS_ICN_DISTANCE.toLocaleString("ja-JP")} km`;
   controls.hidden = !previewMode;
   root.classList.toggle("preview-mode", previewMode);
 
@@ -180,7 +180,7 @@ export function initializeIntro({ onComplete, previewMode = false } = {}) {
   const updateStage = (elapsed) => {
     if (elapsed < INTRO_TIMELINE.zoomOut[0]) return "新千歳空港を出発";
     if (elapsed < INTRO_TIMELINE.flight[0]) return "韓国へ向けてズームアウト";
-    if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "新千歳空港から仁川国際空港へ飛行中";
+    if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "CTS → ICN 飛行中";
     if (elapsed < INTRO_TIMELINE.ground[0]) return "仁川国際空港に到着";
     if (elapsed < 11800) return "仁川国際空港 → 鎮川研修院";
     if (elapsed < INTRO_TIMELINE.arrival[0]) return "鎮川研修院 → 大田文化会館";

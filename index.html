@@ -27,7 +27,7 @@
           <path id="intro-ground-to-jincheon" class="intro-travel-segment" d="M211.38 281.51 C226 292 249 310 265.7 321.45" />
           <path id="intro-ground-to-daejeon" class="intro-travel-segment" d="M265.7 321.45 C267 333 265 346 262.97 352.96" />
           <g class="intro-route-points" aria-hidden="true">
-            <g id="intro-point-cts" class="intro-air-point" transform="translate(910.79 102.22)"><circle r="10"/><text x="-10" y="-20" text-anchor="end">新千歳空港</text></g>
+            <g id="intro-point-cts" class="intro-air-point" transform="translate(910.79 102.22)"><circle r="10"/><text x="-10" y="-20" text-anchor="end">新千歳空港 · CTS</text></g>
             <g id="intro-point-icn" class="intro-air-point" transform="translate(211.38 281.51)"><circle r="9"/><text x="-14" y="-14" text-anchor="end">仁川国際空港</text></g>
             <g id="intro-point-jincheon" class="intro-domestic-point" transform="translate(265.7 321.45)"><circle r="7"/><text x="13" y="4">韓国SGI鎮川研修院</text></g>
             <g id="intro-point-daejeon" class="intro-domestic-point" transform="translate(262.97 352.96)"><circle r="9"/><text x="13" y="5">韓国SGI大田文化会館</text></g>
@@ -41,7 +41,7 @@
           <g id="intro-travel-dot" class="intro-travel-dot" aria-hidden="true"><circle r="11"/><circle r="22"/></g>
         </g>
       </svg>
-      <div class="intro-flight-label" id="intro-flight-label">新千歳空港 → 仁川国際空港</div>
+      <div class="intro-flight-label" id="intro-flight-label">CTS → ICN</div>
       <div class="intro-welcome">
         <p>韓国へようこそ</p>
         <span>北海道訪問団の皆さま、韓国への旅を始めましょう</span>
@@ -133,10 +133,16 @@
             <section class="content-section activity-section" aria-labelledby="activity-section-title">
               <div class="activity-toolbar">
                 <div class="section-heading"><h3 id="activity-section-title">청년 활동 기록</h3></div>
-                <div class="category-tabs" role="tablist" aria-label="활동 유형">
-                  <button type="button" role="tab" id="tab-all" data-category="all" aria-controls="photo-grid" aria-selected="true">전체</button>
-                  <button type="button" role="tab" id="tab-school" data-category="school" aria-controls="photo-grid" aria-selected="false" tabindex="-1">창가청년스쿨</button>
-                  <button type="button" role="tab" id="tab-visit" data-category="visit" aria-controls="photo-grid" aria-selected="false" tabindex="-1">일대일근행회</button>
+                <div class="activity-controls">
+                  <div class="category-tabs" role="tablist" aria-label="활동 유형">
+                    <button type="button" role="tab" id="tab-all" data-category="all" aria-controls="photo-grid" aria-selected="true">전체</button>
+                    <button type="button" role="tab" id="tab-school" data-category="school" aria-controls="photo-grid" aria-selected="false" tabindex="-1">창가청년스쿨</button>
+                    <button type="button" role="tab" id="tab-visit" data-category="visit" aria-controls="photo-grid" aria-selected="false" tabindex="-1">일대일근행회</button>
+                  </div>
+                  <div class="gallery-sort-controls" role="group" aria-label="사진 배열 순서">
+                    <button type="button" data-gallery-sort="random" aria-pressed="false">랜덤</button>
+                    <button type="button" data-gallery-sort="name" aria-pressed="true">이름순</button>
+                  </div>
                 </div>
               </div>
               <div class="gallery-summary" aria-live="polite">

@@ -746,6 +746,9 @@ var UI_COPY = Object.freeze({
     meetingTitle: "방면운영회의",
     activityTitle: "청년 활동 기록",
     categoryLabel: "활동 유형",
+    photoOrderLabel: "사진 배열 순서",
+    randomOrder: "랜덤",
+    nameOrder: "이름순",
     all: "전체",
     school: "창가청년스쿨",
     visit: "일대일근행회",
@@ -797,6 +800,9 @@ var UI_COPY = Object.freeze({
     meetingTitle: "方面運営会議",
     activityTitle: "青年活動の記録",
     categoryLabel: "活動カテゴリー",
+    photoOrderLabel: "写真の並び順",
+    randomOrder: "ランダム",
+    nameOrder: "名前順",
     all: "すべて",
     school: "創価青年スクール",
     visit: "一対一勤行会",
@@ -1069,7 +1075,7 @@ var japanToScene = ([x, y]) => Object.freeze([
 ]);
 var INTRO_ROUTE = Object.freeze({
   cts: Object.freeze({
-    label: "新千歳空港",
+    label: "新千歳空港 · CTS",
     latitude: 42.7752,
     longitude: 141.6923,
     mapPoint: Object.freeze([574.95, 94.2]),
@@ -1182,7 +1188,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     const marker = document.querySelector("#intro-point-".concat(key));
     if (marker) marker.setAttribute("transform", "translate(".concat(point(location2), ")"));
   }
-  routeLabel.textContent = "新千歳空港 → 仁川国際空港 · 約".concat(CTS_ICN_DISTANCE.toLocaleString("ja-JP"), "キロメートル");
+  routeLabel.textContent = "CTS → ICN · 約 ".concat(CTS_ICN_DISTANCE.toLocaleString("ja-JP"), " km");
   controls.hidden = !previewMode2;
   root.classList.toggle("preview-mode", previewMode2);
   const clearAsync = () => {
@@ -1256,7 +1262,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
   const updateStage = (elapsed) => {
     if (elapsed < INTRO_TIMELINE.zoomOut[0]) return "新千歳空港を出発";
     if (elapsed < INTRO_TIMELINE.flight[0]) return "韓国へ向けてズームアウト";
-    if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "新千歳空港から仁川国際空港へ飛行中";
+    if (elapsed < INTRO_TIMELINE.koreaZoom[0]) return "CTS → ICN 飛行中";
     if (elapsed < INTRO_TIMELINE.ground[0]) return "仁川国際空港に到着";
     if (elapsed < 11800) return "仁川国際空港 → 鎮川研修院";
     if (elapsed < INTRO_TIMELINE.arrival[0]) return "鎮川研修院 → 大田文化会館";
@@ -1453,6 +1459,8 @@ var photoGrid = document.querySelector("#photo-grid");
 var photoCount = document.querySelector("#photo-count");
 var galleryStatus = document.querySelector("#gallery-status");
 var categoryButtons = Array.from(document.querySelectorAll("[data-category]"));
+var gallerySortControls = document.querySelector(".gallery-sort-controls");
+var gallerySortButtons = Array.from(document.querySelectorAll("[data-gallery-sort]"));
 var backButton = document.querySelector(".back-button");
 var lightbox = document.querySelector("#lightbox");
 var lightboxImage = document.querySelector("#lightbox-image");
@@ -1468,6 +1476,8 @@ var content = EXHIBITION_CONTENT;
 var manifestAvailable = true;
 var selectedBranch = null;
 var selectedCategory = "all";
+var gallerySort = "name";
+var randomizedPhotoRanks = /* @__PURE__ */ new Map();
 var visiblePhotos = [];
 var isIntroductionCollapsed = false;
 var lightboxItems = [];
@@ -1506,6 +1516,39 @@ function galleryPhotoItem(source) {
     detail: "",
     metadataLabels
   };
+}
+function reshufflePhotoRanks() {
+  const shuffled = manifest.photos.slice();
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  randomizedPhotoRanks = new Map(shuffled.map((photo, index) => [photo.id, index]));
+}
+function orderGalleryPhotos(photos) {
+  const ordered = photos.slice();
+  if (gallerySort === "random") {
+    if (randomizedPhotoRanks.size !== manifest.photos.length) reshufflePhotoRanks();
+    return ordered.sort((left, right) => {
+      var _a, _b;
+      return ((_a = randomizedPhotoRanks.get(left.id)) != null ? _a : Number.MAX_SAFE_INTEGER) - ((_b = randomizedPhotoRanks.get(right.id)) != null ? _b : Number.MAX_SAFE_INTEGER);
+    });
+  }
+  return ordered.sort((left, right) => String(left.filename || left.id).localeCompare(
+    String(right.filename || right.id),
+    "ko",
+    { numeric: true, sensitivity: "base" }
+  ));
+}
+function setGallerySort(sort, options) {
+  if (!(/* @__PURE__ */ new Set(["random", "name"])).has(sort)) return;
+  const config = options || {};
+  if (sort === "random" && (gallerySort !== "random" || config.reshuffle)) reshufflePhotoRanks();
+  gallerySort = sort;
+  gallerySortButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.gallerySort === gallerySort));
+  });
+  if (selectedBranch) renderGallery();
 }
 var svgElement = (name, attributes) => {
   const element = document.createElementNS(SVG_NS, name);
@@ -1832,7 +1875,7 @@ function renderPlaceholders() {
 }
 function renderGallery() {
   if (!selectedBranch) return;
-  visiblePhotos = manifest.photos.filter((photo) => photo.branch === selectedBranch && (selectedCategory === "all" || photo.category === selectedCategory));
+  visiblePhotos = orderGalleryPhotos(manifest.photos.filter((photo) => photo.branch === selectedBranch && (selectedCategory === "all" || photo.category === selectedCategory)));
   replaceChildren(photoGrid, []);
   photoCount.textContent = formatCopy(copy().photoCount, { count: visiblePhotos.length });
   galleryStatus.textContent = manifestAvailable ? copy().galleryReady : copy().galleryUnavailable;
@@ -1973,6 +2016,10 @@ function applyLanguage(language) {
   document.querySelector("#meeting-section-title").textContent = ui.meetingTitle;
   document.querySelector("#activity-section-title").textContent = ui.activityTitle;
   document.querySelector(".category-tabs").setAttribute("aria-label", ui.categoryLabel);
+  gallerySortControls.setAttribute("aria-label", ui.photoOrderLabel);
+  gallerySortButtons.forEach((button) => {
+    button.textContent = button.dataset.gallerySort === "random" ? ui.randomOrder : ui.nameOrder;
+  });
   categoryButtons.forEach((button) => {
     const category = button.dataset.category;
     button.textContent = category === "all" ? ui.all : categoryName(CATEGORIES[category]);
@@ -2143,6 +2190,12 @@ function bindEvents() {
         event.preventDefault();
         setCategory(categoryButtons[nextIndex].dataset.category, { focus: true });
       }
+    });
+  });
+  gallerySortButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const sort = button.dataset.gallerySort;
+      setGallerySort(sort, { reshuffle: sort === "random" && gallerySort === "random" });
     });
   });
   backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));

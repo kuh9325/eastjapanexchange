@@ -460,6 +460,12 @@ h1 {
   border-bottom: 1px solid var(--line);
 }
 .activity-toolbar .section-heading { margin-bottom: 10px; }
+.activity-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
 
 .meeting-card {
   position: relative;
@@ -476,7 +482,7 @@ h1 {
 .meeting-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .meeting-card span { position: absolute; left: 20px; bottom: 18px; padding: 8px 12px; border-radius: 10px; background: rgba(23, 35, 59, 0.84); color: white; font-weight: 850; }
 
-.category-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; padding: 2px 2px 12px; margin: -4px; scrollbar-width: none; }
+.category-tabs { display: flex; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; padding: 2px 2px 12px; margin: -4px; scrollbar-width: none; }
 .category-tabs::-webkit-scrollbar { display: none; }
 .category-tabs button {
   flex: 0 0 auto;
@@ -490,6 +496,26 @@ h1 {
   font-weight: 900;
 }
 .category-tabs button[aria-selected="true"] { background: var(--ink); color: white; border-color: var(--ink); }
+.gallery-sort-controls {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+}
+.gallery-sort-controls button {
+  min-height: 48px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 900;
+  white-space: nowrap;
+}
+.gallery-sort-controls button[aria-pressed="true"] { background: var(--ink); color: white; }
 .gallery-summary { min-height: 38px; display: flex; justify-content: space-between; gap: 14px; padding: 4px 4px 12px; color: var(--muted); font-size: 14px; font-weight: 750; }
 .photo-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: dense; gap: 13px; padding: 3px; }
 .photo-card {
@@ -734,6 +760,9 @@ h1 {
   .hall-card { grid-column: 1; max-width: none; }
   .back-button { justify-self: start; }
   .gallery-scroll-content { --gallery-content-gutter: 14px; padding: 4px var(--gallery-content-gutter) 25px; }
+  .activity-controls { flex-direction: column; }
+  .category-tabs { width: 100%; }
+  .gallery-sort-controls { align-self: flex-end; }
   .photo-card, .photo-card.wide, .placeholder-card { grid-column: span 12; }
   .gallery-summary #gallery-status { display: none; }
   .intro-topbar { top: 12px; left: 12px; right: 12px; }

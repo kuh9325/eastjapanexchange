@@ -65,6 +65,8 @@ const photoGrid = document.querySelector("#photo-grid");
 const photoCount = document.querySelector("#photo-count");
 const galleryStatus = document.querySelector("#gallery-status");
 const categoryButtons = Array.from(document.querySelectorAll("[data-category]"));
+const gallerySortControls = document.querySelector(".gallery-sort-controls");
+const gallerySortButtons = Array.from(document.querySelectorAll("[data-gallery-sort]"));
 const backButton = document.querySelector(".back-button");
 const lightbox = document.querySelector("#lightbox");
 const lightboxImage = document.querySelector("#lightbox-image");
@@ -81,6 +83,8 @@ let content = EXHIBITION_CONTENT;
 let manifestAvailable = true;
 let selectedBranch = null;
 let selectedCategory = "all";
+let gallerySort = "name";
+let randomizedPhotoRanks = new Map();
 let visiblePhotos = [];
 let isIntroductionCollapsed = false;
 let lightboxItems = [];
@@ -126,6 +130,42 @@ function galleryPhotoItem(source) {
     detail: "",
     metadataLabels
   };
+}
+
+function reshufflePhotoRanks() {
+  const shuffled = manifest.photos.slice();
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  randomizedPhotoRanks = new Map(shuffled.map((photo, index) => [photo.id, index]));
+}
+
+function orderGalleryPhotos(photos) {
+  const ordered = photos.slice();
+  if (gallerySort === "random") {
+    if (randomizedPhotoRanks.size !== manifest.photos.length) reshufflePhotoRanks();
+    return ordered.sort((left, right) => (
+      (randomizedPhotoRanks.get(left.id) ?? Number.MAX_SAFE_INTEGER)
+      - (randomizedPhotoRanks.get(right.id) ?? Number.MAX_SAFE_INTEGER)
+    ));
+  }
+  return ordered.sort((left, right) => String(left.filename || left.id).localeCompare(
+    String(right.filename || right.id),
+    "ko",
+    { numeric: true, sensitivity: "base" }
+  ));
+}
+
+function setGallerySort(sort, options) {
+  if (!new Set(["random", "name"]).has(sort)) return;
+  const config = options || {};
+  if (sort === "random" && (gallerySort !== "random" || config.reshuffle)) reshufflePhotoRanks();
+  gallerySort = sort;
+  gallerySortButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.gallerySort === gallerySort));
+  });
+  if (selectedBranch) renderGallery();
 }
 
 const svgElement = (name, attributes) => {
@@ -489,10 +529,10 @@ function renderPlaceholders() {
 
 function renderGallery() {
   if (!selectedBranch) return;
-  visiblePhotos = manifest.photos.filter((photo) => (
+  visiblePhotos = orderGalleryPhotos(manifest.photos.filter((photo) => (
     photo.branch === selectedBranch
     && (selectedCategory === "all" || photo.category === selectedCategory)
-  ));
+  )));
   replaceChildren(photoGrid, []);
   photoCount.textContent = formatCopy(copy().photoCount, { count: visiblePhotos.length });
   galleryStatus.textContent = manifestAvailable
@@ -643,6 +683,10 @@ function applyLanguage(language) {
   document.querySelector("#meeting-section-title").textContent = ui.meetingTitle;
   document.querySelector("#activity-section-title").textContent = ui.activityTitle;
   document.querySelector(".category-tabs").setAttribute("aria-label", ui.categoryLabel);
+  gallerySortControls.setAttribute("aria-label", ui.photoOrderLabel);
+  gallerySortButtons.forEach((button) => {
+    button.textContent = button.dataset.gallerySort === "random" ? ui.randomOrder : ui.nameOrder;
+  });
   categoryButtons.forEach((button) => {
     const category = button.dataset.category;
     button.textContent = category === "all" ? ui.all : categoryName(CATEGORIES[category]);
@@ -826,6 +870,12 @@ function bindEvents() {
         event.preventDefault();
         setCategory(categoryButtons[nextIndex].dataset.category, { focus: true });
       }
+    });
+  });
+  gallerySortButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const sort = button.dataset.gallerySort;
+      setGallerySort(sort, { reshuffle: sort === "random" && gallerySort === "random" });
     });
   });
   backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));
