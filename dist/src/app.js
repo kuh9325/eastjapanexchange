@@ -1131,10 +1131,16 @@ var DOMESTIC_STOPS = Object.freeze({
   jincheon: Object.freeze({ revealAt: 9500, move: Object.freeze([1e4, 11800]) }),
   daejeon: Object.freeze({ revealAt: 11800, move: Object.freeze([12300, 14e3]) })
 });
+var REDUCED_SEQUENCE_STEPS = Object.freeze([
+  Object.freeze(["新千歳空港を出発", INTRO_TIMELINE.depart[0]]),
+  Object.freeze(["仁川国際空港に到着", INTRO_TIMELINE.koreaZoom[0]]),
+  Object.freeze(["韓国SGI鎮川研修院", DOMESTIC_STOPS.jincheon.move[1]]),
+  Object.freeze(["韓国SGI大田文化会館に到着", INTRO_TIMELINE.arrival[0]])
+]);
 var clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 var progressBetween = (elapsed, range) => clamp((elapsed - range[0]) / (range[1] - range[0]), 0, 1);
 var ease = (value) => 1 - (1 - value) ** 3;
-function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {}) {
+function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = false } = {}) {
   const root = document.querySelector("#intro-screen");
   const app2 = document.querySelector("#app");
   const scene = document.querySelector("#intro-world");
@@ -1323,7 +1329,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
       clearAsync();
       root.classList.remove("show-flight");
       setRuntimeStatus("intro", "静的表示 · ".concat(error.message));
-      runReducedSequence();
+      runReducedSequence(elapsed);
       return;
     }
     if (elapsed >= INTRO_TIMELINE.duration) {
@@ -1332,30 +1338,33 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     }
     frameId = window.requestAnimationFrame(tick);
   };
-  const runReducedSequence = () => {
+  const runReducedSequence = (elapsed = 0) => {
+    const reducedElapsed = clamp(elapsed, 0, INTRO_TIMELINE.duration);
     root.classList.add("reduced-sequence", "show-ground");
     groundPath.style.strokeDashoffset = "0";
-    const steps = [
-      ["新千歳空港を出発", 0],
-      ["仁川国際空港に到着", 350],
-      ["韓国SGI鎮川研修院", 700],
-      ["韓国SGI大田文化会館に到着", 1050]
-    ];
-    steps.forEach(([label, delay], index) => {
-      const timeout = window.setTimeout(() => {
+    REDUCED_SEQUENCE_STEPS.forEach(([label, at], index) => {
+      const applyStep = () => {
         if (index >= 1) {
           japanLayer.style.opacity = "0";
           koreaLayer.style.opacity = "1";
+          scene.setAttribute("transform", "translate(-190 -165) scale(1.55)");
         }
         if (index >= 2) root.classList.add("show-jincheon");
         if (index >= 3) root.classList.add("show-daejeon");
         stageLabel.textContent = label;
         setRuntimeStatus("intro", "簡易モーション · ".concat(label));
         root.dataset.reducedStep = String(index);
-        if (index === steps.length - 1) complete();
-      }, delay / speed);
-      timeoutIds.push(timeout);
+      };
+      const delay = Math.max(0, at - reducedElapsed) / speed;
+      if (!delay) {
+        applyStep();
+        return;
+      }
+      timeoutIds.push(window.setTimeout(applyStep, delay));
     });
+    const completionDelay = Math.max(0, INTRO_TIMELINE.duration - reducedElapsed) / speed;
+    if (!completionDelay) complete();
+    else timeoutIds.push(window.setTimeout(complete, completionDelay));
   };
   function start() {
     if (running) return;
@@ -1391,6 +1400,7 @@ function initializeIntro({ onComplete, previewMode: previewMode2 = false } = {})
     if (typeof onComplete === "function") onComplete();
   };
   const replay = () => {
+    if (typeof onReplay === "function") onReplay();
     resetScene();
     if (previewMode2) start();
   };
@@ -2247,6 +2257,9 @@ async function boot() {
   bindEvents();
   initializeIntro({
     previewMode,
+    onReplay() {
+      clearSelection();
+    },
     onComplete() {
       const first = branchSwitcher.querySelector("button");
       if (first) first.focus();

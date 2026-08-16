@@ -254,6 +254,11 @@ try {
   assert.match(sourceIntro, /groundPath\.style\.strokeDashoffset = String\(groundPathLength \* \(1 - domesticRouteProgress\(elapsed\)\)\)/, "초록 점선은 경로를 재생성하지 않고 dash offset으로 이동 구간까지만 표시해야 합니다.");
   assert.doesNotMatch(sourceIntro, /domesticRouteD/, "인트로 프레임마다 국내 이동 SVG path를 재작성하면 안 됩니다.");
   assert.match(sourceIntro, /1000 \/ 30/, "Android·4K 환경은 안정적인 30fps 렌더링 상한을 사용해야 합니다.");
+  assert.match(sourceIntro, /REDUCED_SEQUENCE_STEPS[\s\S]*INTRO_TIMELINE\.koreaZoom\[0\][\s\S]*DOMESTIC_STOPS\.jincheon\.move\[1\][\s\S]*INTRO_TIMELINE\.arrival\[0\]/, "간이 여정도 정상 타임라인에 맞춰 단계를 전환해야 합니다.");
+  assert.match(sourceIntro, /INTRO_TIMELINE\.duration - reducedElapsed/, "간이 여정은 정상 여정과 같은 전체 재생 시간을 유지해야 합니다.");
+  assert.doesNotMatch(sourceIntro, /\["仁川国際空港に到着",\s*350\]|\["韓国SGI大田文化会館に到着",\s*1050\]/, "호환 모드가 약 1초 만에 여정을 끝내면 안 됩니다.");
+  assert.match(sourceIntro, /typeof onReplay === "function"\) onReplay\(\)/, "여정 다시 보기 진입 시 앱 상태를 초기화할 수 있어야 합니다.");
+  assert.match(sourceApp, /initializeIntro\(\{[\s\S]*onReplay\(\)\s*\{\s*clearSelection\(\);\s*\}/, "여정 다시 보기는 기존 방면 선택을 초기화해야 합니다.");
   assert.match(sourceHtml, /id="intro-ground-to-jincheon"[\s\S]*id="intro-ground-to-daejeon"/, "국내 이동용 두 SVG path가 있어야 합니다.");
   assert.doesNotMatch(sourceHtml, /intro-ground-to-guro|intro-point-guro|韓国SGI本部|ソウル九老/, "인트로 마크업에서 구로 본부 핀과 선분을 제거해야 합니다.");
   assert.match(sourceHtml, /id="intro-point-jincheon" class="intro-domestic-point"/);

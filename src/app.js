@@ -928,6 +928,9 @@ async function boot() {
   bindEvents();
   initializeIntro({
     previewMode,
+    onReplay() {
+      clearSelection();
+    },
     onComplete() {
       const first = branchSwitcher.querySelector("button");
       if (first) first.focus();
