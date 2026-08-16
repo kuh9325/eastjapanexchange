@@ -34,6 +34,7 @@ body {
     linear-gradient(145deg, var(--paper), #faf7f0 58%, #eee6da);
 }
 body.lightbox-lock { overflow: hidden !important; }
+#app[aria-hidden="true"] { visibility: hidden; }
 button, select { font: inherit; }
 button, [role="button"] { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button { cursor: pointer; }
@@ -666,7 +667,7 @@ h1 {
 .intro-skip, #intro-start { min-height: 64px; border: 0; border-radius: 999px; font-weight: 900; }
 .intro-skip { min-width: 132px; padding: 0 24px; background: rgba(255, 255, 255, 0.9); color: var(--ink); }
 .intro-map { width: 100%; height: 100%; display: block; }
-#intro-world { transform-box: view-box; transform-origin: 0 0; }
+#intro-world { transform-box: view-box; transform-origin: 0 0; will-change: transform; }
 .intro-japan-layer, .intro-korea-layer { transition: opacity 0.35s ease; will-change: opacity; }
 .intro-korea-layer { opacity: 0; }
 .intro-flight-path, .intro-ground-path { fill: none; stroke-linecap: round; }

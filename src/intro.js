@@ -37,10 +37,68 @@ const REDUCED_SEQUENCE_STEPS = Object.freeze([
   Object.freeze(["韓国SGI鎮川研修院", DOMESTIC_STOPS.jincheon.move[1]]),
   Object.freeze(["韓国SGI大田文化会館に到着", INTRO_TIMELINE.arrival[0]])
 ]);
+const MAX_TIMELINE_FRAME_DELTA = 50;
 
 const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 const progressBetween = (elapsed, range) => clamp((elapsed - range[0]) / (range[1] - range[0]), 0, 1);
 const ease = (value) => 1 - ((1 - value) ** 3);
+const scenePoint = ({ scenePoint: [x, y] }) => ({ x, y });
+const cubicPoint = ([start, controlA, controlB, end], progress) => {
+  const inverse = 1 - progress;
+  return {
+    x: (inverse ** 3) * start.x
+      + 3 * (inverse ** 2) * progress * controlA.x
+      + 3 * inverse * (progress ** 2) * controlB.x
+      + (progress ** 3) * end.x,
+    y: (inverse ** 3) * start.y
+      + 3 * (inverse ** 2) * progress * controlA.y
+      + 3 * inverse * (progress ** 2) * controlB.y
+      + (progress ** 3) * end.y
+  };
+};
+const sampleCurve = (curve, segments = 120) => {
+  const points = [];
+  let length = 0;
+  let previous = cubicPoint(curve, 0);
+  points.push({ ...previous, distance: 0 });
+  for (let index = 1; index <= segments; index += 1) {
+    const current = cubicPoint(curve, index / segments);
+    length += Math.hypot(current.x - previous.x, current.y - previous.y);
+    points.push({ ...current, distance: length });
+    previous = current;
+  }
+  return Object.freeze({ points: Object.freeze(points), length });
+};
+const pointOnSampledCurve = (sampled, fraction) => {
+  const target = sampled.length * clamp(fraction, 0, 1);
+  let low = 0;
+  let high = sampled.points.length - 1;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (sampled.points[middle].distance < target) low = middle + 1;
+    else high = middle;
+  }
+  const next = sampled.points[low];
+  const previous = sampled.points[Math.max(0, low - 1)];
+  const segmentLength = next.distance - previous.distance;
+  const ratio = segmentLength ? (target - previous.distance) / segmentLength : 0;
+  return {
+    x: previous.x + (next.x - previous.x) * ratio,
+    y: previous.y + (next.y - previous.y) * ratio
+  };
+};
+
+const FLIGHT_CURVE = sampleCurve([
+  scenePoint(CTS), { x: 755, y: 58 }, { x: 485, y: 178 }, scenePoint(ICN)
+], 180);
+const DOMESTIC_CURVES = Object.freeze({
+  jincheon: sampleCurve([
+    scenePoint(ICN), { x: 226, y: 292 }, { x: 249, y: 310 }, scenePoint(INTRO_ROUTE.jincheon)
+  ]),
+  daejeon: sampleCurve([
+    scenePoint(INTRO_ROUTE.jincheon), { x: 267, y: 333 }, { x: 265, y: 346 }, scenePoint(INTRO_ROUTE.daejeon)
+  ])
+});
 
 export function initializeIntro({ onComplete, onReplay, previewMode = false } = {}) {
   const root = document.querySelector("#intro-screen");
@@ -67,15 +125,12 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
   const restartButton = document.querySelector("#intro-restart");
   const speedSelect = document.querySelector("#intro-speed");
   const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const supportsMotion = typeof window.requestAnimationFrame === "function"
-    && flightPath && typeof flightPath.getTotalLength === "function"
-    && typeof flightPath.getPointAtLength === "function";
+  const supportsMotion = typeof window.requestAnimationFrame === "function";
 
   let frameId = 0;
   let timeoutIds = [];
-  let startedAt = 0;
-  let pausedAt = 0;
-  let pauseStarted = 0;
+  let timelineElapsed = 0;
+  let lastTickAt = 0;
   let running = false;
   let paused = false;
   let speed = 1;
@@ -83,16 +138,15 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
   let lastRenderedAt = 0;
 
   flightPath.setAttribute("d", `M${point(CTS)} C755 58 485 178 ${point(ICN)}`);
-  groundPath.setAttribute("d", `M${point(ICN)} C226 292 249 310 ${point(INTRO_ROUTE.jincheon)} C268 333 265 346 ${point(INTRO_ROUTE.daejeon)}`);
+  groundPath.setAttribute("d", `M${point(ICN)} C226 292 249 310 ${point(INTRO_ROUTE.jincheon)} C267 333 265 346 ${point(INTRO_ROUTE.daejeon)}`);
   groundSegments.jincheon.setAttribute("d", `M${point(ICN)} C226 292 249 310 ${point(INTRO_ROUTE.jincheon)}`);
   groundSegments.daejeon.setAttribute("d", `M${point(INTRO_ROUTE.jincheon)} C267 333 265 346 ${point(INTRO_ROUTE.daejeon)}`);
-  const flightPathLength = supportsMotion ? flightPath.getTotalLength() : 0;
-  const groundPathLength = supportsMotion ? groundPath.getTotalLength() : 0;
   const groundSegmentLengths = {
-    jincheon: supportsMotion ? groundSegments.jincheon.getTotalLength() : 0,
-    daejeon: supportsMotion ? groundSegments.daejeon.getTotalLength() : 0
+    jincheon: DOMESTIC_CURVES.jincheon.length,
+    daejeon: DOMESTIC_CURVES.daejeon.length
   };
   const domesticPathLength = groundSegmentLengths.jincheon + groundSegmentLengths.daejeon;
+  const groundPathLength = domesticPathLength;
   const targetFrameInterval = /Android/i.test(navigator.userAgent)
     || Math.max(window.screen.width, window.screen.height) * (window.devicePixelRatio || 1) >= 3000
     ? 1000 / 30
@@ -107,6 +161,13 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
   controls.hidden = !previewMode;
   root.classList.toggle("preview-mode", previewMode);
 
+  const setAttributeIfChanged = (element, name, value) => {
+    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+  };
+  const setStyleIfChanged = (element, name, value) => {
+    if (element.style[name] !== value) element.style[name] = value;
+  };
+
   const clearAsync = () => {
     if (frameId) window.cancelAnimationFrame(frameId);
     frameId = 0;
@@ -118,8 +179,8 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
     clearAsync();
     running = false;
     paused = false;
-    pausedAt = 0;
-    pauseStarted = 0;
+    timelineElapsed = 0;
+    lastTickAt = 0;
     lastRenderedAt = 0;
     startButton.disabled = false;
     pauseButton.textContent = "一時停止";
@@ -158,10 +219,6 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
     timeoutIds.push(timeout);
   };
 
-  const pointOnPath = (path, length, fraction) => {
-    return path.getPointAtLength(length * clamp(fraction, 0, 1));
-  };
-
   const movementProgress = (elapsed, stop) => {
     if (elapsed <= stop.move[0]) return 0;
     if (elapsed >= stop.move[1]) return 1;
@@ -177,10 +234,10 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
   const domesticTravelPoint = (elapsed) => {
     if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
     if (elapsed < DOMESTIC_STOPS.jincheon.move[1]) {
-      return pointOnPath(groundSegments.jincheon, groundSegmentLengths.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
+      return pointOnSampledCurve(DOMESTIC_CURVES.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
     }
     if (elapsed < DOMESTIC_STOPS.daejeon.move[0]) return { x: INTRO_ROUTE.jincheon.scenePoint[0], y: INTRO_ROUTE.jincheon.scenePoint[1] };
-    return pointOnPath(groundSegments.daejeon, groundSegmentLengths.daejeon, ease(progressBetween(elapsed, DOMESTIC_STOPS.daejeon.move)));
+    return pointOnSampledCurve(DOMESTIC_CURVES.daejeon, ease(progressBetween(elapsed, DOMESTIC_STOPS.daejeon.move)));
   };
 
   const updateStage = (elapsed) => {
@@ -205,17 +262,17 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
       translateX = -190 * koreaZoom;
       translateY = -165 * koreaZoom;
     }
-    koreaLayer.style.opacity = koreaReveal.toFixed(3);
-    japanLayer.style.opacity = (1 - koreaZoom).toFixed(3);
-    scene.setAttribute("transform", `translate(${translateX.toFixed(2)} ${translateY.toFixed(2)}) scale(${scale.toFixed(4)})`);
+    setStyleIfChanged(koreaLayer, "opacity", koreaReveal.toFixed(3));
+    setStyleIfChanged(japanLayer, "opacity", (1 - koreaZoom).toFixed(3));
+    setAttributeIfChanged(scene, "transform", `translate(${translateX.toFixed(2)} ${translateY.toFixed(2)}) scale(${scale.toFixed(4)})`);
 
     if (elapsed >= INTRO_TIMELINE.flight[0] && elapsed <= INTRO_TIMELINE.flight[1]) {
       root.classList.add("show-flight");
       const flightProgress = ease(progressBetween(elapsed, INTRO_TIMELINE.flight));
-      const point = pointOnPath(flightPath, flightPathLength, flightProgress);
-      const next = pointOnPath(flightPath, flightPathLength, Math.min(1, flightProgress + 0.006));
+      const point = pointOnSampledCurve(FLIGHT_CURVE, flightProgress);
+      const next = pointOnSampledCurve(FLIGHT_CURVE, Math.min(1, flightProgress + 0.006));
       const angle = Math.atan2(next.y - point.y, next.x - point.x) * 180 / Math.PI;
-      plane.setAttribute("transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)}) rotate(${angle.toFixed(2)})`);
+      setAttributeIfChanged(plane, "transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)}) rotate(${angle.toFixed(2)})`);
     } else if (elapsed > INTRO_TIMELINE.flight[1]) {
       root.classList.remove("show-flight");
     }
@@ -223,8 +280,8 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
     if (elapsed >= INTRO_TIMELINE.ground[0]) {
       root.classList.add("show-ground");
       const point = domesticTravelPoint(elapsed);
-      groundPath.style.strokeDashoffset = String(groundPathLength * (1 - domesticRouteProgress(elapsed)));
-      travelDot.setAttribute("transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`);
+      setStyleIfChanged(groundPath, "strokeDashoffset", String(groundPathLength * (1 - domesticRouteProgress(elapsed))));
+      setAttributeIfChanged(travelDot, "transform", `translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`);
     }
     root.classList.toggle("show-jincheon", elapsed >= DOMESTIC_STOPS.jincheon.revealAt);
     root.classList.toggle("show-daejeon", elapsed >= DOMESTIC_STOPS.daejeon.revealAt);
@@ -238,23 +295,26 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
 
   const tick = (timestamp) => {
     if (!running || paused) return;
-    if (!startedAt) startedAt = timestamp;
-    if (targetFrameInterval && lastRenderedAt && timestamp - lastRenderedAt < targetFrameInterval) {
+    if (!lastTickAt) lastTickAt = timestamp;
+    const sinceLastRender = lastRenderedAt ? timestamp - lastRenderedAt : Number.POSITIVE_INFINITY;
+    if (targetFrameInterval && sinceLastRender < targetFrameInterval * 0.85) {
       frameId = window.requestAnimationFrame(tick);
       return;
     }
+    const frameDelta = Math.min(MAX_TIMELINE_FRAME_DELTA, Math.max(0, timestamp - lastTickAt));
+    lastTickAt = timestamp;
     lastRenderedAt = timestamp;
-    const elapsed = (timestamp - startedAt - pausedAt) * speed;
+    timelineElapsed += frameDelta * speed;
     try {
-      renderFrame(elapsed);
+      renderFrame(timelineElapsed);
     } catch (error) {
       clearAsync();
       root.classList.remove("show-flight");
       setRuntimeStatus("intro", `静的表示 · ${error.message}`);
-      runReducedSequence(elapsed);
+      runReducedSequence(timelineElapsed);
       return;
     }
-    if (elapsed >= INTRO_TIMELINE.duration) {
+    if (timelineElapsed >= INTRO_TIMELINE.duration) {
       complete();
       return;
     }
@@ -295,8 +355,8 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
     clearAsync();
     running = true;
     paused = false;
-    startedAt = 0;
-    pausedAt = 0;
+    timelineElapsed = 0;
+    lastTickAt = 0;
     lastRenderedAt = 0;
     startButton.disabled = true;
     welcome.hidden = true;
@@ -342,13 +402,11 @@ export function initializeIntro({ onComplete, onReplay, previewMode = false } = 
     if (!running || reducedMotion || !supportsMotion) return;
     paused = !paused;
     if (paused) {
-      pauseStarted = window.performance ? window.performance.now() : Date.now();
       if (frameId) window.cancelAnimationFrame(frameId);
       pauseButton.textContent = "再生";
       setRuntimeStatus("intro", "一時停止");
     } else {
-      const now = window.performance ? window.performance.now() : Date.now();
-      pausedAt += now - pauseStarted;
+      lastTickAt = 0;
       pauseButton.textContent = "一時停止";
       frameId = window.requestAnimationFrame(tick);
     }

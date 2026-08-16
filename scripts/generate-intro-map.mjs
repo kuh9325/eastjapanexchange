@@ -1,10 +1,12 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 import { COUNTRY_CONTEXT, MAP_LANDMARKS, MAP_VIEWBOX } from "../data/regions.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outputPath = path.join(root, "assets", "intro", "korea.svg");
+const introDirectory = path.join(root, "assets", "intro");
+const outputPath = path.join(introDirectory, "korea.svg");
 const number = (value) => Number(value).toFixed(2).replace(/\.00$/, "");
 
 const paths = COUNTRY_CONTEXT.map((province) => (
@@ -28,4 +30,14 @@ const svg = [
 
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 await fs.writeFile(outputPath, svg, "utf8");
-console.log(`intro map: ${COUNTRY_CONTEXT.length} region(s), ${MAP_LANDMARKS.length} landmark(s) → ${outputPath}`);
+const rasterTargets = [
+  { source: path.join(introDirectory, "japan.svg"), output: path.join(introDirectory, "japan.png"), width: 2400 },
+  { source: outputPath, output: path.join(introDirectory, "korea.png"), width: 1600 }
+];
+await Promise.all(rasterTargets.map(({ source, output, width }) => (
+  sharp(source, { density: 288 })
+    .resize({ width })
+    .png({ compressionLevel: 9, adaptiveFiltering: true, palette: true, colours: 64, effort: 7 })
+    .toFile(output)
+)));
+console.log(`intro map: ${COUNTRY_CONTEXT.length} region(s), ${MAP_LANDMARKS.length} landmark(s), ${rasterTargets.length} raster(s) → ${introDirectory}`);

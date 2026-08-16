@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 import {
   BRANCHES,
   BRANCH_KEYS,
@@ -234,7 +235,8 @@ try {
   assert.doesNotMatch(sourceApp, /class:\s*["']city-label|pathTitle|municipality-list/, "일반 지도에 시군 이름/툴팁을 렌더링하면 안 됩니다.");
   assert.match(sourceApp, /data-debug-city/, "행정구역 식별자는 디버그 모드에서만 제공해야 합니다.");
   assert.match(sourceApp, /MAP_LANDMARKS\.forEach/, "독도 등 원본 보완 표식을 지도에 렌더링해야 합니다.");
-  assert.match(sourceHtml, /id="intro-korea-layer"[^>]*href="\.\/assets\/intro\/korea\.svg"/, "인트로 대한민국 지도는 한 번 래스터화할 수 있는 외부 SVG 이미지여야 합니다.");
+  assert.match(sourceHtml, /id="intro-korea-layer"[^>]*href="\.\/assets\/intro\/korea\.png"/, "인트로 대한민국 지도는 브라우저가 반복 래스터화하지 않는 PNG여야 합니다.");
+  assert.match(sourceHtml, /class="intro-japan-layer"[^>]*href="\.\/assets\/intro\/japan\.png"/, "인트로 일본 지도는 브라우저가 반복 래스터화하지 않는 PNG여야 합니다.");
   assert.match(sourceIntroMap, /<circle[^>]*r="1\.6"/, "인트로 대한민국 지도에도 독도 위치점을 표시해야 합니다.");
   assert.match(sourceHtml, /id="map-landmark-layer"/, "지도에 원본 보완 표식 레이어가 있어야 합니다.");
   assert.match(sourceApp, /class:\s*"map-landmark-dot",\s*r:\s*1\.6/, "독도는 강조 장식 없이 작은 점으로 표시해야 합니다.");
@@ -243,17 +245,19 @@ try {
   assert.doesNotMatch(sourceApp, /renderLeaders|leaderGrid|leaderSection/, "4부 간부 렌더링 코드는 제거해야 합니다.");
   assert.match(sourceHtml, /id="hall-card"/, "방면 소개 옆에 회관 전경 사진 영역이 있어야 합니다.");
   assert.match(sourceApp, /function renderHall\(branchKey\)/, "방면별 회관 전경 사진을 렌더링해야 합니다.");
-  assert.match(sourceIntro, /getTotalLength\(\)/);
-  assert.match(sourceIntro, /getPointAtLength/);
-  assert.doesNotMatch(sourceIntro, /const pointOnPath[\s\S]*?getTotalLength\(\)/, "인트로 프레임마다 SVG 경로 길이를 다시 계산하면 안 됩니다.");
+  assert.doesNotMatch(sourceIntro, /getTotalLength|getPointAtLength/, "인트로 프레임에서 브라우저별 SVG 경로 계산 API에 의존하면 안 됩니다.");
+  assert.match(sourceIntro, /const pointOnSampledCurve[\s\S]*FLIGHT_CURVE[\s\S]*DOMESTIC_CURVES/, "비행기와 국내 이동 위치는 미리 샘플링한 곡선으로 계산해야 합니다.");
   assert.match(sourceIntro, /cancelAnimationFrame/);
   assert.match(sourceIntro, /jincheon:\s*Object\.freeze\(\{ revealAt:\s*9500, move:\s*Object\.freeze\(\[10000, 11800\]\)/, "진천 핀이 먼저 나타난 뒤 인천에서 진천으로 이동해야 합니다.");
   assert.match(sourceIntro, /daejeon:\s*Object\.freeze\(\{ revealAt:\s*11800, move:\s*Object\.freeze\(\[12300, 14000\]\)/, "대전 핀이 먼저 나타난 뒤 대전 이동을 시작해야 합니다.");
-  assert.match(sourceIntro, /const domesticTravelPoint[\s\S]*groundSegments\.jincheon[\s\S]*groundSegments\.daejeon/, "국내 이동은 인천→진천과 진천→대전 두 구간으로 분리해야 합니다.");
+  assert.match(sourceIntro, /const domesticTravelPoint[\s\S]*DOMESTIC_CURVES\.jincheon[\s\S]*DOMESTIC_CURVES\.daejeon/, "국내 이동은 인천→진천과 진천→대전 두 구간으로 분리해야 합니다.");
   assert.doesNotMatch(sourceIntro, /guro|show-guro|韓国SGI本部|ソウル九老/, "인트로 코드에서 구로 본부 경유를 완전히 제거해야 합니다.");
-  assert.match(sourceIntro, /groundPath\.style\.strokeDashoffset = String\(groundPathLength \* \(1 - domesticRouteProgress\(elapsed\)\)\)/, "초록 점선은 경로를 재생성하지 않고 dash offset으로 이동 구간까지만 표시해야 합니다.");
+  assert.match(sourceIntro, /setStyleIfChanged\(groundPath, "strokeDashoffset", String\(groundPathLength \* \(1 - domesticRouteProgress\(elapsed\)\)\)\)/, "초록 점선은 경로를 재생성하지 않고 dash offset으로 이동 구간까지만 표시해야 합니다.");
   assert.doesNotMatch(sourceIntro, /domesticRouteD/, "인트로 프레임마다 국내 이동 SVG path를 재작성하면 안 됩니다.");
   assert.match(sourceIntro, /1000 \/ 30/, "Android·4K 환경은 안정적인 30fps 렌더링 상한을 사용해야 합니다.");
+  assert.match(sourceIntro, /targetFrameInterval \* 0\.85/, "30fps 제한은 디스플레이 주사율 차이에도 균일한 허용 구간을 사용해야 합니다.");
+  assert.match(sourceIntro, /MAX_TIMELINE_FRAME_DELTA/, "긴 프레임 지연이 발생해도 여정 장면을 급격히 건너뛰면 안 됩니다.");
+  assert.match(sourceStyles, /#app\[aria-hidden="true"\]\s*\{\s*visibility:\s*hidden/, "인트로 뒤의 메인 앱은 합성 비용을 줄이도록 렌더링에서 숨겨야 합니다.");
   assert.match(sourceIntro, /REDUCED_SEQUENCE_STEPS[\s\S]*INTRO_TIMELINE\.koreaZoom\[0\][\s\S]*DOMESTIC_STOPS\.jincheon\.move\[1\][\s\S]*INTRO_TIMELINE\.arrival\[0\]/, "간이 여정도 정상 타임라인에 맞춰 단계를 전환해야 합니다.");
   assert.match(sourceIntro, /INTRO_TIMELINE\.duration - reducedElapsed/, "간이 여정은 정상 여정과 같은 전체 재생 시간을 유지해야 합니다.");
   assert.doesNotMatch(sourceIntro, /\["仁川国際空港に到着",\s*350\]|\["韓国SGI大田文化会館に到着",\s*1050\]/, "호환 모드가 약 1초 만에 여정을 끝내면 안 됩니다.");
@@ -340,6 +344,15 @@ try {
   await fs.access(path.join(root, "dist", "assets", "gallery-manifest.json"));
   await fs.access(path.join(root, "dist", "assets", "intro", "japan.svg"));
   await fs.access(path.join(root, "dist", "assets", "intro", "korea.svg"));
+  await fs.access(path.join(root, "dist", "assets", "intro", "japan.png"));
+  await fs.access(path.join(root, "dist", "assets", "intro", "korea.png"));
+  const [japanRaster, koreaRaster] = await Promise.all([
+    sharp(path.join(root, "dist", "assets", "intro", "japan.png")).metadata(),
+    sharp(path.join(root, "dist", "assets", "intro", "korea.png")).metadata()
+  ]);
+  assert.deepEqual([japanRaster.width, japanRaster.height], [2400, 1440], "일본 지도 래스터는 4K 확대에 필요한 해상도를 유지해야 합니다.");
+  assert.deepEqual([koreaRaster.width, koreaRaster.height], [1600, 1559], "대한민국 지도 래스터는 화면 확대에 필요한 해상도를 유지해야 합니다.");
+  assert.ok(japanRaster.hasAlpha && koreaRaster.hasAlpha, "인트로 지도 배경은 기존 화면색이 보이도록 투명해야 합니다.");
   await fs.access(path.join(root, "dist", decodeURIComponent(productionManifest.photos[0].thumbnail.replace(/^\.\//, ""))));
   await fs.access(path.join(root, "dist", "service-worker.js"));
   await fs.access(path.join(root, "dist", "fixtures", "full", "meeting", "group.svg"));

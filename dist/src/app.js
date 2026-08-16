@@ -1117,7 +1117,7 @@ var INTRO_TIMELINE = Object.freeze({
 });
 var CTS = INTRO_ROUTE.cts;
 var ICN = INTRO_ROUTE.icn;
-var point = ({ scenePoint }) => scenePoint.join(" ");
+var point = ({ scenePoint: scenePoint2 }) => scenePoint2.join(" ");
 function haversineDistance(from, to) {
   const earthRadius = 6371;
   const radians = (degrees) => degrees * Math.PI / 180;
@@ -1137,9 +1137,69 @@ var REDUCED_SEQUENCE_STEPS = Object.freeze([
   Object.freeze(["韓国SGI鎮川研修院", DOMESTIC_STOPS.jincheon.move[1]]),
   Object.freeze(["韓国SGI大田文化会館に到着", INTRO_TIMELINE.arrival[0]])
 ]);
+var MAX_TIMELINE_FRAME_DELTA = 50;
 var clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
 var progressBetween = (elapsed, range) => clamp((elapsed - range[0]) / (range[1] - range[0]), 0, 1);
 var ease = (value) => 1 - (1 - value) ** 3;
+var scenePoint = ({ scenePoint: [x, y] }) => ({ x, y });
+var cubicPoint = ([start, controlA, controlB, end], progress) => {
+  const inverse = 1 - progress;
+  return {
+    x: inverse ** 3 * start.x + 3 * inverse ** 2 * progress * controlA.x + 3 * inverse * progress ** 2 * controlB.x + progress ** 3 * end.x,
+    y: inverse ** 3 * start.y + 3 * inverse ** 2 * progress * controlA.y + 3 * inverse * progress ** 2 * controlB.y + progress ** 3 * end.y
+  };
+};
+var sampleCurve = (curve, segments = 120) => {
+  const points = [];
+  let length = 0;
+  let previous = cubicPoint(curve, 0);
+  points.push({ ...previous, distance: 0 });
+  for (let index = 1; index <= segments; index += 1) {
+    const current = cubicPoint(curve, index / segments);
+    length += Math.hypot(current.x - previous.x, current.y - previous.y);
+    points.push({ ...current, distance: length });
+    previous = current;
+  }
+  return Object.freeze({ points: Object.freeze(points), length });
+};
+var pointOnSampledCurve = (sampled, fraction) => {
+  const target = sampled.length * clamp(fraction, 0, 1);
+  let low = 0;
+  let high = sampled.points.length - 1;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (sampled.points[middle].distance < target) low = middle + 1;
+    else high = middle;
+  }
+  const next = sampled.points[low];
+  const previous = sampled.points[Math.max(0, low - 1)];
+  const segmentLength = next.distance - previous.distance;
+  const ratio = segmentLength ? (target - previous.distance) / segmentLength : 0;
+  return {
+    x: previous.x + (next.x - previous.x) * ratio,
+    y: previous.y + (next.y - previous.y) * ratio
+  };
+};
+var FLIGHT_CURVE = sampleCurve([
+  scenePoint(CTS),
+  { x: 755, y: 58 },
+  { x: 485, y: 178 },
+  scenePoint(ICN)
+], 180);
+var DOMESTIC_CURVES = Object.freeze({
+  jincheon: sampleCurve([
+    scenePoint(ICN),
+    { x: 226, y: 292 },
+    { x: 249, y: 310 },
+    scenePoint(INTRO_ROUTE.jincheon)
+  ]),
+  daejeon: sampleCurve([
+    scenePoint(INTRO_ROUTE.jincheon),
+    { x: 267, y: 333 },
+    { x: 265, y: 346 },
+    scenePoint(INTRO_ROUTE.daejeon)
+  ])
+});
 function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = false } = {}) {
   const root = document.querySelector("#intro-screen");
   const app2 = document.querySelector("#app");
@@ -1165,28 +1225,26 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
   const restartButton = document.querySelector("#intro-restart");
   const speedSelect = document.querySelector("#intro-speed");
   const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const supportsMotion = typeof window.requestAnimationFrame === "function" && flightPath && typeof flightPath.getTotalLength === "function" && typeof flightPath.getPointAtLength === "function";
+  const supportsMotion = typeof window.requestAnimationFrame === "function";
   let frameId = 0;
   let timeoutIds = [];
-  let startedAt = 0;
-  let pausedAt = 0;
-  let pauseStarted = 0;
+  let timelineElapsed = 0;
+  let lastTickAt = 0;
   let running = false;
   let paused = false;
   let speed = 1;
   let lastStage = "";
   let lastRenderedAt = 0;
   flightPath.setAttribute("d", "M".concat(point(CTS), " C755 58 485 178 ").concat(point(ICN)));
-  groundPath.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon), " C268 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
+  groundPath.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon), " C267 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
   groundSegments.jincheon.setAttribute("d", "M".concat(point(ICN), " C226 292 249 310 ").concat(point(INTRO_ROUTE.jincheon)));
   groundSegments.daejeon.setAttribute("d", "M".concat(point(INTRO_ROUTE.jincheon), " C267 333 265 346 ").concat(point(INTRO_ROUTE.daejeon)));
-  const flightPathLength = supportsMotion ? flightPath.getTotalLength() : 0;
-  const groundPathLength = supportsMotion ? groundPath.getTotalLength() : 0;
   const groundSegmentLengths = {
-    jincheon: supportsMotion ? groundSegments.jincheon.getTotalLength() : 0,
-    daejeon: supportsMotion ? groundSegments.daejeon.getTotalLength() : 0
+    jincheon: DOMESTIC_CURVES.jincheon.length,
+    daejeon: DOMESTIC_CURVES.daejeon.length
   };
   const domesticPathLength = groundSegmentLengths.jincheon + groundSegmentLengths.daejeon;
+  const groundPathLength = domesticPathLength;
   const targetFrameInterval = /Android/i.test(navigator.userAgent) || Math.max(window.screen.width, window.screen.height) * (window.devicePixelRatio || 1) >= 3e3 ? 1e3 / 30 : 0;
   groundPath.style.strokeDasharray = String(groundPathLength);
   groundPath.style.strokeDashoffset = String(groundPathLength);
@@ -1197,6 +1255,12 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
   routeLabel.textContent = "CTS → ICN · 約 ".concat(CTS_ICN_DISTANCE.toLocaleString("ja-JP"), " km");
   controls.hidden = !previewMode2;
   root.classList.toggle("preview-mode", previewMode2);
+  const setAttributeIfChanged = (element, name, value) => {
+    if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+  };
+  const setStyleIfChanged = (element, name, value) => {
+    if (element.style[name] !== value) element.style[name] = value;
+  };
   const clearAsync = () => {
     if (frameId) window.cancelAnimationFrame(frameId);
     frameId = 0;
@@ -1207,8 +1271,8 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
     clearAsync();
     running = false;
     paused = false;
-    pausedAt = 0;
-    pauseStarted = 0;
+    timelineElapsed = 0;
+    lastTickAt = 0;
     lastRenderedAt = 0;
     startButton.disabled = false;
     pauseButton.textContent = "一時停止";
@@ -1245,9 +1309,6 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
     }, 650);
     timeoutIds.push(timeout);
   };
-  const pointOnPath = (path, length, fraction) => {
-    return path.getPointAtLength(length * clamp(fraction, 0, 1));
-  };
   const movementProgress = (elapsed, stop) => {
     if (elapsed <= stop.move[0]) return 0;
     if (elapsed >= stop.move[1]) return 1;
@@ -1260,10 +1321,10 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
   const domesticTravelPoint = (elapsed) => {
     if (elapsed < DOMESTIC_STOPS.jincheon.move[0]) return { x: ICN.scenePoint[0], y: ICN.scenePoint[1] };
     if (elapsed < DOMESTIC_STOPS.jincheon.move[1]) {
-      return pointOnPath(groundSegments.jincheon, groundSegmentLengths.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
+      return pointOnSampledCurve(DOMESTIC_CURVES.jincheon, ease(progressBetween(elapsed, DOMESTIC_STOPS.jincheon.move)));
     }
     if (elapsed < DOMESTIC_STOPS.daejeon.move[0]) return { x: INTRO_ROUTE.jincheon.scenePoint[0], y: INTRO_ROUTE.jincheon.scenePoint[1] };
-    return pointOnPath(groundSegments.daejeon, groundSegmentLengths.daejeon, ease(progressBetween(elapsed, DOMESTIC_STOPS.daejeon.move)));
+    return pointOnSampledCurve(DOMESTIC_CURVES.daejeon, ease(progressBetween(elapsed, DOMESTIC_STOPS.daejeon.move)));
   };
   const updateStage = (elapsed) => {
     if (elapsed < INTRO_TIMELINE.zoomOut[0]) return "新千歳空港を出発";
@@ -1286,24 +1347,24 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
       translateX = -190 * koreaZoom;
       translateY = -165 * koreaZoom;
     }
-    koreaLayer.style.opacity = koreaReveal.toFixed(3);
-    japanLayer.style.opacity = (1 - koreaZoom).toFixed(3);
-    scene.setAttribute("transform", "translate(".concat(translateX.toFixed(2), " ").concat(translateY.toFixed(2), ") scale(").concat(scale.toFixed(4), ")"));
+    setStyleIfChanged(koreaLayer, "opacity", koreaReveal.toFixed(3));
+    setStyleIfChanged(japanLayer, "opacity", (1 - koreaZoom).toFixed(3));
+    setAttributeIfChanged(scene, "transform", "translate(".concat(translateX.toFixed(2), " ").concat(translateY.toFixed(2), ") scale(").concat(scale.toFixed(4), ")"));
     if (elapsed >= INTRO_TIMELINE.flight[0] && elapsed <= INTRO_TIMELINE.flight[1]) {
       root.classList.add("show-flight");
       const flightProgress = ease(progressBetween(elapsed, INTRO_TIMELINE.flight));
-      const point2 = pointOnPath(flightPath, flightPathLength, flightProgress);
-      const next = pointOnPath(flightPath, flightPathLength, Math.min(1, flightProgress + 6e-3));
+      const point2 = pointOnSampledCurve(FLIGHT_CURVE, flightProgress);
+      const next = pointOnSampledCurve(FLIGHT_CURVE, Math.min(1, flightProgress + 6e-3));
       const angle = Math.atan2(next.y - point2.y, next.x - point2.x) * 180 / Math.PI;
-      plane.setAttribute("transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ") rotate(").concat(angle.toFixed(2), ")"));
+      setAttributeIfChanged(plane, "transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ") rotate(").concat(angle.toFixed(2), ")"));
     } else if (elapsed > INTRO_TIMELINE.flight[1]) {
       root.classList.remove("show-flight");
     }
     if (elapsed >= INTRO_TIMELINE.ground[0]) {
       root.classList.add("show-ground");
       const point2 = domesticTravelPoint(elapsed);
-      groundPath.style.strokeDashoffset = String(groundPathLength * (1 - domesticRouteProgress(elapsed)));
-      travelDot.setAttribute("transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ")"));
+      setStyleIfChanged(groundPath, "strokeDashoffset", String(groundPathLength * (1 - domesticRouteProgress(elapsed))));
+      setAttributeIfChanged(travelDot, "transform", "translate(".concat(point2.x.toFixed(2), " ").concat(point2.y.toFixed(2), ")"));
     }
     root.classList.toggle("show-jincheon", elapsed >= DOMESTIC_STOPS.jincheon.revealAt);
     root.classList.toggle("show-daejeon", elapsed >= DOMESTIC_STOPS.daejeon.revealAt);
@@ -1316,23 +1377,26 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
   };
   const tick = (timestamp) => {
     if (!running || paused) return;
-    if (!startedAt) startedAt = timestamp;
-    if (targetFrameInterval && lastRenderedAt && timestamp - lastRenderedAt < targetFrameInterval) {
+    if (!lastTickAt) lastTickAt = timestamp;
+    const sinceLastRender = lastRenderedAt ? timestamp - lastRenderedAt : Number.POSITIVE_INFINITY;
+    if (targetFrameInterval && sinceLastRender < targetFrameInterval * 0.85) {
       frameId = window.requestAnimationFrame(tick);
       return;
     }
+    const frameDelta = Math.min(MAX_TIMELINE_FRAME_DELTA, Math.max(0, timestamp - lastTickAt));
+    lastTickAt = timestamp;
     lastRenderedAt = timestamp;
-    const elapsed = (timestamp - startedAt - pausedAt) * speed;
+    timelineElapsed += frameDelta * speed;
     try {
-      renderFrame(elapsed);
+      renderFrame(timelineElapsed);
     } catch (error) {
       clearAsync();
       root.classList.remove("show-flight");
       setRuntimeStatus("intro", "静的表示 · ".concat(error.message));
-      runReducedSequence(elapsed);
+      runReducedSequence(timelineElapsed);
       return;
     }
-    if (elapsed >= INTRO_TIMELINE.duration) {
+    if (timelineElapsed >= INTRO_TIMELINE.duration) {
       complete();
       return;
     }
@@ -1371,8 +1435,8 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
     clearAsync();
     running = true;
     paused = false;
-    startedAt = 0;
-    pausedAt = 0;
+    timelineElapsed = 0;
+    lastTickAt = 0;
     lastRenderedAt = 0;
     startButton.disabled = true;
     welcome.hidden = true;
@@ -1415,13 +1479,11 @@ function initializeIntro({ onComplete, onReplay, previewMode: previewMode2 = fal
     if (!running || reducedMotion || !supportsMotion) return;
     paused = !paused;
     if (paused) {
-      pauseStarted = window.performance ? window.performance.now() : Date.now();
       if (frameId) window.cancelAnimationFrame(frameId);
       pauseButton.textContent = "再生";
       setRuntimeStatus("intro", "一時停止");
     } else {
-      const now = window.performance ? window.performance.now() : Date.now();
-      pausedAt += now - pauseStarted;
+      lastTickAt = 0;
       pauseButton.textContent = "一時停止";
       frameId = window.requestAnimationFrame(tick);
     }
