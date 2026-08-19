@@ -2232,7 +2232,7 @@ function openPanelViewer(opener) {
 function closePanelViewer(options) {
   if (panelExhibition.hidden) return;
   const config = options || {};
-  if (awardDialogController.isOpen()) awardDialogController.close();
+  if (awardDialogController && awardDialogController.isOpen()) awardDialogController.close();
   setPanelControlsHidden(false);
   panelExhibition.hidden = true;
   panelExhibition.setAttribute("aria-hidden", "true");
@@ -2370,8 +2370,8 @@ function applyLanguage(language) {
   panelPageButtons.forEach((button, index) => {
     button.setAttribute("aria-label", formatCopy(ui.panelGoTo, { number: index + 1 }));
   });
-  panelAwardDialogKicker.textContent = ui.panelAwardDetail;
-  panelAwardDialogClose.setAttribute("aria-label", ui.panelAwardClose);
+  if (panelAwardDialogKicker) panelAwardDialogKicker.textContent = ui.panelAwardDetail;
+  if (panelAwardDialogClose) panelAwardDialogClose.setAttribute("aria-label", ui.panelAwardClose);
   panelAchievementButtons.forEach((button) => {
     var _a;
     button.setAttribute("aria-label", formatCopy(ui.panelAwardOpen, {
@@ -2428,19 +2428,19 @@ var dialogController = createDialogController(lightbox, () => {
   if (lightboxOpener) lightboxOpener.focus();
   lightboxOpener = null;
 });
-var awardDialogController = createDialogController(panelAwardDialog, () => {
+var awardDialogController = panelAwardDialog ? createDialogController(panelAwardDialog, () => {
   if (panelAwardOpener) panelAwardOpener.focus();
   panelAwardOpener = null;
-});
+}) : null;
 function openAwardDetail(button) {
   var _a, _b, _c;
-  if (!button) return;
+  if (!button || !awardDialogController || !panelAwardDialogTitle || !panelAwardDialogPlace || !panelAwardDialogTranslation) return;
   panelAwardOpener = button;
   panelAwardDialogTitle.textContent = ((_a = button.querySelector("strong")) == null ? void 0 : _a.textContent) || "";
   panelAwardDialogPlace.textContent = ((_b = button.querySelector("span")) == null ? void 0 : _b.textContent) || "";
   panelAwardDialogTranslation.textContent = ((_c = button.querySelector("small")) == null ? void 0 : _c.textContent) || "";
   awardDialogController.open();
-  window.setTimeout(() => panelAwardDialogClose.focus(), 0);
+  if (panelAwardDialogClose) window.setTimeout(() => panelAwardDialogClose.focus(), 0);
 }
 function updateLightbox(index) {
   const item = lightboxItems[index];
@@ -2589,10 +2589,12 @@ function bindEvents() {
       openAwardDetail(button);
     });
   });
-  panelAwardDialogClose.addEventListener("click", () => awardDialogController.close());
-  panelAwardDialog.addEventListener("click", (event) => {
-    if (event.target === panelAwardDialog) awardDialogController.close();
-  });
+  if (panelAwardDialogClose && panelAwardDialog && awardDialogController) {
+    panelAwardDialogClose.addEventListener("click", () => awardDialogController.close());
+    panelAwardDialog.addEventListener("click", (event) => {
+      if (event.target === panelAwardDialog) awardDialogController.close();
+    });
+  }
   panelTrack.addEventListener("click", (event) => {
     if (Date.now() < panelTapBlockUntil || !event.target.closest(".panel-sheet")) return;
     const slide = event.target.closest(".panel-slide");
@@ -2650,7 +2652,7 @@ function bindEvents() {
     lightboxError.hidden = false;
   });
   document.addEventListener("keydown", (event) => {
-    if (awardDialogController.isOpen()) {
+    if (awardDialogController && awardDialogController.isOpen()) {
       if (event.key === "Escape") {
         event.preventDefault();
         awardDialogController.close();
@@ -2678,12 +2680,6 @@ function bindEvents() {
 }
 async function boot() {
   initializeDebugMode(debugMode);
-  renderBranchControls();
-  renderCountryContext();
-  renderMap();
-  applyLanguage(currentLanguage);
-  setRegionInteractive(galleryPanel, false);
-  bindEvents();
   initializeIntro({
     previewMode,
     onReplay() {
@@ -2694,19 +2690,22 @@ async function boot() {
       if (first) first.focus();
     }
   });
+  renderBranchControls();
+  renderCountryContext();
+  renderMap();
+  applyLanguage(currentLanguage);
+  setRegionInteractive(galleryPanel, false);
+  bindEvents();
   registerOfflineWorker();
-  loadManifest().then(() => {
-    if (!selectedBranch) return;
+  await loadManifest();
+  if (selectedBranch) {
     renderMeeting(selectedBranch);
     renderGallery();
-  }).catch((error) => {
-    setRuntimeStatus("lastError", error && error.message ? error.message : String(error));
-  });
+  }
 }
 boot().catch((error) => {
   setRuntimeStatus("lastError", error && error.message ? error.message : String(error));
   console.error("전시 앱 초기화 중 오류가 발생했습니다.", error);
   const intro = document.querySelector("#intro-screen");
-  if (intro) intro.classList.remove("is-visible");
-  app.removeAttribute("aria-hidden");
+  if (!intro || !intro.classList.contains("is-visible")) app.removeAttribute("aria-hidden");
 });

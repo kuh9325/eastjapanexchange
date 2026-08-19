@@ -219,7 +219,7 @@ try {
   assert.match(sourceApp, /const STACKED_LAYOUT_QUERY = "\(max-width: 900px\), \(orientation: portrait\)";/, "모바일 단일 열과 자동 스크롤은 동일한 반응형 기준을 사용해야 합니다.");
   assert.match(sourceApp, /if \(config\.scroll !== false && usesStackedLayout\(\)\)/, "방면 선택 후 사진 영역 자동 스크롤은 실제 단일 열 화면에서만 실행해야 합니다.");
   assert.doesNotMatch(sourceApp, /max-width:\s*1080px[\s\S]{0,120}scrollIntoView/, "PC 가로 화면에서 사진 영역으로 강제 이동해 왼쪽 지도를 밀어내면 안 됩니다.");
-  assert.match(sourceStyles, /@media \(min-width:\s*901px\) and \(orientation:\s*landscape\)\s*\{[\s\S]*?\.stage\s*\{\s*transition:\s*none;/s, "전자칠판 가로 화면의 3:7 프레임 전환은 레이아웃 애니메이션 없이 즉시 적용해야 합니다.");
+  assert.match(sourceStyles, /\.stage\s*\{[^}]*transition:\s*grid-template-columns 0\.7s var\(--ease\), gap 0\.7s var\(--ease\)/s, "전자칠판의 3:7 프레임 전환은 검증된 d4a5b2a 동작을 유지해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*min-width:\s*420px/s, "대형 화면의 축소된 지도 패널은 최소 420px을 유지해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*position:\s*sticky[^}]*height:\s*100%/s, "가로 화면의 왼쪽 지도 패널은 고정되어야 합니다.");
   assert.match(sourceStyles, /\.branch-switcher\s*\{[^}]*position:\s*absolute[^}]*top:\s*12px[^}]*flex-direction:\s*row/s, "방면 버튼은 지도 위쪽에 가로 오버레이로 배치해야 합니다.");
@@ -358,6 +358,8 @@ try {
   assert.match(sourceApp, /function goToPanel\(index, options\)[\s\S]*maxScroll \* \(panelIndex \/ lastIndex\)/, "PC 연속 패널의 버튼 이동은 실제 가로 초과 폭 전체를 균등하게 사용해야 합니다.");
   assert.match(sourceApp, /function setPanelControlsHidden\(hidden\)[\s\S]*panel-controls-hidden[\s\S]*updatePanelLayout/, "패널을 누르면 넘김 조작부를 숨기고 패널 크기를 다시 계산해야 합니다.");
   assert.match(sourceApp, /function openAwardDetail\(button\)[\s\S]*awardDialogController\.open/, "하단 현창 버튼은 상세 확대 대화상자를 열어야 합니다.");
+  assert.match(sourceApp, /const awardDialogController = panelAwardDialog\s*\? createDialogController/, "선택 기능인 현창 대화상자가 없어도 앱 전체 부팅은 계속되어야 합니다.");
+  assert.match(sourceApp, /if \(panelAwardDialogClose && panelAwardDialog && awardDialogController\)/, "현창 대화상자 이벤트는 관련 DOM이 모두 있을 때만 연결해야 합니다.");
   assert.match(sourceApp, /panelLanguageButtons\.forEach[\s\S]*applyLanguage\(button\.dataset\.panelLanguage\)/, "패널의 언어 탭은 기존 전체 언어 상태와 동기화되어야 합니다.");
   for (const filename of ["panel-map.webp", "yu-gwan-sun.webp", "kim-yu-sin.webp", "award-chungbuk.webp", "award-chungnam.webp", "award-daejeon.webp", "award-medal.webp"]) {
     const absolute = path.join(root, "assets", "panels", filename);
@@ -380,8 +382,8 @@ try {
   assert.match(sourceApp, /function applyLanguage\(language\)/, "언어 탭이 메인 화면 전체 문구를 전환해야 합니다.");
   assert.doesNotMatch(sourceUiCopy, /\.replaceAll\(/, "지원 대상 구형 Chromium·Safari에서 부팅을 중단시키는 String.replaceAll을 사용하면 안 됩니다.");
   assert.match(sourceUiCopy, /\.split\(`\{\$\{key\}\}`\)\.join\(String\(value\)\)/, "문구 토큰은 구형 브라우저 호환 split/join 방식으로 치환해야 합니다.");
-  assert.match(sourceApp, /bindEvents\(\);[\s\S]*initializeIntro\(\{[\s\S]*registerOfflineWorker\(\);[\s\S]*loadManifest\(\)\.then/, "인트로와 기본 조작 이벤트는 사진 목록 다운로드보다 먼저 활성화해야 합니다.");
-  assert.doesNotMatch(sourceApp, /await loadManifest\(\)/, "사진 목록 응답이 인트로 조작을 가로막으면 안 됩니다.");
+  assert.match(sourceApp, /async function boot\(\)[\s\S]*initializeDebugMode\(debugMode\);[\s\S]*initializeIntro\(\{[\s\S]*renderBranchControls\(\);[\s\S]*bindEvents\(\);[\s\S]*await loadManifest\(\);/, "인트로와 방면 선택 이벤트는 사진 목록 처리보다 먼저 연결해야 합니다.");
+  assert.match(sourceApp, /if \(!intro \|\| !intro\.classList\.contains\("is-visible"\)\) app\.removeAttribute\("aria-hidden"\)/, "후속 부팅 오류가 발생해도 이미 활성화된 인트로를 강제로 제거하면 안 됩니다.");
   assert.match(sourceApp, /function galleryMetadataLabels\(photo\)/, "권·부서·활동 메타데이터를 파일명 대신 화면 객체로 렌더링해야 합니다.");
   assert.match(sourceApp, /meta\.appendChild\(tag\)/, "썸네일에 구조화된 메타데이터 태그를 추가해야 합니다.");
 
