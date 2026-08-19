@@ -112,6 +112,8 @@ try {
   assert.equal(UI_COPY.ko.expandIntroduction, "소개 펼치기");
   assert.equal(UI_COPY.ja.collapseIntroduction, "紹介を閉じる");
   assert.equal(UI_COPY.ja.expandIntroduction, "紹介を開く");
+  assert.equal(UI_COPY.ko.panelEntryTitle, "전시 패널 관람");
+  assert.equal(UI_COPY.ja.panelEntryTitle, "展示パネルを見る");
   assert.equal(ZONE_LABELS.chungju.ja, "忠州圏");
   assert.equal(DEPARTMENT_LABELS.men.ja, "男子部");
   assert.equal(DEPARTMENT_LABELS.women.ja, "女子部");
@@ -313,6 +315,34 @@ try {
   assert.equal(EXHIBITION_CONTENT.daejeon.slogan, "한 사람의 행동이 도시를 바꾼다");
   assert.equal(EXHIBITION_CONTENT.daejeon.sloganJa, "一人の行動が都市を変える");
   assert.match(sourceHtml, /class="language-tabs"[\s\S]*data-language="ko"[\s\S]*data-language="ja"/, "메인 화면에 한국어·일본어 언어 탭이 있어야 합니다.");
+  assert.match(sourceHtml, /id="panel-entry"[\s\S]*id="panel-exhibition"/, "여정 이후 메인 화면에서 전시 패널 뷰어로 진입할 수 있어야 합니다.");
+  assert.equal((sourceHtml.match(/class="panel-slide"/g) || []).length, 3, "세로형 전시 패널 3장을 각각 한 슬라이드로 제공해야 합니다.");
+  assert.equal((sourceHtml.match(/class="panel-canvas /g) || []).length, 3, "각 패널은 전체 페이지 래스터가 아닌 HTML/CSS 캔버스여야 합니다.");
+  assert.doesNotMatch(sourceHtml, /panel-[123]-(?:1200|2400)\.(?:webp|jpg)/, "전체 패널 페이지를 이미지로 다시 삽입하면 안 됩니다.");
+  assert.doesNotMatch(sourceHtml, /QR|큐알/i, "웹앱 자신을 가리키는 QR 코드를 패널에 표시하면 안 됩니다.");
+  assert.match(sourceHtml, /panel-origin-prologue[\s\S]*panel-person-yu[\s\S]*panel-achievement-list/, "세 패널의 본문은 선택 가능한 의미 구조로 작성해야 합니다.");
+  assert.match(sourceHtml, /class="panel-language-tabs"[\s\S]*data-panel-language="ko"[\s\S]*data-panel-language="ja"/, "패널 화면에서도 한국어·일본어를 전환할 수 있어야 합니다.");
+  assert.match(sourceStyles, /\.panel-track\s*\{[^}]*display:\s*flex[^}]*overflow-x:\s*auto[^}]*scroll-snap-type:\s*x mandatory/s, "패널 뷰어는 가로 스와이프와 한 장 단위 스냅을 사용해야 합니다.");
+  assert.match(sourceStyles, /\.panel-slide\s*\{[^}]*flex:\s*0 0 100%[^}]*scroll-snap-align:\s*start/s, "모바일과 가로 화면 모두 한 번에 한 패널을 보여야 합니다.");
+  assert.match(sourceStyles, /@font-face\s*\{[\s\S]*GmarketSans-Light\.woff2[\s\S]*GmarketSans-Bold\.woff2/, "한국어 패널은 공식 Gmarket Sans 웹폰트를 사용해야 합니다.");
+  assert.match(sourceStyles, /@font-face\s*\{[^}]*Source Han Serif KR Panel[^}]*SourceHanSerifKR-Panel\.woff2[^}]*\}/s, "한국어 세리프는 본명조 웹폰트를 사용해야 합니다.");
+  assert.match(sourceStyles, /@font-face\s*\{[^}]*Source Han Serif JP Panel[^}]*SourceHanSerifJP-Panel\.woff2[^}]*\}/s, "일본어 세리프는 源ノ明朝 웹폰트를 사용해야 합니다.");
+  assert.match(sourceStyles, /--panel-serif:[^;]*Source Han Serif KR Panel/, "패널 세리프 슬롯의 첫 글꼴은 본명조여야 합니다.");
+  assert.match(sourceStyles, /--panel-japanese:[^;]*Source Han Serif JP Panel/, "일본어 패널 글꼴은 源ノ明朝여야 합니다.");
+  assert.match(sourceStyles, /\.panel-canvas\s*\{[^}]*width:\s*900px[^}]*height:\s*1246px[^}]*transform-origin:\s*0 0/s, "패널 CSS 캔버스는 원본 세로 비율의 고정 좌표계를 사용해야 합니다.");
+  assert.match(sourceApp, /function openPanelViewer\(opener\)[\s\S]*stage\.hidden = true[\s\S]*panelExhibition\.hidden = false/, "패널 관람 중 기존 지도·사진 화면을 가리고 전용 뷰어를 열어야 합니다.");
+  assert.match(sourceApp, /function goToPanel\(index, options\)[\s\S]*panelTrack\.scrollTo/, "패널 화살표와 페이지 버튼이 슬라이드를 이동해야 합니다.");
+  assert.match(sourceApp, /function updatePanelLayout\(\)[\s\S]*PANEL_CANVAS_WIDTH[\s\S]*PANEL_CANVAS_HEIGHT[\s\S]*canvas\.style\.transform/, "화면 방향과 크기에 맞게 HTML 패널 전체를 같은 비율로 확대·축소해야 합니다.");
+  assert.match(sourceApp, /panelLanguageButtons\.forEach[\s\S]*applyLanguage\(button\.dataset\.panelLanguage\)/, "패널의 언어 탭은 기존 전체 언어 상태와 동기화되어야 합니다.");
+  for (const filename of ["panel-map.webp", "yu-gwan-sun.webp", "kim-yu-sin.webp", "award-chungbuk.webp", "award-chungnam.webp", "award-daejeon.webp", "award-medal.webp"]) {
+    const absolute = path.join(root, "assets", "panels", filename);
+    await fs.access(absolute);
+    assert.equal((await sharp(absolute).metadata()).format, "webp", `${filename}은 WebP 의미 애셋이어야 합니다.`);
+    assert.ok((await fs.stat(absolute)).size < 500_000, `${filename}은 전체 페이지 이미지보다 작아야 합니다.`);
+  }
+  for (const filename of ["GmarketSans-Light.woff2", "GmarketSans-Medium.woff2", "GmarketSans-Bold.woff2", "SourceHanSerifKR-Panel.woff2", "SourceHanSerifJP-Panel.woff2", "SourceHanSerif-LICENSE.txt"]) {
+    await fs.access(path.join(root, "assets", "fonts", filename));
+  }
   assert.match(sourceHtml, /id="tab-school"[^>]*data-category="school"[^>]*>창가청년스쿨<\/button>/, "한국어 기본 화면에 창가청년스쿨 탭이 있어야 합니다.");
   assert.match(sourceHtml, /id="tab-visit"[^>]*data-category="visit"[^>]*>일대일근행회<\/button>/, "한국어 기본 화면에 일대일근행회 탭이 있어야 합니다.");
   assert.match(sourceApp, /function applyLanguage\(language\)/, "언어 탭이 메인 화면 전체 문구를 전환해야 합니다.");
@@ -346,6 +376,9 @@ try {
   await fs.access(path.join(root, "dist", "assets", "intro", "korea.svg"));
   await fs.access(path.join(root, "dist", "assets", "intro", "japan.png"));
   await fs.access(path.join(root, "dist", "assets", "intro", "korea.png"));
+  await fs.access(path.join(root, "dist", "assets", "panels", "panel-map.webp"));
+  await fs.access(path.join(root, "dist", "assets", "panels", "award-medal.webp"));
+  await fs.access(path.join(root, "dist", "assets", "fonts", "GmarketSans-Bold.woff2"));
   const [japanRaster, koreaRaster] = await Promise.all([
     sharp(path.join(root, "dist", "assets", "intro", "japan.png")).metadata(),
     sharp(path.join(root, "dist", "assets", "intro", "korea.png")).metadata()
@@ -355,6 +388,9 @@ try {
   assert.ok(japanRaster.hasAlpha && koreaRaster.hasAlpha, "인트로 지도 배경은 기존 화면색이 보이도록 투명해야 합니다.");
   await fs.access(path.join(root, "dist", decodeURIComponent(productionManifest.photos[0].thumbnail.replace(/^\.\//, ""))));
   await fs.access(path.join(root, "dist", "service-worker.js"));
+  const serviceWorker = await fs.readFile(path.join(root, "dist", "service-worker.js"), "utf8");
+  assert.match(serviceWorker, /\.\/assets\/panels\/panel-map\.webp/, "패널 의미 이미지는 오프라인 전시를 위해 사전 캐시해야 합니다.");
+  assert.match(serviceWorker, /\.\/assets\/fonts\/GmarketSans-Bold\.woff2/, "패널 웹폰트는 오프라인 전시를 위해 사전 캐시해야 합니다.");
   await fs.access(path.join(root, "dist", "fixtures", "full", "meeting", "group.svg"));
   await assert.rejects(fs.access(path.join(root, "dist", "data", "vendor")));
 

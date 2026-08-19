@@ -725,6 +725,26 @@ var UI_COPY = Object.freeze({
     mapPanelLabel: "대한민국 지도에서 방면 선택",
     heroTitle: "마음과 마음을 잇는 청년의 발자취",
     heroSubtitle: "지도에서 방면을 선택해 활동의 순간을 만나보세요.",
+    panelEntryLabel: "전시 패널 3장 관람하기",
+    panelEntryTitle: "전시 패널 관람",
+    panelEntryDescription: "교류의 역사와 사제보은의 도전 · 총 3장",
+    panelViewerKicker: "전시 패널",
+    panelViewerTitle: "일본과 충남·충북·대전, 교류의 이야기",
+    panelViewerDescription: "좌우로 넘기며 세 장의 패널을 관람해 보세요.",
+    panelCloseLabel: "활동사진 화면으로 돌아가기",
+    panelClose: "활동사진",
+    panelPrevious: "이전 패널",
+    panelNext: "다음 패널",
+    panelSelectionLabel: "패널 선택",
+    panelHint: "화면을 좌우로 밀거나 화살표를 눌러 이동할 수 있습니다.",
+    panelPageLabel: "{current} / {total}",
+    panelGoTo: "{number}번째 패널",
+    panelTitle1: "교류의 시작",
+    panelTitle2: "선생님 스피치 속 위인",
+    panelTitle3: "사제보은의 도전",
+    panelAlt1: "일본과 충남·충북·대전, 교류의 시작을 소개하는 첫 번째 전시 패널",
+    panelAlt2: "선생님 스피치 속 위인을 소개하는 두 번째 전시 패널",
+    panelAlt3: "충남·충북·대전의 사제보은 도전을 소개하는 세 번째 전시 패널",
     branchSwitcherLabel: "방면 선택",
     mapTitle: "대한민국 지도와 충남, 충북, 대전방면",
     mapDescription: "낮은 대비의 대한민국 지도 위에 충남방면, 충북방면, 대전방면을 서로 다른 색으로 표시하고 동쪽에 독도 위치점을 표시했습니다.",
@@ -779,6 +799,26 @@ var UI_COPY = Object.freeze({
     mapPanelLabel: "韓国地図から方面を選択",
     heroTitle: "心と心を結ぶ青年の足跡",
     heroSubtitle: "地図から方面を選び、青年たちの活動の軌跡をご覧ください。",
+    panelEntryLabel: "3枚の展示パネルを見る",
+    panelEntryTitle: "展示パネルを見る",
+    panelEntryDescription: "交流の歴史と師弟報恩の挑戦 · 全3枚",
+    panelViewerKicker: "展示パネル",
+    panelViewerTitle: "日本と忠南・忠北・大田、交流の物語",
+    panelViewerDescription: "左右にめくりながら、3枚のパネルをご覧ください。",
+    panelCloseLabel: "活動写真の画面に戻る",
+    panelClose: "活動写真",
+    panelPrevious: "前のパネル",
+    panelNext: "次のパネル",
+    panelSelectionLabel: "パネルを選択",
+    panelHint: "画面を左右にスワイプするか、矢印を押して移動できます。",
+    panelPageLabel: "{current} / {total}",
+    panelGoTo: "{number}枚目のパネル",
+    panelTitle1: "交流の始まり",
+    panelTitle2: "先生のスピーチに登場する偉人",
+    panelTitle3: "師弟報恩の挑戦",
+    panelAlt1: "日本と忠南・忠北・大田の交流の始まりを紹介する1枚目の展示パネル",
+    panelAlt2: "先生のスピーチに登場する偉人を紹介する2枚目の展示パネル",
+    panelAlt3: "忠南・忠北・大田の師弟報恩の挑戦を紹介する3枚目の展示パネル",
     branchSwitcherLabel: "方面を選択",
     mapTitle: "韓国地図と忠南・忠北・大田方面",
     mapDescription: "淡い韓国地図の上に忠南・忠北・大田の各方面を色分けし、東側に独島の位置を点で示しています。",
@@ -1508,6 +1548,7 @@ var previewMode = query.get("intro") === "preview";
 var debugMode = query.get("debug") === "1";
 var currentLanguage = query.get("lang") === "ja" ? "ja" : "ko";
 var app = document.querySelector("#app");
+var stage = document.querySelector(".stage");
 var branchSwitcher = document.querySelector("#branch-switcher");
 var koreaMap = document.querySelector(".korea-map");
 var countryContextLayer = document.querySelector("#country-context-layer");
@@ -1543,6 +1584,20 @@ var lightboxNext = document.querySelector(".lightbox-nav.next");
 var lightboxClose = document.querySelector(".lightbox-close");
 var mapAttribution = document.querySelector("#map-attribution");
 var languageButtons = Array.from(document.querySelectorAll("[data-language]"));
+var panelEntry = document.querySelector("#panel-entry");
+var panelExhibition = document.querySelector("#panel-exhibition");
+var panelClose = document.querySelector("#panel-close");
+var panelTrack = document.querySelector("#panel-track");
+var panelSlides = Array.from(document.querySelectorAll(".panel-slide"));
+var panelSheets = Array.from(document.querySelectorAll(".panel-slide > .panel-sheet"));
+var panelCanvases = Array.from(document.querySelectorAll(".panel-canvas"));
+var panelCaptions = Array.from(document.querySelectorAll(".panel-slide > .panel-sheet > figcaption"));
+var panelPrevious = document.querySelector("#panel-previous");
+var panelNext = document.querySelector("#panel-next");
+var panelPagination = document.querySelector("#panel-pagination");
+var panelPageButtons = Array.from(document.querySelectorAll("[data-panel-go]"));
+var panelLanguageButtons = Array.from(document.querySelectorAll("[data-panel-language]"));
+var panelCounter = document.querySelector("#panel-counter");
 var manifest = { photos: [] };
 var content = EXHIBITION_CONTENT;
 var manifestAvailable = true;
@@ -1557,7 +1612,14 @@ var lightboxIndex = 0;
 var lightboxOpener = null;
 var galleryPointerDrag = null;
 var galleryDragClickBlockUntil = 0;
+var panelIndex = 0;
+var panelOpener = null;
+var panelScrollFrame = 0;
+var panelPointerDrag = null;
+var panelResizeTimer = 0;
 var GALLERY_DRAG_THRESHOLD = 8;
+var PANEL_CANVAS_WIDTH = 900;
+var PANEL_CANVAS_HEIGHT = 1246;
 var copy = () => UI_COPY[currentLanguage];
 var localizedValue = (source, key) => {
   if (!source) return "";
@@ -2056,6 +2118,122 @@ function clearSelection(options) {
     if (trigger) trigger.focus();
   }
 }
+function updatePanelNavigation() {
+  const ui = copy();
+  panelPrevious.disabled = panelIndex === 0;
+  panelNext.disabled = panelIndex === panelSlides.length - 1;
+  panelCounter.textContent = formatCopy(ui.panelPageLabel, {
+    current: panelIndex + 1,
+    total: panelSlides.length
+  });
+  panelPageButtons.forEach((button, index) => {
+    const active = index === panelIndex;
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+}
+function updatePanelLayout() {
+  const landscape = window.matchMedia("(orientation: landscape)").matches;
+  panelSlides.forEach((slide, index) => {
+    const sheet = panelSheets[index];
+    const canvas = panelCanvases[index];
+    if (!sheet || !canvas) return;
+    const availableWidth = Math.max(280, slide.clientWidth - (landscape ? 164 : 16));
+    const availableHeight = Math.max(360, slide.clientHeight - (landscape ? 18 : 26));
+    const widthScale = availableWidth / PANEL_CANVAS_WIDTH;
+    const heightScale = availableHeight / PANEL_CANVAS_HEIGHT;
+    const scale = landscape ? Math.min(widthScale, heightScale) : widthScale;
+    sheet.style.width = "".concat(PANEL_CANVAS_WIDTH * scale, "px");
+    sheet.style.height = "".concat(PANEL_CANVAS_HEIGHT * scale, "px");
+    canvas.style.transform = "scale(".concat(scale, ")");
+  });
+}
+function goToPanel(index, options) {
+  const config = options || {};
+  panelIndex = Math.max(0, Math.min(panelSlides.length - 1, index));
+  const left = panelIndex * panelTrack.clientWidth;
+  if (config.instant) {
+    panelTrack.scrollLeft = left;
+  } else {
+    try {
+      panelTrack.scrollTo({ left, behavior: "smooth" });
+    } catch {
+      panelTrack.scrollLeft = left;
+    }
+  }
+  updatePanelNavigation();
+}
+function openPanelViewer(opener) {
+  panelOpener = opener || document.activeElement;
+  stage.hidden = true;
+  panelExhibition.hidden = false;
+  panelExhibition.setAttribute("aria-hidden", "false");
+  app.classList.add("panel-mode");
+  document.body.classList.add("panel-lock");
+  window.requestAnimationFrame(() => {
+    updatePanelLayout();
+    goToPanel(panelIndex, { instant: true });
+    panelClose.focus();
+  });
+}
+function closePanelViewer(options) {
+  if (panelExhibition.hidden) return;
+  const config = options || {};
+  panelExhibition.hidden = true;
+  panelExhibition.setAttribute("aria-hidden", "true");
+  stage.hidden = false;
+  app.classList.remove("panel-mode");
+  document.body.classList.remove("panel-lock");
+  if (config.restoreFocus !== false && panelOpener) panelOpener.focus();
+  panelOpener = null;
+}
+function syncPanelIndexFromScroll() {
+  panelScrollFrame = 0;
+  const width = panelTrack.clientWidth;
+  if (!width) return;
+  const nextIndex = Math.max(0, Math.min(panelSlides.length - 1, Math.round(panelTrack.scrollLeft / width)));
+  if (nextIndex !== panelIndex) {
+    panelIndex = nextIndex;
+    updatePanelNavigation();
+  }
+}
+function bindPanelPointerDrag() {
+  panelTrack.addEventListener("dragstart", (event) => event.preventDefault());
+  panelTrack.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary || event.button !== 0 || event.pointerType === "touch") return;
+    panelPointerDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      scrollLeft: panelTrack.scrollLeft,
+      moved: false
+    };
+  });
+  panelTrack.addEventListener("pointermove", (event) => {
+    if (!panelPointerDrag || event.pointerId !== panelPointerDrag.pointerId) return;
+    const deltaX = event.clientX - panelPointerDrag.startX;
+    if (!panelPointerDrag.moved && Math.abs(deltaX) < GALLERY_DRAG_THRESHOLD) return;
+    if (!panelPointerDrag.moved) {
+      panelPointerDrag.moved = true;
+      panelTrack.classList.add("is-pointer-dragging");
+      try {
+        panelTrack.setPointerCapture(event.pointerId);
+      } catch (error) {
+        setRuntimeStatus("lastError", "panel pointer capture fallback: ".concat(error.message));
+      }
+    }
+    event.preventDefault();
+    panelTrack.scrollLeft = panelPointerDrag.scrollLeft - deltaX;
+  }, { passive: false });
+  const finishPanelDrag = (event) => {
+    if (!panelPointerDrag || event && event.pointerId !== panelPointerDrag.pointerId) return;
+    panelPointerDrag = null;
+    panelTrack.classList.remove("is-pointer-dragging");
+    goToPanel(Math.round(panelTrack.scrollLeft / Math.max(1, panelTrack.clientWidth)));
+  };
+  window.addEventListener("pointerup", finishPanelDrag);
+  window.addEventListener("pointercancel", finishPanelDrag);
+  window.addEventListener("blur", () => finishPanelDrag());
+}
 function applyLanguage(language) {
   currentLanguage = language === "ja" ? "ja" : "ko";
   const ui = copy();
@@ -2069,9 +2247,17 @@ function applyLanguage(language) {
     button.setAttribute("aria-selected", String(active));
     button.tabIndex = active ? 0 : -1;
   });
+  panelLanguageButtons.forEach((button) => {
+    const active = button.dataset.panelLanguage === currentLanguage;
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
   document.querySelector(".map-panel").setAttribute("aria-label", ui.mapPanelLabel);
   document.querySelector("#hero-title").textContent = ui.heroTitle;
   document.querySelector("#hero-subtitle").textContent = ui.heroSubtitle;
+  panelEntry.setAttribute("aria-label", ui.panelEntryLabel);
+  document.querySelector("#panel-entry-title").textContent = ui.panelEntryTitle;
+  document.querySelector("#panel-entry-description").textContent = ui.panelEntryDescription;
   branchSwitcher.setAttribute("aria-label", ui.branchSwitcherLabel);
   document.querySelector("#map-title").textContent = ui.mapTitle;
   document.querySelector("#map-desc").textContent = ui.mapDescription;
@@ -2100,6 +2286,23 @@ function applyLanguage(language) {
   lightboxPrevious.setAttribute("aria-label", ui.previousPhoto);
   lightboxNext.setAttribute("aria-label", ui.nextPhoto);
   lightboxError.textContent = ui.lightboxError;
+  panelClose.setAttribute("aria-label", ui.panelCloseLabel);
+  document.querySelector("#panel-close-label").textContent = ui.panelClose;
+  document.querySelector("#panel-viewer-kicker").textContent = ui.panelViewerKicker;
+  document.querySelector("#panel-viewer-title").textContent = ui.panelViewerTitle;
+  document.querySelector("#panel-viewer-description").textContent = ui.panelViewerDescription;
+  document.querySelector(".panel-language-tabs").setAttribute("aria-label", ui.languageLabel);
+  panelPrevious.setAttribute("aria-label", ui.panelPrevious);
+  panelNext.setAttribute("aria-label", ui.panelNext);
+  panelPagination.setAttribute("aria-label", ui.panelSelectionLabel);
+  document.querySelector("#panel-hint").textContent = ui.panelHint;
+  panelCaptions.forEach((caption, index) => {
+    caption.textContent = ui["panelTitle".concat(index + 1)];
+  });
+  panelPageButtons.forEach((button, index) => {
+    button.setAttribute("aria-label", formatCopy(ui.panelGoTo, { number: index + 1 }));
+  });
+  updatePanelNavigation();
   BRANCH_KEYS.forEach((branchKey) => {
     const branch = BRANCHES[branchKey];
     const name = branchName(branch);
@@ -2228,6 +2431,7 @@ function bindGalleryPointerDragScroll() {
 }
 function bindEvents() {
   bindGalleryPointerDragScroll();
+  bindPanelPointerDrag();
   languageButtons.forEach((button, index) => {
     button.addEventListener("click", () => applyLanguage(button.dataset.language));
     button.addEventListener("keydown", (event) => {
@@ -2236,6 +2440,17 @@ function bindEvents() {
       const offset = event.key === "ArrowRight" ? 1 : -1;
       const next = languageButtons[(index + offset + languageButtons.length) % languageButtons.length];
       applyLanguage(next.dataset.language);
+      next.focus();
+    });
+  });
+  panelLanguageButtons.forEach((button, index) => {
+    button.addEventListener("click", () => applyLanguage(button.dataset.panelLanguage));
+    button.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      const next = panelLanguageButtons[(index + offset + panelLanguageButtons.length) % panelLanguageButtons.length];
+      applyLanguage(next.dataset.panelLanguage);
       next.focus();
     });
   });
@@ -2271,6 +2486,37 @@ function bindEvents() {
     });
   });
   backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));
+  panelEntry.addEventListener("click", () => openPanelViewer(panelEntry));
+  panelClose.addEventListener("click", () => closePanelViewer());
+  panelPrevious.addEventListener("click", () => goToPanel(panelIndex - 1));
+  panelNext.addEventListener("click", () => goToPanel(panelIndex + 1));
+  panelPageButtons.forEach((button) => {
+    button.addEventListener("click", () => goToPanel(Number(button.dataset.panelGo)));
+  });
+  panelTrack.addEventListener("scroll", () => {
+    if (panelScrollFrame) return;
+    panelScrollFrame = window.requestAnimationFrame(syncPanelIndexFromScroll);
+  }, { passive: true });
+  panelTrack.addEventListener("keydown", (event) => {
+    let nextIndex = null;
+    if (event.key === "ArrowLeft") nextIndex = panelIndex - 1;
+    if (event.key === "ArrowRight") nextIndex = panelIndex + 1;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = panelSlides.length - 1;
+    if (nextIndex !== null) {
+      event.preventDefault();
+      goToPanel(nextIndex);
+    }
+  });
+  window.addEventListener("resize", () => {
+    window.clearTimeout(panelResizeTimer);
+    panelResizeTimer = window.setTimeout(() => {
+      if (!panelExhibition.hidden) {
+        updatePanelLayout();
+        goToPanel(panelIndex, { instant: true });
+      }
+    }, 120);
+  });
   introductionToggle.addEventListener("click", () => {
     setIntroductionCollapsed(!isIntroductionCollapsed);
   });
@@ -2295,7 +2541,13 @@ function bindEvents() {
     lightboxError.hidden = false;
   });
   document.addEventListener("keydown", (event) => {
-    if (!dialogController.isOpen()) return;
+    if (!dialogController.isOpen()) {
+      if (!panelExhibition.hidden && event.key === "Escape") {
+        event.preventDefault();
+        closePanelViewer();
+      }
+      return;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       dialogController.close();

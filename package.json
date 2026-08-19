@@ -8,6 +8,7 @@
     "intro-map": "node scripts/generate-intro-map.mjs",
     "assets": "node scripts/generate-gallery-manifest.mjs",
     "thumbnails": "node scripts/generate-gallery-thumbnails.mjs",
+    "panels:import": "node scripts/import-panel.mjs",
     "assets:drive": "node scripts/import-drive-gallery.mjs",
     "dev": "node scripts/generate-map-data.mjs && node scripts/generate-intro-map.mjs && node scripts/generate-gallery-thumbnails.mjs && node scripts/generate-gallery-manifest.mjs && node scripts/dev-server.mjs",
     "build": "node scripts/build.mjs",

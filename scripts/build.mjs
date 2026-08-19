@@ -49,13 +49,17 @@ await build({
   sourcemap: false
 });
 
-const cacheVersion = createHash("sha256")
+const cacheHash = createHash("sha256")
   .update(html)
   .update(await fs.readFile(path.join(dist, "src", "app.js")))
   .update(await fs.readFile(path.join(dist, "src", "styles.css")))
-  .update(await fs.readFile(path.join(dist, "data", "regions.js")))
-  .digest("hex")
-  .slice(0, 12);
+  .update(await fs.readFile(path.join(dist, "data", "regions.js")));
+const panelFiles = await listFiles(path.join(dist, "assets", "panels"), "assets/panels");
+const fontFiles = await listFiles(path.join(dist, "assets", "fonts"), "assets/fonts");
+for (const filename of [...panelFiles, ...fontFiles].sort()) {
+  cacheHash.update(filename).update(await fs.readFile(path.join(dist, filename)));
+}
+const cacheVersion = cacheHash.digest("hex").slice(0, 12);
 html = html
   .replace('href="./src/styles.css"', `href="./src/styles.css?v=${cacheVersion}"`)
   .replace('src="./src/app.js"', `src="./src/app.js?v=${cacheVersion}"`);
@@ -68,7 +72,7 @@ const cacheCandidates = [
   "data/regions.js",
   "assets/gallery-manifest.json"
 ];
-for (const directory of ["assets/intro", "fixtures/full"]) {
+for (const directory of ["assets/intro", "assets/fonts", "assets/panels", "fixtures/full"]) {
   const absolute = path.join(dist, directory);
   try {
     const files = await listFiles(absolute, directory);

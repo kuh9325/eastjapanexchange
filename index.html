@@ -71,6 +71,14 @@
             </div>
             <h1 id="hero-title">마음과 마음을 잇는 청년의 발자취</h1>
             <p class="subtitle" id="hero-subtitle">지도에서 방면을 선택해 활동의 순간을 만나보세요.</p>
+            <button class="panel-entry" id="panel-entry" type="button" aria-label="전시 패널 3장 관람하기">
+              <span class="panel-entry-pages" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="panel-entry-copy">
+                <strong id="panel-entry-title">전시 패널 관람</strong>
+                <small id="panel-entry-description">교류의 역사와 사제보은의 도전 · 총 3장</small>
+              </span>
+              <span class="panel-entry-arrow" aria-hidden="true">→</span>
+            </button>
           </header>
 
           <div class="map-shell">
@@ -153,6 +161,212 @@
             </section>
           </div>
         </section>
+      </section>
+
+      <section class="panel-exhibition" id="panel-exhibition" aria-labelledby="panel-viewer-title" aria-hidden="true" hidden>
+        <header class="panel-viewer-header">
+          <button class="panel-close" id="panel-close" type="button" aria-label="활동사진 화면으로 돌아가기">
+            <span aria-hidden="true">←</span>
+            <span id="panel-close-label">활동사진</span>
+          </button>
+          <div class="panel-viewer-heading">
+            <span class="panel-viewer-kicker" id="panel-viewer-kicker">전시 패널</span>
+            <h2 id="panel-viewer-title">일본과 충남·충북·대전, 교류의 이야기</h2>
+            <p id="panel-viewer-description">좌우로 넘기며 세 장의 패널을 관람해 보세요.</p>
+          </div>
+          <div class="panel-language-tabs" role="tablist" aria-label="표시 언어">
+            <button type="button" role="tab" data-panel-language="ko" aria-selected="true">한국어</button>
+            <button type="button" role="tab" data-panel-language="ja" aria-selected="false" tabindex="-1">日本語</button>
+          </div>
+        </header>
+
+        <div class="panel-viewer-body">
+          <button class="panel-nav previous" id="panel-previous" type="button" aria-label="이전 패널">‹</button>
+          <div class="panel-track" id="panel-track" tabindex="0">
+            <article class="panel-slide" data-panel-index="0" aria-labelledby="panel-slide-title-1">
+              <figure class="panel-sheet">
+                <div class="panel-canvas panel-origin">
+                  <span class="panel-hanging-ornament" aria-hidden="true"></span>
+                  <span class="panel-cloud panel-cloud-top" aria-hidden="true"></span>
+                  <header class="panel-page-title">
+                    <h3 lang="ja">日本と 忠南、忠北、大田<br /><strong>交流の始まり</strong></h3>
+                    <p lang="ko">일본과 충남·충북·대전 교류의 시작</p>
+                  </header>
+
+                  <section class="panel-origin-prologue">
+                    <div class="panel-bilingual-lines">
+                      <p lang="ja">伸一はいつも韓国は日本に「文化大恩の国」であり、</p>
+                      <small lang="ko">신이치는 언제나 한국은 일본에게 ‘문화 대은의 나라’이고</small>
+                      <p lang="ja">その恩に報いるためにも幸福と平和の大哲理を</p>
+                      <small lang="ko">그 은혜에 보답하기 위해서라도 행복과 평화의 대철리를</small>
+                      <p lang="ja">伝えなければならないと考えていた。</p>
+                      <small lang="ko">전해야 한다고 생각하고 있었다.</small>
+                      <p lang="ja">これらの絶対的な恵みの中で最大“大恩”がまさに</p>
+                      <small lang="ko">이러한 절대적인 은혜 중에서도 가장 큰 대은(大恩)이 바로</small>
+                      <p lang="ja">仏教を伝来してくれたことだ。</p>
+                      <small lang="ko">불교를 전래해 준 일이다.</small>
+                    </div>
+                    <div class="panel-omission"><span lang="ja">- 中略 -</span><small lang="ko">중략</small></div>
+                  </section>
+
+                  <section class="panel-scripture-quotes" aria-label="어서 인용문">
+                    <blockquote>
+                      <p lang="ja">「百済国より経・論・僧等をわたすのみならず金銅の教主釈尊を渡し奉る」</p>
+                      <small lang="ko">“백제국으로부터 경(經)·논(論)·승(僧) 등을 건네 주었을 뿐더러 금동(金銅)의 교주석존을 건네 주었다.”</small>
+                      <cite>御書997頁 · 어서 997쪽</cite>
+                    </blockquote>
+                    <blockquote>
+                      <p lang="ja">「百済国と申す国より聖明皇・日本国に仏法をわたす」</p>
+                      <small lang="ko">“백제국이라고 하는 나라로부터 성명왕(聖明皇)이 일본국에 불법을 전하니”</small>
+                      <cite>御書1309頁 · 어서 1309쪽</cite>
+                    </blockquote>
+                  </section>
+
+                  <section class="panel-origin-conclusion">
+                    <img src="./assets/panels/panel-map.webp" alt="백제에서 일본으로 이어지는 문화 교류 지도" loading="lazy" decoding="async" draggable="false" />
+                    <div class="panel-conclusion-copy">
+                      <p lang="ja">韓国はまさに文化先進の土地だった。</p>
+                      <small lang="ko">한국은 그야말로 문화 선진의 땅이었다.</small>
+                      <p lang="ja">まさにこの文化先進の地で釈尊の仏法が日本に伝来され、</p>
+                      <small lang="ko">바로 이 문화 선진의 땅에서 석존의 불법이 일본에 전래되어</small>
+                      <p lang="ja">今日、仏法西還の時代を迎えたのだ。</p>
+                      <small lang="ko">오늘날 불법서환(佛法西還)의 시대를 맞이한 것이다.</small>
+                      <cite>＜新人間革命第8巻 激流の章＞<br /><span lang="ko">＜신인간혁명 제8권 격류의 장＞</span></cite>
+                    </div>
+                  </section>
+                  <span class="panel-mountain-ornament" aria-hidden="true"></span>
+                </div>
+                <figcaption id="panel-slide-title-1">교류의 시작</figcaption>
+              </figure>
+            </article>
+            <article class="panel-slide" data-panel-index="1" aria-labelledby="panel-slide-title-2">
+              <figure class="panel-sheet">
+                <div class="panel-canvas panel-figures">
+                  <span class="panel-pine-ornament" aria-hidden="true"></span>
+                  <span class="panel-cloud panel-cloud-top" aria-hidden="true"></span>
+                  <header class="panel-page-title">
+                    <h3 lang="ja">先生のスピーチ中の偉人</h3>
+                    <p lang="ko">선생님 스피치 속 위인</p>
+                  </header>
+
+                  <section class="panel-person panel-person-yu">
+                    <figure class="panel-person-portrait">
+                      <img src="./assets/panels/yu-gwan-sun.webp" alt="유관순 열사 사진" loading="lazy" decoding="async" draggable="false" />
+                      <figcaption><strong lang="ja">柳寛順</strong><span lang="ko">유관순</span><em>（ユ・グァンスン）</em><small>1902.12.16. - 1920.09.28.</small></figcaption>
+                    </figure>
+                    <div class="panel-person-message">
+                      <div class="panel-person-lead">
+                        <p lang="ja">「独立万歳！」叫びながら獄中闘士選んだ青春。<br />そして永遠に残る命の軌跡！</p>
+                        <small lang="ko">“독립만세!” 외치면서 옥중 투사 선열한 청춘.<br />그리고 영원히 남을 생명의 궤적!</small>
+                      </div>
+                      <blockquote>
+                        <p lang="ja">人間としての偉大さは時代を超越して輝いていく。<br />だから皆さんも是非「強い心、強い信念」として、<br />自分と社会の「希望の朝」に向かって<br />力強く生きていってほしい。</p>
+                        <small lang="ko">인간으로서의 위대함은 시대를 초월해 빛나간다.<br />그러므로 여러분도 부디 ‘강한 마음, 강한 신념’으로써,<br />자신과 사회의 ‘희망의 아침’을 향해<br />힘차게 살아 나가 주기 바란다.</small>
+                      </blockquote>
+                      <cite>＜1990年10月20日 関西創価学院第9回健康祭＞<br /><span lang="ko">＜1990년 10월 20일, 간사이창가학원 제9회 건강제＞</span></cite>
+                    </div>
+                  </section>
+
+                  <section class="panel-person panel-person-kim">
+                    <div class="panel-person-message">
+                      <div class="panel-person-lead">
+                        <p lang="ja">“必死の一人は萬軍に勝つ”<br />勝敗は心がどうかで決定！</p>
+                        <small lang="ko">“필사의 한 사람은 만군(萬軍)을 이긴다”<br />승패는 마음이 어떤가로 결정!</small>
+                      </div>
+                      <blockquote>
+                        <p lang="ja">仏法の真髄も「人の心」だ。<br />「心だけが重要だから」（御書1192頁）と<br />大聖人は明言しておられる。<br />みんなの心が別々に孤立してしまうと力は出ない。<br />すべての人の心を合わせると力は乗算になり数倍になる。</p>
+                        <small lang="ko">불법의 진수도 ‘사람의 마음’이다.<br />“마음만이 중요하니라”(어서 1192쪽)고<br />대성인은 명언하고 계신다.<br />모든 사람의 마음이 따로따로 고립되고 만다면 힘은 나오지 않는다.<br />모든 사람의 마음을 합하면 힘은 ‘곱셈’이 되어 몇 배가 된다.</small>
+                      </blockquote>
+                      <cite>＜1998年1月18日 全国青年部幹部会＞<br /><span lang="ko">＜1998년 1월 18일, 전국 청년부간부회＞</span></cite>
+                    </div>
+                    <figure class="panel-person-portrait">
+                      <img src="./assets/panels/kim-yu-sin.webp" alt="김유신 장군 영정" loading="lazy" decoding="async" draggable="false" />
+                      <figcaption><span lang="ko">김유신</span><strong lang="ja">金庾信</strong><em>（キム・ユシン）</em><small>595. - 673.</small></figcaption>
+                    </figure>
+                  </section>
+                  <span class="panel-mountain-ornament" aria-hidden="true"></span>
+                </div>
+                <figcaption id="panel-slide-title-2">선생님 스피치 속 위인</figcaption>
+              </figure>
+            </article>
+            <article class="panel-slide" data-panel-index="2" aria-labelledby="panel-slide-title-3">
+              <figure class="panel-sheet">
+                <div class="panel-canvas panel-honors">
+                  <span class="panel-cloud panel-cloud-top" aria-hidden="true"></span>
+                  <span class="panel-hanging-ornament" aria-hidden="true"></span>
+                  <header class="panel-page-title">
+                    <h3 lang="ja">師弟報恩の挑戦</h3>
+                    <p lang="ko">사제보은의 도전</p>
+                  </header>
+
+                  <section class="panel-award-summary" aria-label="주요 현창 수량">
+                    <div class="panel-medal"><strong lang="ja">感謝牌<br />2個</strong><small lang="ko">감사패 2개</small></div>
+                    <div class="panel-medal"><strong lang="ja">特別顕彰<br />21個</strong><small lang="ko">특별현창 21개</small></div>
+                    <div class="panel-medal"><strong lang="ja">名誉市民・<br />道民・郡民証<br />8個</strong><small lang="ko">명예시민·도민·군민증 8개</small></div>
+                    <div class="panel-medal"><strong lang="ja">名誉教授<br />及び博士<br />5個</strong><small lang="ko">명예교수·박사 5개</small></div>
+                  </section>
+
+                  <section class="panel-featured-awards">
+                    <div class="panel-award-photos">
+                      <img src="./assets/panels/award-chungbuk.webp" alt="충북방면 진천 명예군민증" loading="lazy" decoding="async" draggable="false" />
+                      <img src="./assets/panels/award-chungnam.webp" alt="충남방면 충청남도 현창패" loading="lazy" decoding="async" draggable="false" />
+                      <img src="./assets/panels/award-daejeon.webp" alt="대전방면 대덕구 특별현창패" loading="lazy" decoding="async" draggable="false" />
+                    </div>
+                    <ul>
+                      <li lang="ja">忠北方面 鎮川名誉郡民証、特別顕彰 <span>1998.1.2.</span></li>
+                      <li lang="ja">忠南方面 忠清南道顕彰 <span>2012.5.2.</span></li>
+                      <li lang="ja">大田方面 大徳区特別顕彰 <span>2013.5.16.</span></li>
+                    </ul>
+                  </section>
+
+                  <section class="panel-achievement-list" aria-label="지역별 현창 내역">
+                    <div><strong lang="ja">感謝牌1個</strong><span>（公州市）</span><small lang="ko">감사패 1개</small></div>
+                    <div><strong lang="ja">夫婦特別顕彰6個</strong><span>（道議会、扶余郡、天安市議員、天安市、礼山郡、公州市）</span><small lang="ko">부부 특별현창 6개</small></div>
+                    <div><strong lang="ja">会長特別顕彰1個</strong><span>（扶余郡議会）</span><small lang="ko">회장 특별현창 1개</small></div>
+                    <div><strong lang="ja">名誉郡民証2個</strong><span>（扶余郡、泰安郡）</span><small lang="ko">명예군민증 2개</small></div>
+                    <div><strong lang="ja">夫婦名誉市民1個</strong><span>（天安市）</span><small lang="ko">부부 명예시민 1개</small></div>
+                    <div><strong lang="ja">名誉経営学博士1個</strong><span>（建陽大学）</span><small lang="ko">명예경영학박사 1개</small></div>
+                    <div><strong lang="ja">感謝牌1個</strong><span>（大田広域市）</span><small lang="ko">감사패 1개</small></div>
+                    <div><strong lang="ja">夫婦特別顕彰1個</strong><span>（中区議会）</span><small lang="ko">부부 특별현창 1개</small></div>
+                    <div><strong lang="ja">会長特別顕彰1個</strong><span>（大田・世宗市教育庁）</span><small lang="ko">회장 특별현창 1개</small></div>
+                    <div><strong lang="ja">夫婦名誉区民1個</strong><span>（大徳区）</span><small lang="ko">부부 명예구민 1개</small></div>
+                    <div><strong lang="ja">名誉道民証1個</strong><span>（忠清北道）</span><small lang="ko">명예도민증 1개</small></div>
+                    <div><strong lang="ja">名誉市民証1個</strong><span>（忠州市）</span><small lang="ko">명예시민증 1개</small></div>
+                    <div><strong lang="ja">夫婦名誉郡民証1個</strong><span>（陰城郡）</span><small lang="ko">부부 명예군민증 1개</small></div>
+                    <div><strong lang="ja">特別顕彰5個</strong><span>（陰城郡、清原郡、忠州市、世宗市教育庁、世宗市）</span><small lang="ko">특별현창 5개</small></div>
+                    <div><strong lang="ja">夫婦特別顕彰3個</strong><span>（忠州市議会、道教育庁、清州市議会）</span><small lang="ko">부부 특별현창 3개</small></div>
+                    <div><strong lang="ja">SGI会長顕彰1個</strong><span>（忠清北道）</span><small lang="ko">SGI 회장 현창 1개</small></div>
+                    <div><strong lang="ja">名誉教授</strong><span>（忠清大学）</span><small lang="ko">명예교수</small></div>
+                    <div><strong lang="ja">名誉経営学博士</strong><span>（忠州大学）</span><small lang="ko">명예경영학박사</small></div>
+                    <div><strong lang="ja">名誉教育学博士</strong><span>（忠北大学）</span><small lang="ko">명예교육학박사</small></div>
+                    <div><strong lang="ja">奥様名誉席座教授</strong><span>（忠州大学）</span><small lang="ko">사모님 명예석좌교수</small></div>
+                  </section>
+
+                  <section class="panel-honors-closing">
+                    <p class="panel-region-call" lang="ja">忠南 <span lang="ko">충남</span>・忠北 <span lang="ko">충북</span>・大田 <span lang="ko">대전</span></p>
+                    <p class="panel-hometown" lang="ja">先生の故郷 大田 <s>（区）</s></p>
+                    <small lang="ko">스승의 고향 ‘오타’</small>
+                    <p class="panel-vow" lang="ja">先生の故郷大田、大田！忠南・忠北・大田広域の青年部は！<br />いつも師弟不二の心で誇り高く勝利いたします！</p>
+                    <small lang="ko">“스승의 고향 오타, 대전! 충남·충북·대전 광역의 청년부는!<br />언제나 사제불이의 마음을 긍지 드높이 승리하겠습니다!”</small>
+                  </section>
+                  <span class="panel-mountain-ornament" aria-hidden="true"></span>
+                </div>
+                <figcaption id="panel-slide-title-3">사제보은의 도전</figcaption>
+              </figure>
+            </article>
+          </div>
+          <button class="panel-nav next" id="panel-next" type="button" aria-label="다음 패널">›</button>
+        </div>
+
+        <footer class="panel-viewer-footer">
+          <div class="panel-pagination" id="panel-pagination" role="tablist" aria-label="패널 선택">
+            <button type="button" role="tab" data-panel-go="0" aria-label="첫 번째 패널" aria-selected="true"></button>
+            <button type="button" role="tab" data-panel-go="1" aria-label="두 번째 패널" aria-selected="false" tabindex="-1"></button>
+            <button type="button" role="tab" data-panel-go="2" aria-label="세 번째 패널" aria-selected="false" tabindex="-1"></button>
+          </div>
+          <p id="panel-hint">화면을 좌우로 밀거나 화살표를 눌러 이동할 수 있습니다.</p>
+          <output id="panel-counter" aria-live="polite">1 / 3</output>
+        </footer>
       </section>
     </main>
 

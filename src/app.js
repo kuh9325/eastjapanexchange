@@ -42,6 +42,7 @@ const debugMode = query.get("debug") === "1";
 let currentLanguage = query.get("lang") === "ja" ? "ja" : "ko";
 
 const app = document.querySelector("#app");
+const stage = document.querySelector(".stage");
 const branchSwitcher = document.querySelector("#branch-switcher");
 const koreaMap = document.querySelector(".korea-map");
 const countryContextLayer = document.querySelector("#country-context-layer");
@@ -77,6 +78,20 @@ const lightboxNext = document.querySelector(".lightbox-nav.next");
 const lightboxClose = document.querySelector(".lightbox-close");
 const mapAttribution = document.querySelector("#map-attribution");
 const languageButtons = Array.from(document.querySelectorAll("[data-language]"));
+const panelEntry = document.querySelector("#panel-entry");
+const panelExhibition = document.querySelector("#panel-exhibition");
+const panelClose = document.querySelector("#panel-close");
+const panelTrack = document.querySelector("#panel-track");
+const panelSlides = Array.from(document.querySelectorAll(".panel-slide"));
+const panelSheets = Array.from(document.querySelectorAll(".panel-slide > .panel-sheet"));
+const panelCanvases = Array.from(document.querySelectorAll(".panel-canvas"));
+const panelCaptions = Array.from(document.querySelectorAll(".panel-slide > .panel-sheet > figcaption"));
+const panelPrevious = document.querySelector("#panel-previous");
+const panelNext = document.querySelector("#panel-next");
+const panelPagination = document.querySelector("#panel-pagination");
+const panelPageButtons = Array.from(document.querySelectorAll("[data-panel-go]"));
+const panelLanguageButtons = Array.from(document.querySelectorAll("[data-panel-language]"));
+const panelCounter = document.querySelector("#panel-counter");
 
 let manifest = { photos: [] };
 let content = EXHIBITION_CONTENT;
@@ -92,8 +107,15 @@ let lightboxIndex = 0;
 let lightboxOpener = null;
 let galleryPointerDrag = null;
 let galleryDragClickBlockUntil = 0;
+let panelIndex = 0;
+let panelOpener = null;
+let panelScrollFrame = 0;
+let panelPointerDrag = null;
+let panelResizeTimer = 0;
 
 const GALLERY_DRAG_THRESHOLD = 8;
+const PANEL_CANVAS_WIDTH = 900;
+const PANEL_CANVAS_HEIGHT = 1246;
 
 const copy = () => UI_COPY[currentLanguage];
 const localizedValue = (source, key) => {
@@ -650,6 +672,129 @@ function clearSelection(options) {
   }
 }
 
+function updatePanelNavigation() {
+  const ui = copy();
+  panelPrevious.disabled = panelIndex === 0;
+  panelNext.disabled = panelIndex === panelSlides.length - 1;
+  panelCounter.textContent = formatCopy(ui.panelPageLabel, {
+    current: panelIndex + 1,
+    total: panelSlides.length
+  });
+  panelPageButtons.forEach((button, index) => {
+    const active = index === panelIndex;
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+}
+
+function updatePanelLayout() {
+  const landscape = window.matchMedia("(orientation: landscape)").matches;
+  panelSlides.forEach((slide, index) => {
+    const sheet = panelSheets[index];
+    const canvas = panelCanvases[index];
+    if (!sheet || !canvas) return;
+    const availableWidth = Math.max(280, slide.clientWidth - (landscape ? 164 : 16));
+    const availableHeight = Math.max(360, slide.clientHeight - (landscape ? 18 : 26));
+    const widthScale = availableWidth / PANEL_CANVAS_WIDTH;
+    const heightScale = availableHeight / PANEL_CANVAS_HEIGHT;
+    const scale = landscape ? Math.min(widthScale, heightScale) : widthScale;
+    sheet.style.width = `${PANEL_CANVAS_WIDTH * scale}px`;
+    sheet.style.height = `${PANEL_CANVAS_HEIGHT * scale}px`;
+    canvas.style.transform = `scale(${scale})`;
+  });
+}
+
+function goToPanel(index, options) {
+  const config = options || {};
+  panelIndex = Math.max(0, Math.min(panelSlides.length - 1, index));
+  const left = panelIndex * panelTrack.clientWidth;
+  if (config.instant) {
+    panelTrack.scrollLeft = left;
+  } else {
+    try {
+      panelTrack.scrollTo({ left, behavior: "smooth" });
+    } catch {
+      panelTrack.scrollLeft = left;
+    }
+  }
+  updatePanelNavigation();
+}
+
+function openPanelViewer(opener) {
+  panelOpener = opener || document.activeElement;
+  stage.hidden = true;
+  panelExhibition.hidden = false;
+  panelExhibition.setAttribute("aria-hidden", "false");
+  app.classList.add("panel-mode");
+  document.body.classList.add("panel-lock");
+  window.requestAnimationFrame(() => {
+    updatePanelLayout();
+    goToPanel(panelIndex, { instant: true });
+    panelClose.focus();
+  });
+}
+
+function closePanelViewer(options) {
+  if (panelExhibition.hidden) return;
+  const config = options || {};
+  panelExhibition.hidden = true;
+  panelExhibition.setAttribute("aria-hidden", "true");
+  stage.hidden = false;
+  app.classList.remove("panel-mode");
+  document.body.classList.remove("panel-lock");
+  if (config.restoreFocus !== false && panelOpener) panelOpener.focus();
+  panelOpener = null;
+}
+
+function syncPanelIndexFromScroll() {
+  panelScrollFrame = 0;
+  const width = panelTrack.clientWidth;
+  if (!width) return;
+  const nextIndex = Math.max(0, Math.min(panelSlides.length - 1, Math.round(panelTrack.scrollLeft / width)));
+  if (nextIndex !== panelIndex) {
+    panelIndex = nextIndex;
+    updatePanelNavigation();
+  }
+}
+
+function bindPanelPointerDrag() {
+  panelTrack.addEventListener("dragstart", (event) => event.preventDefault());
+  panelTrack.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary || event.button !== 0 || event.pointerType === "touch") return;
+    panelPointerDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      scrollLeft: panelTrack.scrollLeft,
+      moved: false
+    };
+  });
+  panelTrack.addEventListener("pointermove", (event) => {
+    if (!panelPointerDrag || event.pointerId !== panelPointerDrag.pointerId) return;
+    const deltaX = event.clientX - panelPointerDrag.startX;
+    if (!panelPointerDrag.moved && Math.abs(deltaX) < GALLERY_DRAG_THRESHOLD) return;
+    if (!panelPointerDrag.moved) {
+      panelPointerDrag.moved = true;
+      panelTrack.classList.add("is-pointer-dragging");
+      try {
+        panelTrack.setPointerCapture(event.pointerId);
+      } catch (error) {
+        setRuntimeStatus("lastError", `panel pointer capture fallback: ${error.message}`);
+      }
+    }
+    event.preventDefault();
+    panelTrack.scrollLeft = panelPointerDrag.scrollLeft - deltaX;
+  }, { passive: false });
+  const finishPanelDrag = (event) => {
+    if (!panelPointerDrag || (event && event.pointerId !== panelPointerDrag.pointerId)) return;
+    panelPointerDrag = null;
+    panelTrack.classList.remove("is-pointer-dragging");
+    goToPanel(Math.round(panelTrack.scrollLeft / Math.max(1, panelTrack.clientWidth)));
+  };
+  window.addEventListener("pointerup", finishPanelDrag);
+  window.addEventListener("pointercancel", finishPanelDrag);
+  window.addEventListener("blur", () => finishPanelDrag());
+}
+
 function applyLanguage(language) {
   currentLanguage = language === "ja" ? "ja" : "ko";
   const ui = copy();
@@ -663,10 +808,18 @@ function applyLanguage(language) {
     button.setAttribute("aria-selected", String(active));
     button.tabIndex = active ? 0 : -1;
   });
+  panelLanguageButtons.forEach((button) => {
+    const active = button.dataset.panelLanguage === currentLanguage;
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
 
   document.querySelector(".map-panel").setAttribute("aria-label", ui.mapPanelLabel);
   document.querySelector("#hero-title").textContent = ui.heroTitle;
   document.querySelector("#hero-subtitle").textContent = ui.heroSubtitle;
+  panelEntry.setAttribute("aria-label", ui.panelEntryLabel);
+  document.querySelector("#panel-entry-title").textContent = ui.panelEntryTitle;
+  document.querySelector("#panel-entry-description").textContent = ui.panelEntryDescription;
   branchSwitcher.setAttribute("aria-label", ui.branchSwitcherLabel);
   document.querySelector("#map-title").textContent = ui.mapTitle;
   document.querySelector("#map-desc").textContent = ui.mapDescription;
@@ -695,6 +848,23 @@ function applyLanguage(language) {
   lightboxPrevious.setAttribute("aria-label", ui.previousPhoto);
   lightboxNext.setAttribute("aria-label", ui.nextPhoto);
   lightboxError.textContent = ui.lightboxError;
+  panelClose.setAttribute("aria-label", ui.panelCloseLabel);
+  document.querySelector("#panel-close-label").textContent = ui.panelClose;
+  document.querySelector("#panel-viewer-kicker").textContent = ui.panelViewerKicker;
+  document.querySelector("#panel-viewer-title").textContent = ui.panelViewerTitle;
+  document.querySelector("#panel-viewer-description").textContent = ui.panelViewerDescription;
+  document.querySelector(".panel-language-tabs").setAttribute("aria-label", ui.languageLabel);
+  panelPrevious.setAttribute("aria-label", ui.panelPrevious);
+  panelNext.setAttribute("aria-label", ui.panelNext);
+  panelPagination.setAttribute("aria-label", ui.panelSelectionLabel);
+  document.querySelector("#panel-hint").textContent = ui.panelHint;
+  panelCaptions.forEach((caption, index) => {
+    caption.textContent = ui[`panelTitle${index + 1}`];
+  });
+  panelPageButtons.forEach((button, index) => {
+    button.setAttribute("aria-label", formatCopy(ui.panelGoTo, { number: index + 1 }));
+  });
+  updatePanelNavigation();
 
   BRANCH_KEYS.forEach((branchKey) => {
     const branch = BRANCHES[branchKey];
@@ -836,6 +1006,7 @@ function bindGalleryPointerDragScroll() {
 
 function bindEvents() {
   bindGalleryPointerDragScroll();
+  bindPanelPointerDrag();
   languageButtons.forEach((button, index) => {
     button.addEventListener("click", () => applyLanguage(button.dataset.language));
     button.addEventListener("keydown", (event) => {
@@ -844,6 +1015,17 @@ function bindEvents() {
       const offset = event.key === "ArrowRight" ? 1 : -1;
       const next = languageButtons[(index + offset + languageButtons.length) % languageButtons.length];
       applyLanguage(next.dataset.language);
+      next.focus();
+    });
+  });
+  panelLanguageButtons.forEach((button, index) => {
+    button.addEventListener("click", () => applyLanguage(button.dataset.panelLanguage));
+    button.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      const next = panelLanguageButtons[(index + offset + panelLanguageButtons.length) % panelLanguageButtons.length];
+      applyLanguage(next.dataset.panelLanguage);
       next.focus();
     });
   });
@@ -879,6 +1061,37 @@ function bindEvents() {
     });
   });
   backButton.addEventListener("click", () => clearSelection({ restoreFocus: true }));
+  panelEntry.addEventListener("click", () => openPanelViewer(panelEntry));
+  panelClose.addEventListener("click", () => closePanelViewer());
+  panelPrevious.addEventListener("click", () => goToPanel(panelIndex - 1));
+  panelNext.addEventListener("click", () => goToPanel(panelIndex + 1));
+  panelPageButtons.forEach((button) => {
+    button.addEventListener("click", () => goToPanel(Number(button.dataset.panelGo)));
+  });
+  panelTrack.addEventListener("scroll", () => {
+    if (panelScrollFrame) return;
+    panelScrollFrame = window.requestAnimationFrame(syncPanelIndexFromScroll);
+  }, { passive: true });
+  panelTrack.addEventListener("keydown", (event) => {
+    let nextIndex = null;
+    if (event.key === "ArrowLeft") nextIndex = panelIndex - 1;
+    if (event.key === "ArrowRight") nextIndex = panelIndex + 1;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = panelSlides.length - 1;
+    if (nextIndex !== null) {
+      event.preventDefault();
+      goToPanel(nextIndex);
+    }
+  });
+  window.addEventListener("resize", () => {
+    window.clearTimeout(panelResizeTimer);
+    panelResizeTimer = window.setTimeout(() => {
+      if (!panelExhibition.hidden) {
+        updatePanelLayout();
+        goToPanel(panelIndex, { instant: true });
+      }
+    }, 120);
+  });
   introductionToggle.addEventListener("click", () => {
     setIntroductionCollapsed(!isIntroductionCollapsed);
   });
@@ -903,7 +1116,13 @@ function bindEvents() {
     lightboxError.hidden = false;
   });
   document.addEventListener("keydown", (event) => {
-    if (!dialogController.isOpen()) return;
+    if (!dialogController.isOpen()) {
+      if (!panelExhibition.hidden && event.key === "Escape") {
+        event.preventDefault();
+        closePanelViewer();
+      }
+      return;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       dialogController.close();

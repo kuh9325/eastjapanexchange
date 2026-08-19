@@ -1,0 +1,17 @@
+{
+  "source": "panel.pdf",
+  "mode": "html-css",
+  "pageCount": 3,
+  "assets": [
+    "panel-map.webp",
+    "yu-gwan-sun.webp",
+    "kim-yu-sin.webp",
+    "award-chungbuk.webp",
+    "award-chungnam.webp",
+    "award-daejeon.webp",
+    "award-medal.webp"
+  ],
+  "omitted": [
+    "QR code"
+  ]
+}
