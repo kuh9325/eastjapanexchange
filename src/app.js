@@ -92,6 +92,13 @@ const panelPagination = document.querySelector("#panel-pagination");
 const panelPageButtons = Array.from(document.querySelectorAll("[data-panel-go]"));
 const panelLanguageButtons = Array.from(document.querySelectorAll("[data-panel-language]"));
 const panelCounter = document.querySelector("#panel-counter");
+const panelAchievementButtons = Array.from(document.querySelectorAll(".panel-achievement-list button"));
+const panelAwardDialog = document.querySelector("#panel-award-dialog");
+const panelAwardDialogClose = document.querySelector("#panel-award-dialog-close");
+const panelAwardDialogKicker = document.querySelector("#panel-award-dialog-kicker");
+const panelAwardDialogTitle = document.querySelector("#panel-award-dialog-title");
+const panelAwardDialogPlace = document.querySelector("#panel-award-dialog-place");
+const panelAwardDialogTranslation = document.querySelector("#panel-award-dialog-translation");
 
 let manifest = { photos: [] };
 let content = EXHIBITION_CONTENT;
@@ -112,6 +119,9 @@ let panelOpener = null;
 let panelScrollFrame = 0;
 let panelPointerDrag = null;
 let panelResizeTimer = 0;
+let panelControlsLayoutTimer = 0;
+let panelTapBlockUntil = 0;
+let panelAwardOpener = null;
 
 const GALLERY_DRAG_THRESHOLD = 8;
 const PANEL_CANVAS_WIDTH = 900;
@@ -687,13 +697,25 @@ function updatePanelNavigation() {
   });
 }
 
+function usesThreePanelLayout() {
+  return window.matchMedia("(min-width: 1181px) and (orientation: landscape)").matches;
+}
+
+function setPanelControlsHidden(hidden) {
+  panelExhibition.classList.toggle("panel-controls-hidden", Boolean(hidden));
+  window.clearTimeout(panelControlsLayoutTimer);
+  window.requestAnimationFrame(() => window.requestAnimationFrame(updatePanelLayout));
+  panelControlsLayoutTimer = window.setTimeout(updatePanelLayout, 280);
+}
+
 function updatePanelLayout() {
   const landscape = window.matchMedia("(orientation: landscape)").matches;
+  const threePanelLayout = usesThreePanelLayout();
   panelSlides.forEach((slide, index) => {
     const sheet = panelSheets[index];
     const canvas = panelCanvases[index];
     if (!sheet || !canvas) return;
-    const availableWidth = Math.max(280, slide.clientWidth - (landscape ? 164 : 16));
+    const availableWidth = Math.max(280, slide.clientWidth - (threePanelLayout ? 12 : landscape ? 164 : 16));
     const availableHeight = Math.max(360, slide.clientHeight - (landscape ? 18 : 26));
     const widthScale = availableWidth / PANEL_CANVAS_WIDTH;
     const heightScale = availableHeight / PANEL_CANVAS_HEIGHT;
@@ -707,7 +729,9 @@ function updatePanelLayout() {
 function goToPanel(index, options) {
   const config = options || {};
   panelIndex = Math.max(0, Math.min(panelSlides.length - 1, index));
-  const left = panelIndex * panelTrack.clientWidth;
+  const step = panelSlides[0]?.clientWidth || panelTrack.clientWidth;
+  const maxScroll = Math.max(0, panelTrack.scrollWidth - panelTrack.clientWidth);
+  const left = Math.min(panelIndex * step, maxScroll);
   if (config.instant) {
     panelTrack.scrollLeft = left;
   } else {
@@ -722,6 +746,7 @@ function goToPanel(index, options) {
 
 function openPanelViewer(opener) {
   panelOpener = opener || document.activeElement;
+  setPanelControlsHidden(false);
   stage.hidden = true;
   panelExhibition.hidden = false;
   panelExhibition.setAttribute("aria-hidden", "false");
@@ -737,6 +762,8 @@ function openPanelViewer(opener) {
 function closePanelViewer(options) {
   if (panelExhibition.hidden) return;
   const config = options || {};
+  if (awardDialogController.isOpen()) awardDialogController.close();
+  setPanelControlsHidden(false);
   panelExhibition.hidden = true;
   panelExhibition.setAttribute("aria-hidden", "true");
   stage.hidden = false;
@@ -748,7 +775,7 @@ function closePanelViewer(options) {
 
 function syncPanelIndexFromScroll() {
   panelScrollFrame = 0;
-  const width = panelTrack.clientWidth;
+  const width = panelSlides[0]?.clientWidth || panelTrack.clientWidth;
   if (!width) return;
   const nextIndex = Math.max(0, Math.min(panelSlides.length - 1, Math.round(panelTrack.scrollLeft / width)));
   if (nextIndex !== panelIndex) {
@@ -760,9 +787,10 @@ function syncPanelIndexFromScroll() {
 function bindPanelPointerDrag() {
   panelTrack.addEventListener("dragstart", (event) => event.preventDefault());
   panelTrack.addEventListener("pointerdown", (event) => {
-    if (!event.isPrimary || event.button !== 0 || event.pointerType === "touch") return;
+    if (!event.isPrimary || event.button !== 0) return;
     panelPointerDrag = {
       pointerId: event.pointerId,
+      pointerType: event.pointerType,
       startX: event.clientX,
       scrollLeft: panelTrack.scrollLeft,
       moved: false
@@ -772,6 +800,10 @@ function bindPanelPointerDrag() {
     if (!panelPointerDrag || event.pointerId !== panelPointerDrag.pointerId) return;
     const deltaX = event.clientX - panelPointerDrag.startX;
     if (!panelPointerDrag.moved && Math.abs(deltaX) < GALLERY_DRAG_THRESHOLD) return;
+    if (panelPointerDrag.pointerType === "touch") {
+      panelPointerDrag.moved = true;
+      return;
+    }
     if (!panelPointerDrag.moved) {
       panelPointerDrag.moved = true;
       panelTrack.classList.add("is-pointer-dragging");
@@ -786,9 +818,11 @@ function bindPanelPointerDrag() {
   }, { passive: false });
   const finishPanelDrag = (event) => {
     if (!panelPointerDrag || (event && event.pointerId !== panelPointerDrag.pointerId)) return;
+    if (panelPointerDrag.moved) panelTapBlockUntil = Date.now() + 350;
+    const shouldSnap = panelPointerDrag.pointerType !== "touch";
     panelPointerDrag = null;
     panelTrack.classList.remove("is-pointer-dragging");
-    goToPanel(Math.round(panelTrack.scrollLeft / Math.max(1, panelTrack.clientWidth)));
+    if (shouldSnap) goToPanel(Math.round(panelTrack.scrollLeft / Math.max(1, panelSlides[0]?.clientWidth || panelTrack.clientWidth)));
   };
   window.addEventListener("pointerup", finishPanelDrag);
   window.addEventListener("pointercancel", finishPanelDrag);
@@ -864,6 +898,13 @@ function applyLanguage(language) {
   panelPageButtons.forEach((button, index) => {
     button.setAttribute("aria-label", formatCopy(ui.panelGoTo, { number: index + 1 }));
   });
+  panelAwardDialogKicker.textContent = ui.panelAwardDetail;
+  panelAwardDialogClose.setAttribute("aria-label", ui.panelAwardClose);
+  panelAchievementButtons.forEach((button) => {
+    button.setAttribute("aria-label", formatCopy(ui.panelAwardOpen, {
+      title: button.querySelector("strong")?.textContent || ""
+    }));
+  });
   updatePanelNavigation();
 
   BRANCH_KEYS.forEach((branchKey) => {
@@ -918,6 +959,21 @@ const dialogController = createDialogController(lightbox, () => {
   if (lightboxOpener) lightboxOpener.focus();
   lightboxOpener = null;
 });
+
+const awardDialogController = createDialogController(panelAwardDialog, () => {
+  if (panelAwardOpener) panelAwardOpener.focus();
+  panelAwardOpener = null;
+});
+
+function openAwardDetail(button) {
+  if (!button) return;
+  panelAwardOpener = button;
+  panelAwardDialogTitle.textContent = button.querySelector("strong")?.textContent || "";
+  panelAwardDialogPlace.textContent = button.querySelector("span")?.textContent || "";
+  panelAwardDialogTranslation.textContent = button.querySelector("small")?.textContent || "";
+  awardDialogController.open();
+  window.setTimeout(() => panelAwardDialogClose.focus(), 0);
+}
 
 function updateLightbox(index) {
   const item = lightboxItems[index];
@@ -1068,6 +1124,25 @@ function bindEvents() {
   panelPageButtons.forEach((button) => {
     button.addEventListener("click", () => goToPanel(Number(button.dataset.panelGo)));
   });
+  panelAchievementButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openAwardDetail(button);
+    });
+  });
+  panelAwardDialogClose.addEventListener("click", () => awardDialogController.close());
+  panelAwardDialog.addEventListener("click", (event) => {
+    if (event.target === panelAwardDialog) awardDialogController.close();
+  });
+  panelTrack.addEventListener("click", (event) => {
+    if (Date.now() < panelTapBlockUntil || !event.target.closest(".panel-sheet")) return;
+    const slide = event.target.closest(".panel-slide");
+    if (slide) {
+      panelIndex = Number(slide.dataset.panelIndex) || 0;
+      updatePanelNavigation();
+    }
+    setPanelControlsHidden(!panelExhibition.classList.contains("panel-controls-hidden"));
+  });
   panelTrack.addEventListener("scroll", () => {
     if (panelScrollFrame) return;
     panelScrollFrame = window.requestAnimationFrame(syncPanelIndexFromScroll);
@@ -1116,6 +1191,13 @@ function bindEvents() {
     lightboxError.hidden = false;
   });
   document.addEventListener("keydown", (event) => {
+    if (awardDialogController.isOpen()) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        awardDialogController.close();
+      }
+      return;
+    }
     if (!dialogController.isOpen()) {
       if (!panelExhibition.hidden && event.key === "Escape") {
         event.preventDefault();

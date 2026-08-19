@@ -9,7 +9,12 @@
     "award-chungbuk.webp",
     "award-chungnam.webp",
     "award-daejeon.webp",
-    "award-medal.webp"
+    "award-medal.webp",
+    "decor-hanging.svg",
+    "decor-cloud-sun.svg",
+    "decor-mountains.svg",
+    "decor-cloud-ribbons.svg",
+    "decor-pines.svg"
   ],
   "omitted": [
     "QR code"

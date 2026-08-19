@@ -1,9 +1,9 @@
 const CACHE_PREFIX = "eastjapanexchange-";
-const CACHE_NAME = `${CACHE_PREFIX}ca8a2f969309`;
+const CACHE_NAME = `${CACHE_PREFIX}1ec47c4bb8bf`;
 const PRECACHE = [
   "./index.html",
-  "./src/styles.css?v=ca8a2f969309",
-  "./src/app.js?v=ca8a2f969309",
+  "./src/styles.css?v=1ec47c4bb8bf",
+  "./src/app.js?v=1ec47c4bb8bf",
   "./data/regions.js",
   "./assets/gallery-manifest.json",
   "./assets/intro/SOURCE.md",
@@ -22,6 +22,11 @@ const PRECACHE = [
   "./assets/panels/award-chungnam.webp",
   "./assets/panels/award-daejeon.webp",
   "./assets/panels/award-medal.webp",
+  "./assets/panels/decor-cloud-ribbons.svg",
+  "./assets/panels/decor-cloud-sun.svg",
+  "./assets/panels/decor-hanging.svg",
+  "./assets/panels/decor-mountains.svg",
+  "./assets/panels/decor-pines.svg",
   "./assets/panels/kim-yu-sin.webp",
   "./assets/panels/panel-map.webp",
   "./assets/panels/panels.json",
