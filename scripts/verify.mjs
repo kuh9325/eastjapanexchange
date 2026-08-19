@@ -22,7 +22,7 @@ import {
 import { ADMIN_SOURCES } from "../data/region-config.js";
 import { EXHIBITION_CONTENT } from "../data/exhibition-content.js";
 import { INTRO_ROUTE } from "../data/intro-route.js";
-import { UI_COPY } from "../data/ui-copy.js";
+import { formatCopy, UI_COPY } from "../data/ui-copy.js";
 import {
   DEPARTMENT_LABELS,
   inferDepartment,
@@ -116,6 +116,7 @@ try {
   assert.equal(UI_COPY.ja.panelEntryTitle, "展示パネルを見る");
   assert.equal(UI_COPY.ko.panelAwardDetail, "현창 상세");
   assert.equal(UI_COPY.ja.panelAwardDetail, "顕彰の詳細");
+  assert.equal(formatCopy("{name}・{name}", { name: "大田" }), "大田・大田", "구형 브라우저 호환 치환도 반복 토큰을 모두 바꿔야 합니다.");
   assert.equal(ZONE_LABELS.chungju.ja, "忠州圏");
   assert.equal(DEPARTMENT_LABELS.men.ja, "男子部");
   assert.equal(DEPARTMENT_LABELS.women.ja, "女子部");
@@ -180,6 +181,7 @@ try {
   const sourceStyles = await fs.readFile(path.join(root, "src", "styles.css"), "utf8");
   const sourceHtml = await fs.readFile(path.join(root, "index.html"), "utf8");
   const sourceApp = await fs.readFile(path.join(root, "src", "app.js"), "utf8");
+  const sourceUiCopy = await fs.readFile(path.join(root, "data", "ui-copy.js"), "utf8");
   const sourceIntro = await fs.readFile(path.join(root, "src", "intro.js"), "utf8");
   const sourceBuild = await fs.readFile(path.join(root, "scripts", "build.mjs"), "utf8");
   const sourceIntroMap = await fs.readFile(path.join(root, "assets", "intro", "korea.svg"), "utf8");
@@ -326,7 +328,8 @@ try {
   assert.match(sourceHtml, /class="panel-language-tabs"[\s\S]*data-panel-language="ko"[\s\S]*data-panel-language="ja"/, "패널 화면에서도 한국어·일본어를 전환할 수 있어야 합니다.");
   assert.match(sourceStyles, /\.panel-track\s*\{[^}]*display:\s*flex[^}]*overflow-x:\s*auto[^}]*scroll-snap-type:\s*x mandatory/s, "패널 뷰어는 가로 스와이프와 한 장 단위 스냅을 사용해야 합니다.");
   assert.match(sourceStyles, /\.panel-slide\s*\{[^}]*flex:\s*0 0 100%[^}]*scroll-snap-align:\s*start/s, "모바일과 좁은 화면은 한 번에 한 패널을 보여야 합니다.");
-  assert.match(sourceStyles, /@media \(min-width:\s*1181px\) and \(orientation:\s*landscape\)[\s\S]*\.panel-slide\s*\{[^}]*flex:\s*0 0 calc\(\(100% - 32px\) \/ 3\)/s, "PC 가로 화면은 세 패널을 동시에 보여야 합니다.");
+  assert.match(sourceStyles, /@media \(min-width:\s*901px\) and \(orientation:\s*landscape\)[\s\S]*\.panel-track\s*\{[^}]*scroll-snap-type:\s*x proximity[\s\S]*\.panel-slide\s*\{[^}]*flex:\s*0 0 auto[^}]*height:\s*100%/s, "PC 가로 화면은 세 패널을 한 줄에 두고 넘치는 폭만 수평 슬라이드해야 합니다.");
+  assert.doesNotMatch(sourceStyles, /\.panel-slide\s*\{[^}]*calc\(\(100%[^}]*\/\s*3\)/s, "PC 패널 폭을 화면의 3분의 1로 강제해 세로 여백을 만들면 안 됩니다.");
   assert.match(sourceHtml, /panel-person-yu[\s\S]*panel-bilingual-sequence[\s\S]*lang="ja"[\s\S]*lang="ko"[\s\S]*lang="ja"[\s\S]*lang="ko"/, "위인 패널은 일본어 한 문장 바로 아래에 한국어를 배치해야 합니다.");
   assert.doesNotMatch(sourceHtml, /panel-person-lead[\s\S]{0,500}<br\s*\/>/, "위인 패널의 한 문장 내부에 강제 줄바꿈을 넣으면 안 됩니다.");
   assert.equal((sourceHtml.match(/<button type="button"><strong lang="ja">/g) || []).length, 20, "하단 현창 20개를 각각 확대 가능한 버튼으로 제공해야 합니다.");
@@ -347,7 +350,8 @@ try {
   assert.match(sourceStyles, /\.panel-canvas\s*\{[^}]*width:\s*900px[^}]*height:\s*1246px[^}]*transform-origin:\s*0 0/s, "패널 CSS 캔버스는 원본 세로 비율의 고정 좌표계를 사용해야 합니다.");
   assert.match(sourceApp, /function openPanelViewer\(opener\)[\s\S]*stage\.hidden = true[\s\S]*panelExhibition\.hidden = false/, "패널 관람 중 기존 지도·사진 화면을 가리고 전용 뷰어를 열어야 합니다.");
   assert.match(sourceApp, /function goToPanel\(index, options\)[\s\S]*panelTrack\.scrollTo/, "패널 화살표와 페이지 버튼이 슬라이드를 이동해야 합니다.");
-  assert.match(sourceApp, /function updatePanelLayout\(\)[\s\S]*PANEL_CANVAS_WIDTH[\s\S]*PANEL_CANVAS_HEIGHT[\s\S]*canvas\.style\.transform/, "화면 방향과 크기에 맞게 HTML 패널 전체를 같은 비율로 확대·축소해야 합니다.");
+  assert.match(sourceApp, /function updatePanelLayout\(\)[\s\S]*availableHeight = Math\.max\(240, panelTrack\.clientHeight - verticalInset\)[\s\S]*slideWidth = PANEL_CANVAS_WIDTH \* heightScale[\s\S]*canvas\.style\.transform/, "PC 패널은 화면 높이를 기준으로 같은 비율로 확대하고 필요한 가로 폭을 계산해야 합니다.");
+  assert.match(sourceApp, /function goToPanel\(index, options\)[\s\S]*maxScroll \* \(panelIndex \/ lastIndex\)/, "PC 연속 패널의 버튼 이동은 실제 가로 초과 폭 전체를 균등하게 사용해야 합니다.");
   assert.match(sourceApp, /function setPanelControlsHidden\(hidden\)[\s\S]*panel-controls-hidden[\s\S]*updatePanelLayout/, "패널을 누르면 넘김 조작부를 숨기고 패널 크기를 다시 계산해야 합니다.");
   assert.match(sourceApp, /function openAwardDetail\(button\)[\s\S]*awardDialogController\.open/, "하단 현창 버튼은 상세 확대 대화상자를 열어야 합니다.");
   assert.match(sourceApp, /panelLanguageButtons\.forEach[\s\S]*applyLanguage\(button\.dataset\.panelLanguage\)/, "패널의 언어 탭은 기존 전체 언어 상태와 동기화되어야 합니다.");
@@ -370,6 +374,10 @@ try {
   assert.match(sourceHtml, /id="tab-school"[^>]*data-category="school"[^>]*>창가청년스쿨<\/button>/, "한국어 기본 화면에 창가청년스쿨 탭이 있어야 합니다.");
   assert.match(sourceHtml, /id="tab-visit"[^>]*data-category="visit"[^>]*>일대일근행회<\/button>/, "한국어 기본 화면에 일대일근행회 탭이 있어야 합니다.");
   assert.match(sourceApp, /function applyLanguage\(language\)/, "언어 탭이 메인 화면 전체 문구를 전환해야 합니다.");
+  assert.doesNotMatch(sourceUiCopy, /\.replaceAll\(/, "지원 대상 구형 Chromium·Safari에서 부팅을 중단시키는 String.replaceAll을 사용하면 안 됩니다.");
+  assert.match(sourceUiCopy, /\.split\(`\{\$\{key\}\}`\)\.join\(String\(value\)\)/, "문구 토큰은 구형 브라우저 호환 split/join 방식으로 치환해야 합니다.");
+  assert.match(sourceApp, /bindEvents\(\);[\s\S]*initializeIntro\(\{[\s\S]*registerOfflineWorker\(\);[\s\S]*loadManifest\(\)\.then/, "인트로와 기본 조작 이벤트는 사진 목록 다운로드보다 먼저 활성화해야 합니다.");
+  assert.doesNotMatch(sourceApp, /await loadManifest\(\)/, "사진 목록 응답이 인트로 조작을 가로막으면 안 됩니다.");
   assert.match(sourceApp, /function galleryMetadataLabels\(photo\)/, "권·부서·활동 메타데이터를 파일명 대신 화면 객체로 렌더링해야 합니다.");
   assert.match(sourceApp, /meta\.appendChild\(tag\)/, "썸네일에 구조화된 메타데이터 태그를 추가해야 합니다.");
 

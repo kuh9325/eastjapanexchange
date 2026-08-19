@@ -157,7 +157,7 @@ export const UI_COPY = Object.freeze({
 
 export function formatCopy(template, values = {}) {
   return Object.entries(values).reduce(
-    (result, [key, value]) => result.replaceAll(`{${key}}`, String(value)),
+    (result, [key, value]) => result.split(`{${key}}`).join(String(value)),
     template
   );
 }

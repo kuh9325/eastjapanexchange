@@ -874,7 +874,7 @@ var UI_COPY = Object.freeze({
 });
 function formatCopy(template, values = {}) {
   return Object.entries(values).reduce(
-    (result, [key, value]) => result.replaceAll("{".concat(key, "}"), String(value)),
+    (result, [key, value]) => result.split("{".concat(key, "}")).join(String(value)),
     template
   );
 }
@@ -2149,7 +2149,7 @@ function updatePanelNavigation() {
   });
 }
 function usesThreePanelLayout() {
-  return window.matchMedia("(min-width: 1181px) and (orientation: landscape)").matches;
+  return window.matchMedia("(min-width: 901px) and (orientation: landscape)").matches;
 }
 function setPanelControlsHidden(hidden) {
   panelExhibition.classList.toggle("panel-controls-hidden", Boolean(hidden));
@@ -2160,12 +2160,31 @@ function setPanelControlsHidden(hidden) {
 function updatePanelLayout() {
   const landscape = window.matchMedia("(orientation: landscape)").matches;
   const threePanelLayout = usesThreePanelLayout();
+  panelTrack.classList.remove("is-row-contained");
   panelSlides.forEach((slide, index) => {
     const sheet = panelSheets[index];
     const canvas = panelCanvases[index];
     if (!sheet || !canvas) return;
-    const availableWidth = Math.max(280, slide.clientWidth - (threePanelLayout ? 12 : landscape ? 164 : 16));
-    const availableHeight = Math.max(360, slide.clientHeight - (landscape ? 18 : 26));
+    const slideStyle = window.getComputedStyle(slide);
+    const horizontalInset = parseFloat(slideStyle.paddingLeft || "0") + parseFloat(slideStyle.paddingRight || "0");
+    const verticalInset = parseFloat(slideStyle.paddingTop || "0") + parseFloat(slideStyle.paddingBottom || "0");
+    let availableWidth;
+    let availableHeight;
+    if (threePanelLayout) {
+      availableHeight = Math.max(240, panelTrack.clientHeight - verticalInset);
+      const heightScale2 = availableHeight / PANEL_CANVAS_HEIGHT;
+      const slideWidth = PANEL_CANVAS_WIDTH * heightScale2 + horizontalInset;
+      slide.style.flexBasis = "".concat(slideWidth, "px");
+      slide.style.width = "".concat(slideWidth, "px");
+      slide.style.minWidth = "".concat(slideWidth, "px");
+      availableWidth = slideWidth - horizontalInset;
+    } else {
+      slide.style.removeProperty("flex-basis");
+      slide.style.removeProperty("width");
+      slide.style.removeProperty("min-width");
+      availableWidth = Math.max(280, slide.clientWidth - (landscape ? 164 : horizontalInset));
+      availableHeight = Math.max(360, slide.clientHeight - (landscape ? verticalInset : 26));
+    }
     const widthScale = availableWidth / PANEL_CANVAS_WIDTH;
     const heightScale = availableHeight / PANEL_CANVAS_HEIGHT;
     const scale = landscape ? Math.min(widthScale, heightScale) : widthScale;
@@ -2173,14 +2192,16 @@ function updatePanelLayout() {
     sheet.style.height = "".concat(PANEL_CANVAS_HEIGHT * scale, "px");
     canvas.style.transform = "scale(".concat(scale, ")");
   });
+  if (threePanelLayout) {
+    panelTrack.classList.toggle("is-row-contained", panelTrack.scrollWidth <= panelTrack.clientWidth + 1);
+  }
 }
 function goToPanel(index, options) {
-  var _a;
   const config = options || {};
   panelIndex = Math.max(0, Math.min(panelSlides.length - 1, index));
-  const step = ((_a = panelSlides[0]) == null ? void 0 : _a.clientWidth) || panelTrack.clientWidth;
   const maxScroll = Math.max(0, panelTrack.scrollWidth - panelTrack.clientWidth);
-  const left = Math.min(panelIndex * step, maxScroll);
+  const lastIndex = Math.max(1, panelSlides.length - 1);
+  const left = maxScroll * (panelIndex / lastIndex);
   if (config.instant) {
     panelTrack.scrollLeft = left;
   } else {
@@ -2220,11 +2241,11 @@ function closePanelViewer(options) {
   panelOpener = null;
 }
 function syncPanelIndexFromScroll() {
-  var _a;
   panelScrollFrame = 0;
-  const width = ((_a = panelSlides[0]) == null ? void 0 : _a.clientWidth) || panelTrack.clientWidth;
-  if (!width) return;
-  const nextIndex = Math.max(0, Math.min(panelSlides.length - 1, Math.round(panelTrack.scrollLeft / width)));
+  const maxScroll = Math.max(0, panelTrack.scrollWidth - panelTrack.clientWidth);
+  if (!maxScroll) return;
+  const lastIndex = panelSlides.length - 1;
+  const nextIndex = Math.max(0, Math.min(lastIndex, Math.round(panelTrack.scrollLeft / maxScroll * lastIndex)));
   if (nextIndex !== panelIndex) {
     panelIndex = nextIndex;
     updatePanelNavigation();
@@ -2263,13 +2284,17 @@ function bindPanelPointerDrag() {
     panelTrack.scrollLeft = panelPointerDrag.scrollLeft - deltaX;
   }, { passive: false });
   const finishPanelDrag = (event) => {
-    var _a;
     if (!panelPointerDrag || event && event.pointerId !== panelPointerDrag.pointerId) return;
     if (panelPointerDrag.moved) panelTapBlockUntil = Date.now() + 350;
     const shouldSnap = panelPointerDrag.pointerType !== "touch";
     panelPointerDrag = null;
     panelTrack.classList.remove("is-pointer-dragging");
-    if (shouldSnap) goToPanel(Math.round(panelTrack.scrollLeft / Math.max(1, ((_a = panelSlides[0]) == null ? void 0 : _a.clientWidth) || panelTrack.clientWidth)));
+    if (shouldSnap) {
+      const maxScroll = Math.max(0, panelTrack.scrollWidth - panelTrack.clientWidth);
+      const lastIndex = panelSlides.length - 1;
+      const nextIndex = maxScroll ? Math.round(panelTrack.scrollLeft / maxScroll * lastIndex) : 0;
+      goToPanel(nextIndex);
+    }
   };
   window.addEventListener("pointerup", finishPanelDrag);
   window.addEventListener("pointercancel", finishPanelDrag);
@@ -2651,7 +2676,6 @@ function bindEvents() {
 }
 async function boot() {
   initializeDebugMode(debugMode);
-  await loadManifest();
   renderBranchControls();
   renderCountryContext();
   renderMap();
@@ -2669,6 +2693,13 @@ async function boot() {
     }
   });
   registerOfflineWorker();
+  loadManifest().then(() => {
+    if (!selectedBranch) return;
+    renderMeeting(selectedBranch);
+    renderGallery();
+  }).catch((error) => {
+    setRuntimeStatus("lastError", error && error.message ? error.message : String(error));
+  });
 }
 boot().catch((error) => {
   setRuntimeStatus("lastError", error && error.message ? error.message : String(error));
