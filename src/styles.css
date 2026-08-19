@@ -572,6 +572,16 @@ h1 {
 }
 .panel-canvas [lang="ja"] { font-family: var(--panel-japanese); }
 .panel-canvas img { display: block; -webkit-user-drag: none; user-select: none; }
+.panel-zoom-image {
+  cursor: zoom-in;
+  transition: filter 0.18s ease, box-shadow 0.18s ease;
+}
+.panel-zoom-image:hover { filter: brightness(1.04); }
+.panel-zoom-image:focus-visible {
+  outline: 5px solid #2b65c8;
+  outline-offset: 5px;
+  box-shadow: 0 0 0 9px rgba(255, 255, 255, 0.85);
+}
 .panel-sheet figcaption {
   position: absolute;
   width: 1px;
@@ -751,9 +761,16 @@ h1 {
 .panel-medal {
   position: relative;
   height: 174px;
+  padding: 0;
+  border: 0;
   background: url("../assets/panels/award-medal.webp") center 0 / 165px auto no-repeat;
+  color: #151515;
+  cursor: zoom-in;
   text-align: center;
+  transition: transform 0.18s var(--ease), filter 0.18s ease;
 }
+.panel-medal:hover,
+.panel-medal:focus-visible { transform: scale(1.045); filter: saturate(1.08); }
 .panel-medal strong {
   position: absolute;
   top: 70px;

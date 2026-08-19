@@ -1604,7 +1604,8 @@ var panelPagination = document.querySelector("#panel-pagination");
 var panelPageButtons = Array.from(document.querySelectorAll("[data-panel-go]"));
 var panelLanguageButtons = Array.from(document.querySelectorAll("[data-panel-language]"));
 var panelCounter = document.querySelector("#panel-counter");
-var panelAchievementButtons = Array.from(document.querySelectorAll(".panel-achievement-list button"));
+var panelZoomImages = Array.from(document.querySelectorAll(".panel-zoom-image"));
+var panelAchievementButtons = Array.from(document.querySelectorAll(".panel-achievement-list button, .panel-medal"));
 var panelAwardDialog = document.querySelector("#panel-award-dialog");
 var panelAwardDialogClose = document.querySelector("#panel-award-dialog-close");
 var panelAwardDialogKicker = document.querySelector("#panel-award-dialog-kicker");
@@ -1616,7 +1617,7 @@ var content = EXHIBITION_CONTENT;
 var manifestAvailable = true;
 var selectedBranch = null;
 var selectedCategory = "all";
-var gallerySort = "name";
+var gallerySort = "random";
 var randomizedPhotoRanks = /* @__PURE__ */ new Map();
 var visiblePhotos = [];
 var isIntroductionCollapsed = false;
@@ -2463,6 +2464,17 @@ function openLightbox(items, index, opener) {
   dialogController.open();
   window.setTimeout(() => lightboxClose.focus(), 0);
 }
+function openPanelImage(image) {
+  const index = panelZoomImages.indexOf(image);
+  if (index < 0) return;
+  const items = panelZoomImages.map((panelImage) => ({
+    src: panelImage.currentSrc || panelImage.src,
+    alt: panelImage.alt,
+    caption: panelImage.alt,
+    detail: ""
+  }));
+  openLightbox(items, index, image);
+}
 function moveLightbox(direction) {
   if (lightboxItems.length < 2) return;
   updateLightbox((lightboxIndex + direction + lightboxItems.length) % lightboxItems.length);
@@ -2587,6 +2599,19 @@ function bindEvents() {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       openAwardDetail(button);
+    });
+  });
+  panelZoomImages.forEach((image) => {
+    image.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (Date.now() < panelTapBlockUntil) return;
+      openPanelImage(image);
+    });
+    image.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      openPanelImage(image);
     });
   });
   if (panelAwardDialogClose && panelAwardDialog && awardDialogController) {

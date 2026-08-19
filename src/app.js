@@ -92,7 +92,8 @@ const panelPagination = document.querySelector("#panel-pagination");
 const panelPageButtons = Array.from(document.querySelectorAll("[data-panel-go]"));
 const panelLanguageButtons = Array.from(document.querySelectorAll("[data-panel-language]"));
 const panelCounter = document.querySelector("#panel-counter");
-const panelAchievementButtons = Array.from(document.querySelectorAll(".panel-achievement-list button"));
+const panelZoomImages = Array.from(document.querySelectorAll(".panel-zoom-image"));
+const panelAchievementButtons = Array.from(document.querySelectorAll(".panel-achievement-list button, .panel-medal"));
 const panelAwardDialog = document.querySelector("#panel-award-dialog");
 const panelAwardDialogClose = document.querySelector("#panel-award-dialog-close");
 const panelAwardDialogKicker = document.querySelector("#panel-award-dialog-kicker");
@@ -105,7 +106,7 @@ let content = EXHIBITION_CONTENT;
 let manifestAvailable = true;
 let selectedBranch = null;
 let selectedCategory = "all";
-let gallerySort = "name";
+let gallerySort = "random";
 let randomizedPhotoRanks = new Map();
 let visiblePhotos = [];
 let isIntroductionCollapsed = false;
@@ -1030,6 +1031,18 @@ function openLightbox(items, index, opener) {
   window.setTimeout(() => lightboxClose.focus(), 0);
 }
 
+function openPanelImage(image) {
+  const index = panelZoomImages.indexOf(image);
+  if (index < 0) return;
+  const items = panelZoomImages.map((panelImage) => ({
+    src: panelImage.currentSrc || panelImage.src,
+    alt: panelImage.alt,
+    caption: panelImage.alt,
+    detail: ""
+  }));
+  openLightbox(items, index, image);
+}
+
 function moveLightbox(direction) {
   if (lightboxItems.length < 2) return;
   updateLightbox((lightboxIndex + direction + lightboxItems.length) % lightboxItems.length);
@@ -1160,6 +1173,19 @@ function bindEvents() {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       openAwardDetail(button);
+    });
+  });
+  panelZoomImages.forEach((image) => {
+    image.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (Date.now() < panelTapBlockUntil) return;
+      openPanelImage(image);
+    });
+    image.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      openPanelImage(image);
     });
   });
   if (panelAwardDialogClose && panelAwardDialog && awardDialogController) {

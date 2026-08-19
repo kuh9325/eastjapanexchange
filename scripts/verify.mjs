@@ -203,7 +203,8 @@ try {
   assert.match(sourceStyles, /\.gallery-panel img\s*\{[^}]*-webkit-user-drag:\s*none[^}]*user-select:\s*none/s, "WebKit 계열에서도 갤러리 이미지 끌기와 선택을 막아야 합니다.");
   assert.doesNotMatch(sourceStyles, /\.activity-toolbar\s*\{[^}]*position:\s*sticky/s, "활동 제목과 카테고리 탭은 사진 화면을 가리지 않도록 스크롤되어야 합니다.");
   assert.match(sourceHtml, /class="activity-toolbar"[\s\S]*class="section-heading"[\s\S]*class="category-tabs"/, "활동 제목과 카테고리 탭은 하나의 일반 툴바로 묶어야 합니다.");
-  assert.match(sourceHtml, /class="gallery-sort-controls"[^>]*role="group"[^>]*[\s\S]*data-gallery-sort="random"[^>]*aria-pressed="false"[\s\S]*data-gallery-sort="name"[^>]*aria-pressed="true"/, "사진 배열은 랜덤과 이름순 버튼을 제공하고 이름순을 기본값으로 사용해야 합니다.");
+  assert.match(sourceHtml, /class="gallery-sort-controls"[^>]*role="group"[^>]*[\s\S]*data-gallery-sort="random"[^>]*aria-pressed="true"[\s\S]*data-gallery-sort="name"[^>]*aria-pressed="false"/, "사진 배열은 랜덤과 이름순 버튼을 제공하고 랜덤을 기본값으로 사용해야 합니다.");
+  assert.match(sourceApp, /let gallerySort = "random";/, "사진 배열 상태도 랜덤을 기본값으로 시작해야 합니다.");
   assert.match(sourceApp, /function reshufflePhotoRanks\(\)[\s\S]*Math\.floor\(Math\.random\(\) \* \(index \+ 1\)\)/, "랜덤 배열은 편향이 적은 Fisher-Yates 셔플을 사용해야 합니다.");
   assert.match(sourceApp, /function orderGalleryPhotos\(photos\)[\s\S]*localeCompare\([\s\S]*numeric:\s*true/, "이름순은 파일명을 숫자 인식 오름차순으로 정렬해야 합니다.");
   assert.match(sourceApp, /reshuffle:\s*sort === "random" && gallerySort === "random"/, "선택된 랜덤 버튼을 다시 누르면 사진을 재배열해야 합니다.");
@@ -337,6 +338,8 @@ try {
   assert.match(sourceHtml, /panel-person-yu[\s\S]*panel-bilingual-sequence[\s\S]*lang="ja"[\s\S]*lang="ko"[\s\S]*lang="ja"[\s\S]*lang="ko"/, "위인 패널은 일본어 한 문장 바로 아래에 한국어를 배치해야 합니다.");
   assert.doesNotMatch(sourceHtml, /panel-person-lead[\s\S]{0,500}<br\s*\/>/, "위인 패널의 한 문장 내부에 강제 줄바꿈을 넣으면 안 됩니다.");
   assert.equal((sourceHtml.match(/<button type="button"><strong lang="ja">/g) || []).length, 20, "하단 현창 20개를 각각 확대 가능한 버튼으로 제공해야 합니다.");
+  assert.equal((sourceHtml.match(/class="panel-zoom-image"/g) || []).length, 6, "패널의 지도·인물·대표 현창 사진 6개를 모두 확대 가능하게 제공해야 합니다.");
+  assert.equal((sourceHtml.match(/type="button" class="panel-medal"/g) || []).length, 4, "상단 현창 요약 4개도 상세 확대 가능한 버튼이어야 합니다.");
   assert.match(sourceHtml, /id="panel-award-dialog"[^>]*aria-labelledby="panel-award-dialog-title"/, "현창 상세 확대 대화상자가 있어야 합니다.");
   assert.match(sourceHtml, /panel-region-call[^>]*>[\s\S]*lang="ko">충남[\s\S]*lang="ja">忠南[\s\S]*lang="ko">충북[\s\S]*lang="ja">忠北[\s\S]*lang="ko">대전[\s\S]*panel-brush-underline[^>]*lang="ja">大田/, "하단 지역명은 원본처럼 한국어 다음 일본어 순서여야 합니다.");
   assert.match(sourceStyles, /\.panel-brush-underline::before[\s\S]*clip-path:\s*polygon/, "大田 강조선은 붓 터치 형태여야 합니다.");
@@ -358,6 +361,8 @@ try {
   assert.match(sourceApp, /function goToPanel\(index, options\)[\s\S]*maxScroll \* \(panelIndex \/ lastIndex\)/, "PC 연속 패널의 버튼 이동은 실제 가로 초과 폭 전체를 균등하게 사용해야 합니다.");
   assert.match(sourceApp, /function setPanelControlsHidden\(hidden\)[\s\S]*panel-controls-hidden[\s\S]*updatePanelLayout/, "패널을 누르면 넘김 조작부를 숨기고 패널 크기를 다시 계산해야 합니다.");
   assert.match(sourceApp, /function openAwardDetail\(button\)[\s\S]*awardDialogController\.open/, "하단 현창 버튼은 상세 확대 대화상자를 열어야 합니다.");
+  assert.match(sourceApp, /function openPanelImage\(image\)[\s\S]*panelZoomImages\.map[\s\S]*openLightbox\(items, index, image\)/, "패널 이미지는 기존 전체화면 사진 확대 뷰어로 열려야 합니다.");
+  assert.match(sourceApp, /panelZoomImages\.forEach[\s\S]*image\.addEventListener\("click"[\s\S]*image\.addEventListener\("keydown"/, "패널 이미지는 클릭과 키보드 모두로 확대할 수 있어야 합니다.");
   assert.match(sourceApp, /const awardDialogController = panelAwardDialog\s*\? createDialogController/, "선택 기능인 현창 대화상자가 없어도 앱 전체 부팅은 계속되어야 합니다.");
   assert.match(sourceApp, /if \(panelAwardDialogClose && panelAwardDialog && awardDialogController\)/, "현창 대화상자 이벤트는 관련 DOM이 모두 있을 때만 연결해야 합니다.");
   assert.match(sourceApp, /panelLanguageButtons\.forEach[\s\S]*applyLanguage\(button\.dataset\.panelLanguage\)/, "패널의 언어 탭은 기존 전체 언어 상태와 동기화되어야 합니다.");

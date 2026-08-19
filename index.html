@@ -148,8 +148,8 @@
                     <button type="button" role="tab" id="tab-visit" data-category="visit" aria-controls="photo-grid" aria-selected="false" tabindex="-1">일대일근행회</button>
                   </div>
                   <div class="gallery-sort-controls" role="group" aria-label="사진 배열 순서">
-                    <button type="button" data-gallery-sort="random" aria-pressed="false">랜덤</button>
-                    <button type="button" data-gallery-sort="name" aria-pressed="true">이름순</button>
+                    <button type="button" data-gallery-sort="random" aria-pressed="true">랜덤</button>
+                    <button type="button" data-gallery-sort="name" aria-pressed="false">이름순</button>
                   </div>
                 </div>
               </div>
@@ -223,7 +223,7 @@
                   </section>
 
                   <section class="panel-origin-conclusion">
-                    <img src="./assets/panels/panel-map.webp" alt="백제에서 일본으로 이어지는 문화 교류 지도" loading="lazy" decoding="async" draggable="false" />
+                    <img class="panel-zoom-image" src="./assets/panels/panel-map.webp" alt="백제에서 일본으로 이어지는 문화 교류 지도" loading="lazy" decoding="async" draggable="false" role="button" tabindex="0" aria-haspopup="dialog" />
                     <div class="panel-conclusion-copy">
                       <p lang="ja">韓国はまさに文化先進の土地だった。</p>
                       <small lang="ko">한국은 그야말로 문화 선진의 땅이었다.</small>
@@ -251,7 +251,7 @@
 
                   <section class="panel-person panel-person-yu">
                     <figure class="panel-person-portrait">
-                      <img src="./assets/panels/yu-gwan-sun.webp" alt="유관순 열사 사진" loading="lazy" decoding="async" draggable="false" />
+                      <img class="panel-zoom-image" src="./assets/panels/yu-gwan-sun.webp" alt="유관순 열사 사진" loading="lazy" decoding="async" draggable="false" role="button" tabindex="0" aria-haspopup="dialog" />
                       <figcaption><strong lang="ja">柳寛順</strong><span lang="ko">유관순</span><em>（ユ・グァンスン）</em><small>1902.12.16. - 1920.09.28.</small></figcaption>
                     </figure>
                     <div class="panel-person-message">
@@ -285,7 +285,7 @@
                       <cite>＜1998年1月18日 全国青年部幹部会＞<br /><span lang="ko">＜1998년 1월 18일, 전국 청년부간부회＞</span></cite>
                     </div>
                     <figure class="panel-person-portrait">
-                      <img src="./assets/panels/kim-yu-sin.webp" alt="김유신 장군 영정" loading="lazy" decoding="async" draggable="false" />
+                      <img class="panel-zoom-image" src="./assets/panels/kim-yu-sin.webp" alt="김유신 장군 영정" loading="lazy" decoding="async" draggable="false" role="button" tabindex="0" aria-haspopup="dialog" />
                       <figcaption><span lang="ko">김유신</span><strong lang="ja">金庾信</strong><em>（キム・ユシン）</em><small>595. - 673.</small></figcaption>
                     </figure>
                   </section>
@@ -305,17 +305,17 @@
                   </header>
 
                   <section class="panel-award-summary" aria-label="주요 현창 수량">
-                    <div class="panel-medal"><strong lang="ja">感謝牌<br />2個</strong><small lang="ko">감사패 2개</small></div>
-                    <div class="panel-medal"><strong lang="ja">特別顕彰<br />21個</strong><small lang="ko">특별현창 21개</small></div>
-                    <div class="panel-medal"><strong lang="ja">名誉市民・<br />道民・郡民証<br />8個</strong><small lang="ko">명예시민·도민·군민증 8개</small></div>
-                    <div class="panel-medal"><strong lang="ja">名誉教授<br />及び博士<br />5個</strong><small lang="ko">명예교수·박사 5개</small></div>
+                    <button type="button" class="panel-medal"><strong lang="ja">感謝牌<br />2個</strong><small lang="ko">감사패 2개</small></button>
+                    <button type="button" class="panel-medal"><strong lang="ja">特別顕彰<br />21個</strong><small lang="ko">특별현창 21개</small></button>
+                    <button type="button" class="panel-medal"><strong lang="ja">名誉市民・<br />道民・郡民証<br />8個</strong><small lang="ko">명예시민·도민·군민증 8개</small></button>
+                    <button type="button" class="panel-medal"><strong lang="ja">名誉教授<br />及び博士<br />5個</strong><small lang="ko">명예교수·박사 5개</small></button>
                   </section>
 
                   <section class="panel-featured-awards">
                     <div class="panel-award-photos">
-                      <img src="./assets/panels/award-chungbuk.webp" alt="충북방면 진천 명예군민증" loading="lazy" decoding="async" draggable="false" />
-                      <img src="./assets/panels/award-chungnam.webp" alt="충남방면 충청남도 현창패" loading="lazy" decoding="async" draggable="false" />
-                      <img src="./assets/panels/award-daejeon.webp" alt="대전방면 대덕구 특별현창패" loading="lazy" decoding="async" draggable="false" />
+                      <img class="panel-zoom-image" src="./assets/panels/award-chungbuk.webp" alt="충북방면 진천 명예군민증" loading="lazy" decoding="async" draggable="false" role="button" tabindex="0" aria-haspopup="dialog" />
+                      <img class="panel-zoom-image" src="./assets/panels/award-chungnam.webp" alt="충남방면 충청남도 현창패" loading="lazy" decoding="async" draggable="false" role="button" tabindex="0" aria-haspopup="dialog" />
+                      <img class="panel-zoom-image" src="./assets/panels/award-daejeon.webp" alt="대전방면 대덕구 특별현창패" loading="lazy" decoding="async" draggable="false" role="button" tabindex="0" aria-haspopup="dialog" />
                     </div>
                     <ul>
                       <li lang="ja">忠北方面 鎮川名誉郡民証、特別顕彰 <span>1998.1.2.</span></li>
