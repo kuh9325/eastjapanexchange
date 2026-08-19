@@ -1636,6 +1636,7 @@ var panelAwardOpener = null;
 var GALLERY_DRAG_THRESHOLD = 8;
 var PANEL_CANVAS_WIDTH = 900;
 var PANEL_CANVAS_HEIGHT = 1246;
+var STACKED_LAYOUT_QUERY = "(max-width: 900px), (orientation: portrait)";
 var copy = () => UI_COPY[currentLanguage];
 var localizedValue = (source, key) => {
   if (!source) return "";
@@ -1647,6 +1648,7 @@ var branchName = (branch, short = false) => {
   return currentLanguage === "ja" ? branch["".concat(key, "Ja")] || branch[key] : branch[key];
 };
 var categoryName = (category) => currentLanguage === "ja" ? category.nameJa || category.name : category.name;
+var usesStackedLayout = () => window.matchMedia(STACKED_LAYOUT_QUERY).matches;
 function galleryMetadataLabels(photo) {
   const zone = localizedMetadataLabel(ZONE_LABELS[photo.zone], currentLanguage) || branchName(BRANCHES[photo.branch], true);
   const department = localizedMetadataLabel(
@@ -2108,7 +2110,7 @@ function selectBranch(branchKey, options) {
   renderMeeting(branchKey);
   setCategory("all");
   galleryPanel.scrollTop = 0;
-  if (config.scroll !== false && window.matchMedia("(max-width: 1080px), (orientation: portrait)").matches) {
+  if (config.scroll !== false && usesStackedLayout()) {
     window.requestAnimationFrame(() => galleryPanel.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 }

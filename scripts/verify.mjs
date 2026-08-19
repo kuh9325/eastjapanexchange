@@ -216,6 +216,10 @@ try {
   assert.match(sourceApp, /function setIntroductionCollapsed\(collapsed\)[\s\S]*introductionDetails\.hidden = isIntroductionCollapsed[\s\S]*hallCard\.hidden = isIntroductionCollapsed/, "방면 소개를 접으면 소개문과 회관 사진을 모두 숨겨야 합니다.");
   assert.match(sourceStyles, /\.gallery-sticky-header\.is-collapsed\s*\{[^}]*grid-template-columns:\s*auto minmax\(0, 1fr\)/s, "접힌 방면 소개는 PC와 모바일에서 낮은 높이를 사용해야 합니다.");
   assert.match(sourceStyles, /\.exhibition\.has-selection \.stage\s*\{[^}]*grid-template-columns:\s*minmax\(420px,\s*30fr\)\s*minmax\(0,\s*70fr\)/s, "방면 선택 후 지도와 사진 영역은 3:7 비율이어야 합니다.");
+  assert.match(sourceApp, /const STACKED_LAYOUT_QUERY = "\(max-width: 900px\), \(orientation: portrait\)";/, "모바일 단일 열과 자동 스크롤은 동일한 반응형 기준을 사용해야 합니다.");
+  assert.match(sourceApp, /if \(config\.scroll !== false && usesStackedLayout\(\)\)/, "방면 선택 후 사진 영역 자동 스크롤은 실제 단일 열 화면에서만 실행해야 합니다.");
+  assert.doesNotMatch(sourceApp, /max-width:\s*1080px[\s\S]{0,120}scrollIntoView/, "PC 가로 화면에서 사진 영역으로 강제 이동해 왼쪽 지도를 밀어내면 안 됩니다.");
+  assert.match(sourceStyles, /@media \(min-width:\s*901px\) and \(orientation:\s*landscape\)\s*\{[\s\S]*?\.stage\s*\{\s*transition:\s*none;/s, "전자칠판 가로 화면의 3:7 프레임 전환은 레이아웃 애니메이션 없이 즉시 적용해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*min-width:\s*420px/s, "대형 화면의 축소된 지도 패널은 최소 420px을 유지해야 합니다.");
   assert.match(sourceStyles, /\.map-panel\s*\{[^}]*position:\s*sticky[^}]*height:\s*100%/s, "가로 화면의 왼쪽 지도 패널은 고정되어야 합니다.");
   assert.match(sourceStyles, /\.branch-switcher\s*\{[^}]*position:\s*absolute[^}]*top:\s*12px[^}]*flex-direction:\s*row/s, "방면 버튼은 지도 위쪽에 가로 오버레이로 배치해야 합니다.");

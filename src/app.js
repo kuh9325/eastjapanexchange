@@ -126,6 +126,7 @@ let panelAwardOpener = null;
 const GALLERY_DRAG_THRESHOLD = 8;
 const PANEL_CANVAS_WIDTH = 900;
 const PANEL_CANVAS_HEIGHT = 1246;
+const STACKED_LAYOUT_QUERY = "(max-width: 900px), (orientation: portrait)";
 
 const copy = () => UI_COPY[currentLanguage];
 const localizedValue = (source, key) => {
@@ -138,6 +139,7 @@ const branchName = (branch, short = false) => {
   return currentLanguage === "ja" ? branch[`${key}Ja`] || branch[key] : branch[key];
 };
 const categoryName = (category) => currentLanguage === "ja" ? category.nameJa || category.name : category.name;
+const usesStackedLayout = () => window.matchMedia(STACKED_LAYOUT_QUERY).matches;
 
 function galleryMetadataLabels(photo) {
   const zone = localizedMetadataLabel(ZONE_LABELS[photo.zone], currentLanguage)
@@ -654,7 +656,7 @@ function selectBranch(branchKey, options) {
   setCategory("all");
   galleryPanel.scrollTop = 0;
 
-  if (config.scroll !== false && window.matchMedia("(max-width: 1080px), (orientation: portrait)").matches) {
+  if (config.scroll !== false && usesStackedLayout()) {
     window.requestAnimationFrame(() => galleryPanel.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 }
